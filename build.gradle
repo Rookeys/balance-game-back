@@ -28,9 +28,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.15'
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -38,4 +43,24 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// QueryDSL 관련 파일 생성 경로 설정
+def querydslDir = "$buildDir/generated/querydsl"
+
+sourceSets {
+    main {
+        java {
+            srcDir querydslDir  // QueryDSL 생성 파일을 소스 경로에 포함
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// clean task에서 QueryDSL 생성 파일 삭제
+clean {
+    delete file(querydslDir)
 }
