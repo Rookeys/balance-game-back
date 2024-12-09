@@ -1,5 +1,7 @@
 package com.games.balancegameback.infra.entity;
 
+import com.games.balancegameback.core.enums.MediaType;
+import com.games.balancegameback.core.enums.UsingType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;

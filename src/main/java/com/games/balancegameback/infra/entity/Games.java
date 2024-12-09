@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.entity;
 
+import com.games.balancegameback.core.enums.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
