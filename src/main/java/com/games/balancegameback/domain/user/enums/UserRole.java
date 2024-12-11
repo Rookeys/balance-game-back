@@ -1,4 +1,4 @@
-package com.games.balancegameback.core.enums;
+package com.games.balancegameback.domain.user.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
