@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.user;
 
+import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.user.LoginRequest;
 import com.games.balancegameback.dto.user.SignUpRequest;
 import com.games.balancegameback.dto.user.UserRequest;
@@ -20,4 +21,8 @@ public interface UserService {
     void logout(HttpServletRequest request);
 
     void resign(HttpServletRequest request);
+
+    void reissue(HttpServletRequest request, HttpServletResponse response);
+
+    Users findUserByToken(HttpServletRequest request);
 }
