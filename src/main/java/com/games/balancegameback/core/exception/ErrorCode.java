@@ -10,7 +10,7 @@ public enum ErrorCode {
     RUNTIME_EXCEPTION(400, "400", "400 Bad Request"),
     ACCESS_DENIED_EXCEPTION(401, "401", "401 UnAuthorized"),
     NOT_ALLOW_WRITE_EXCEPTION(401, "401_1", "Not Allow"),
-    NOT_ALLOW_WITHDRAWAL_EXCEPTION(401, "401_2", "Already Withdrawal"),
+    NOT_ALLOW_RESIGN_EXCEPTION(401, "401_2", "Already resigned user."),
     DUPLICATED_EXCEPTION(401, "401_3", "Duplicated data"),
     FORBIDDEN_EXCEPTION(403, "403", "403 Forbidden"),
     NOT_FOUND_EXCEPTION(404, "404", "404 Not Found"),

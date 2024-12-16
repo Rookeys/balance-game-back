@@ -24,4 +24,9 @@ public class UserRepositoryImpl implements UserRepository {
     public void save(Users users) {
         userRepository.save(UsersEntity.from(users));
     }
+
+    @Override
+    public boolean existsByEmailAndDeleted(String email, boolean isDeleted) {
+        return userRepository.existsByEmailAndIsDeleted(email, isDeleted);
+    }
 }

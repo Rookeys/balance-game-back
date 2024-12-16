@@ -20,12 +20,12 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.email();
+        return user.getEmail();
     }
 
     @Override
     public String getUsername() {
-        return user.nickname();
+        return user.getNickname();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class UserDetailsImpl implements UserDetails {
     @Transactional
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<String> userRole = new ArrayList<>();
-        userRole.add(user.userRole().toString());
+        userRole.add(user.getUserRole().toString());
         String authority = userRole.getFirst();
 
         SimpleGrantedAuthority simpleAuthority = new SimpleGrantedAuthority(authority);

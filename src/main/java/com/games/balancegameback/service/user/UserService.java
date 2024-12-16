@@ -22,6 +22,8 @@ public interface UserService {
 
     void resign(HttpServletRequest request);
 
+    void cancelResign(String email);
+
     void reissue(HttpServletRequest request, HttpServletResponse response);
 
     Users findUserByToken(HttpServletRequest request);

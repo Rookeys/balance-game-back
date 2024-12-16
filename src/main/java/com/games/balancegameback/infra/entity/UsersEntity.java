@@ -32,6 +32,9 @@ public class UsersEntity {
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
+    @Column
+    private Boolean isDeleted = false;
+
     @Column(updatable = false)
     @CreatedDate
     private LocalDateTime createdDate;
@@ -42,11 +45,12 @@ public class UsersEntity {
 
     public static UsersEntity from(Users user) {
         UsersEntity userEntity = new UsersEntity();
-        userEntity.uid = user.uid();
-        userEntity.nickname = user.nickname();
-        userEntity.email = user.email();
-        userEntity.loginType = user.loginType();
-        userEntity.userRole = user.userRole();
+        userEntity.uid = user.getUid();
+        userEntity.nickname = user.getNickname();
+        userEntity.email = user.getEmail();
+        userEntity.loginType = user.getLoginType();
+        userEntity.userRole = user.getUserRole();
+        userEntity.isDeleted = user.isDeleted();
 
         return userEntity;
     }
@@ -58,6 +62,7 @@ public class UsersEntity {
                 .email(email)
                 .loginType(loginType)
                 .userRole(userRole)
+                .isDeleted(isDeleted)
                 .build();
     }
 }

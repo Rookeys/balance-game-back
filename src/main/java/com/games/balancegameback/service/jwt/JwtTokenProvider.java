@@ -131,7 +131,7 @@ public class JwtTokenProvider {
 
     public UserRole getRoles(String email) {
         return userRepository.findByEmail(email)
-                .map(Users::userRole)
+                .map(Users::getUserRole)
                 .orElseThrow(() -> new InvalidTokenException("User not found", ErrorCode.NOT_FOUND_EXCEPTION));
     }
 
@@ -139,6 +139,20 @@ public class JwtTokenProvider {
         String email = extractEmail(token);
         UserDetails userDetails = customUserDetailService.loadUserByUsername(email);
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+
+    public void expireToken(String token) {
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Date expiration = claims.getExpiration();
+        Date now = new Date();
+        if (now.after(expiration)) {
+            redisRepository.addTokenToBlacklist(token, expiration.getTime() - now.getTime());
+        }
     }
 
     public String extractEmail(String token) {

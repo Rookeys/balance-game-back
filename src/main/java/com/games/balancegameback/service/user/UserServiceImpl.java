@@ -22,6 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -46,10 +47,15 @@ public class UserServiceImpl implements UserService {
             throw new UnAuthorizedException("유저를 찾을 수 없습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
+        if (users.get().isDeleted()) {
+            throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
+        }
+
         createToken(users.get(), response);
     }
 
     @Override
+    @Transactional
     public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
         this.validateToken(signUpRequest.getCode(), signUpRequest.getLoginType());
 
@@ -64,25 +70,56 @@ public class UserServiceImpl implements UserService {
         Users users = this.findUserByToken(request);
 
         return UserResponse.builder()
-                .nickname(users.nickname())
-                .email(users.email())
+                .nickname(users.getNickname())
+                .email(users.getEmail())
                 .fileUrl("추가 예정")   // Media 로직 완성 후 추가 예정.
                 .build();
     }
 
     @Override
+    @Transactional
     public void updateProfile(UserRequest userRequest, HttpServletRequest request) {
+        Users users = this.findUserByToken(request);
 
+        if (userRequest.getNickname() != null) {
+            users.setNickname(userRequest.getNickname());
+        }
+
+        if (userRequest.getUrl() != null) {
+            // Media 로직 완성 후 추가 예정.
+        }
+
+        userRepository.save(users);
     }
 
     @Override
     public void logout(HttpServletRequest request) {
-
+        redisRepository.delValues(jwtTokenProvider.resolveRefreshToken(request));
+        jwtTokenProvider.expireToken(jwtTokenProvider.resolveAccessToken(request));
     }
 
     @Override
+    @Transactional
     public void resign(HttpServletRequest request) {
+        Users user = this.findUserByToken(request);
+        user.setDeleted(true);
 
+        userRepository.save(user);
+        this.logout(request);
+    }
+
+    @Override
+    @Transactional
+    public void cancelResign(String email) {
+        if (userRepository.existsByEmailAndDeleted(email, true)) {
+            Users user = userRepository.findByEmail(email).orElseThrow(()
+                    -> new NotFoundException("404", ErrorCode.NOT_FOUND_EXCEPTION));
+
+            user.setDeleted(false);
+            userRepository.save(user);
+        } else {
+            throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
+        }
     }
 
     @Override
@@ -151,12 +188,12 @@ public class UserServiceImpl implements UserService {
         AccessToken & RefreshToken 생성 및 헤더 삽입.
      */
     private void createToken(Users users, HttpServletResponse response) {
-        String accessToken = jwtTokenProvider.createAccessToken(users.email(), users.userRole());
-        String refreshToken = jwtTokenProvider.createRefreshToken(users.email(), users.userRole());
+        String accessToken = jwtTokenProvider.createAccessToken(users.getEmail(), users.getUserRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(users.getEmail(), users.getUserRole());
 
         jwtTokenProvider.setHeaderAccessToken(response, accessToken);
         jwtTokenProvider.setHeaderRefreshToken(response, refreshToken);
 
-        redisRepository.setValues(refreshToken, users.email());
+        redisRepository.setValues(refreshToken, users.getEmail());
     }
 }
