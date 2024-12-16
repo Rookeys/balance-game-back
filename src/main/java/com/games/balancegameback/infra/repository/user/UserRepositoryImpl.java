@@ -29,4 +29,9 @@ public class UserRepositoryImpl implements UserRepository {
     public boolean existsByEmailAndDeleted(String email, boolean isDeleted) {
         return userRepository.existsByEmailAndIsDeleted(email, isDeleted);
     }
+
+    @Override
+    public boolean existsByNickname(String nickname) {
+        return userRepository.existsByNickname(nickname);
+    }
 }

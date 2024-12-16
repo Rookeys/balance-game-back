@@ -14,6 +14,8 @@ public interface UserService {
 
     void signUp(SignUpRequest signUpRequest, HttpServletResponse response);
 
+    boolean existsByNickname(String nickname);
+
     UserResponse getProfile(HttpServletRequest request);
 
     void updateProfile(UserRequest userRequest, HttpServletRequest request);

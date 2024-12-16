@@ -59,10 +59,19 @@ public class UserServiceImpl implements UserService {
     public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
         this.validateToken(signUpRequest.getCode(), signUpRequest.getLoginType());
 
+        if (this.existsByNickname(signUpRequest.getNickname())) {
+            throw new UnAuthorizedException("중복된 닉네임입니다.", ErrorCode.DUPLICATED_EXCEPTION);
+        }
+
         Users users = signUpRequest.toDomain();
         userRepository.save(users);
 
         createToken(users, response);
+    }
+
+    @Override
+    public boolean existsByNickname(String nickname) {
+        return userRepository.existsByNickname(nickname);
     }
 
     @Override
@@ -174,8 +183,8 @@ public class UserServiceImpl implements UserService {
         RestTemplate 생성 및 타임 아웃 설정
      */
     private RestTemplate createRestTemplateWithTimeout() {
-        int connectTimeout = 3000; // 연결 타임아웃 (밀리초)
-        int readTimeout = 3000;    // 읽기 타임아웃 (밀리초)
+        int connectTimeout = 3000; // 연결 Timeout (밀리초)
+        int readTimeout = 3000;    // 읽기 Timeout (밀리초)
 
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
         factory.setConnectTimeout(connectTimeout);
