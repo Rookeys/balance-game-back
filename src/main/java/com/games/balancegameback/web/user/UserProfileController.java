@@ -1,6 +1,5 @@
 package com.games.balancegameback.web.user;
 
-import com.games.balancegameback.dto.user.SignUpRequest;
 import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
 import com.games.balancegameback.service.user.UserService;
