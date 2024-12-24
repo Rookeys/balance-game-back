@@ -1,9 +1,9 @@
 package com.games.balancegameback.service.media.impl;
 
-import com.games.balancegameback.core.exception.impl.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -11,9 +11,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.UUID;
-
-import static com.games.balancegameback.core.exception.ErrorCode.RUNTIME_EXCEPTION;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +21,7 @@ public class ImageService {
     private String bucket;
 
     private final S3Presigner s3Presigner;
+    private static final Region REGION = Region.AP_NORTHEAST_2;
 
     /**
      * Presigned URL 발급
@@ -30,7 +29,7 @@ public class ImageService {
      * @param fileName 클라이언트가 전달한 파일명 파라미터
      * @return Presigned URL
      */
-    public String getPreSignedUrl(String prefix, String fileName) {
+    public Map<String, String> getPreSignedUrl(String prefix, String fileName) {
         if (prefix != null && !prefix.isEmpty()) {
             fileName = createPath(prefix, fileName);
         }
@@ -38,7 +37,32 @@ public class ImageService {
         // Presigned URL 생성
         PresignedPutObjectRequest presignedRequest = generatePreSignedUrlRequest(bucket, fileName);
         URL url = presignedRequest.url();
-        return url.toString();
+
+        // 최종 S3 URL 생성
+        String finalUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, REGION, fileName);
+
+        Map<String, String> result = new HashMap<>();
+        result.put("presignedUrl", url.toString());
+        result.put("finalUrl", finalUrl);
+
+        return result;
+    }
+
+    /**
+     * 여러 장의 Presigned URL 발급 및 S3 URL 반환
+     * @param prefix 버킷 디렉토리 이름
+     * @param fileNames 클라이언트가 전달한 파일명 리스트
+     * @return List<Map<String, String>> (presignedUrl, finalUrl)
+     */
+    public List<Map<String, String>> getPreSignedUrls(String prefix, List<String> fileNames) {
+        List<Map<String, String>> urls = new ArrayList<>();
+
+        for (String fileName : fileNames) {
+            Map<String, String> url = getPreSignedUrl(prefix, fileName);
+            urls.add(url);
+        }
+
+        return urls;
     }
 
     /**
