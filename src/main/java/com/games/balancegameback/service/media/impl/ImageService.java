@@ -1,5 +1,8 @@
 package com.games.balancegameback.service.media.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.service.media.MediaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,45 +24,42 @@ public class ImageService {
     private String bucket;
 
     private final S3Presigner s3Presigner;
+    private final MediaRepository mediaRepository;
     private static final Region REGION = Region.AP_NORTHEAST_2;
 
     /**
      * Presigned URL 발급
      * @param prefix 버킷 디렉토리 이름
-     * @param fileName 클라이언트가 전달한 파일명 파라미터
+     * @param roomId 게임방 id
      * @return Presigned URL
      */
-    public Map<String, String> getPreSignedUrl(String prefix, String fileName) {
-        if (prefix != null && !prefix.isEmpty()) {
-            fileName = createPath(prefix, fileName);
+    public String getPreSignedUrl(Long roomId, String prefix) {
+        if (prefix == null || prefix.isEmpty()) {
+            throw new BadRequestException("prefix 값이 잘못되었습니다.", ErrorCode.RUNTIME_EXCEPTION);
         }
+
+        String fileName = createPath(roomId, prefix);
 
         // Presigned URL 생성
         PresignedPutObjectRequest presignedRequest = generatePreSignedUrlRequest(bucket, fileName);
         URL url = presignedRequest.url();
 
         // 최종 S3 URL 생성
-        String finalUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, REGION, fileName);
-
-        Map<String, String> result = new HashMap<>();
-        result.put("presignedUrl", url.toString());
-        result.put("finalUrl", finalUrl);
-
-        return result;
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, REGION, url);
     }
 
     /**
      * 여러 장의 Presigned URL 발급 및 S3 URL 반환
+     * @param roomId 게임방 id
      * @param prefix 버킷 디렉토리 이름
-     * @param fileNames 클라이언트가 전달한 파일명 리스트
-     * @return List<Map<String, String>> (presignedUrl, finalUrl)
+     * @param length 클라이언트가 전달한 파일 갯수
+     * @return List<String> (presignedUrl, finalUrl)
      */
-    public List<Map<String, String>> getPreSignedUrls(String prefix, List<String> fileNames) {
-        List<Map<String, String>> urls = new ArrayList<>();
+    public List<String> getPreSignedUrls(Long roomId, String prefix, int length) {
+        List<String> urls = new ArrayList<>();
 
-        for (String fileName : fileNames) {
-            Map<String, String> url = getPreSignedUrl(prefix, fileName);
-            urls.add(url);
+        for (int i = 0; i < length; i++) {
+            urls.add(getPreSignedUrl(roomId, prefix));
         }
 
         return urls;
@@ -97,13 +97,12 @@ public class ImageService {
     }
 
     /**
-     * 파일의 전체 경로를 생성
+     * 파일의 전체 경로를 생성, redis 에 파일 이름과 다운로드 링크를 임시 저장
      * @param prefix 디렉토리 경로
-     * @param fileName 파일 이름
      * @return 파일의 전체 경로
      */
-    private String createPath(String prefix, String fileName) {
+    private String createPath(Long roomId, String prefix) {
         String fileId = createFileId();
-        return String.format("%s/%s%s", prefix, fileId, fileName);
+        return String.format("%s/%s", prefix, fileId);
     }
 }

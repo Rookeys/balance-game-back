@@ -10,7 +10,4 @@ public class PresignedUrlRequest {
 
     @Schema(description = "prefix")
     private String prefix;
-
-    @Schema(description = "파일 이름")
-    private String fileName;
 }
