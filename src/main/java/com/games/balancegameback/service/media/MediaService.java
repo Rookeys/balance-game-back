@@ -23,4 +23,9 @@ public class MediaService {
     public List<String> getPreSignedUrls(Long roomId, PresignedUrlsRequest request) {
         return imageService.getPreSignedUrls(roomId, request.getPrefix(), request.getLength());
     }
+
+    // S3 내 객체와 DB 내 정보 validate
+    public boolean validateUploadedFile(Long roomId, String imageUrl) {
+        return imageService.isFileExistOnS3(roomId, imageUrl);
+    }
 }

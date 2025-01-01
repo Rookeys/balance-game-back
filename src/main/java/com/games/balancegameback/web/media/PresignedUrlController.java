@@ -37,7 +37,7 @@ public class PresignedUrlController {
             @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음.")
     })
     @PostMapping(value = "/multiple")
-    public List<String> getPreSignedUrl(@RequestParam(value = "roomId") Long roomId,
+    public List<String> getPreSignedUrl(@RequestParam(value = "roomId", defaultValue = "1") Long roomId,
                                                      @RequestBody PresignedUrlsRequest request) {
         return mediaService.getPreSignedUrls(roomId, request);
     }

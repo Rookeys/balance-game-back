@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -24,6 +26,7 @@ public class ImageService {
     private String bucket;
 
     private final S3Presigner s3Presigner;
+    private final S3Client s3Client;
     private final MediaRepository mediaRepository;
     private static final Region REGION = Region.AP_NORTHEAST_2;
 
@@ -63,6 +66,34 @@ public class ImageService {
         }
 
         return urls;
+    }
+
+    /**
+     * 주어진 S3 객체 URL을 통해 해당 객체가 존재하는지 확인
+     * @param roomId 게임방 Id
+     * @param imageUrl S3 객체의 URL
+     * @return true / false
+     */
+    public boolean isFileExistOnS3(Long roomId, String imageUrl) {
+        String key = extractKeyFromUrl(imageUrl);
+        try {
+            s3Client.headObject(HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * S3 객체 키(Key) 추출
+     * @param imageUrl S3 객체의 URL
+     * @return 객체 키 (S3 내 경로)
+     */
+    private String extractKeyFromUrl(String imageUrl) {
+        return imageUrl.split(".amazonaws.com/")[1];
     }
 
     /**
