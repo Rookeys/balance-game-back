@@ -2,7 +2,8 @@ package com.games.balancegameback.service.media;
 
 import com.games.balancegameback.dto.media.PresignedUrlRequest;
 import com.games.balancegameback.dto.media.PresignedUrlsRequest;
-import com.games.balancegameback.service.media.impl.ImageService;
+import com.games.balancegameback.service.media.impl.PresignedUrlService;
+import com.games.balancegameback.service.user.impl.UserUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,20 +13,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MediaService {
 
-    private final ImageService imageService;
+    private final PresignedUrlService presignedUrlService;
+    private final UserUtils userUtils;
 
     // Presigned URL 발급 (단일, 유저)
     public String getPreSignedUrl(PresignedUrlRequest request) {
-        return imageService.getPreSignedUrl(null, request.getPrefix());
+        return presignedUrlService.getPreSignedUrl(request.getPrefix());
     }
 
     // Presigned URL 발급 (다중)
-    public List<String> getPreSignedUrls(Long roomId, PresignedUrlsRequest request) {
-        return imageService.getPreSignedUrls(roomId, request.getPrefix(), request.getLength());
-    }
-
-    // S3 내 객체와 DB 내 정보 validate
-    public boolean validateUploadedFile(Long roomId, String imageUrl) {
-        return imageService.isFileExistOnS3(roomId, imageUrl);
+    public List<String> getPreSignedUrls(Long roomId, String token, PresignedUrlsRequest request) {
+        // game 로직 완성 후 validate 로직 추가 예정.
+        return presignedUrlService.getPreSignedUrls(request.getPrefix(), request.getLength());
     }
 }

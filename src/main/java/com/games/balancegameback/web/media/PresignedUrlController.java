@@ -35,10 +35,12 @@ public class PresignedUrlController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 발급 성공"),
             @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음.")
+            // @ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @PostMapping(value = "/multiple")
-    public List<String> getPreSignedUrl(@RequestParam(value = "roomId", defaultValue = "1") Long roomId,
-                                                     @RequestBody PresignedUrlsRequest request) {
-        return mediaService.getPreSignedUrls(roomId, request);
+    public List<String> getPreSignedUrl(@RequestBody PresignedUrlsRequest request,
+                                        @RequestHeader("Authorization") String token,
+                                        @RequestParam(value = "roomId") Long roomId) {
+        return mediaService.getPreSignedUrls(roomId, token, request);
     }
 }

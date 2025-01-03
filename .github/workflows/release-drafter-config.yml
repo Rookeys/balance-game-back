@@ -1,22 +1,25 @@
 name-template: 'v$RESOLVED_VERSION 🌈'
 tag-template: 'v$RESOLVED_VERSION'
-commitish: main
 # publish: true # 릴리즈를 자동으로 게시
+commitish: main
 categories:
-  - title: '🚀 Major Update'
-    labels:
-      - 'major'
   - title: '🚀 Features'
     labels:
       - 'enhancement'
   - title: '🐛 Bug Fixes'
     labels:
-      - 'fix'
       - 'bug'
   - title: '🧰 Maintenance'
-    label: 'chore'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+    labels:
+      - 'chore'
+change-template: '- $TITLE ([#$NUMBER]($URL)) by @$AUTHOR'
+exclude-labels:
+  - 'skip-release-tag'
+include-labels:
+  - 'major'
+  - 'bug'
+  - 'enhancement'
+  - 'chore'
 version-resolver:
   major:
     labels:
@@ -26,12 +29,9 @@ version-resolver:
       - 'enhancement'
   patch:
     labels:
-      - 'fix'
       - 'bug'
       - 'chore'
   default: patch
 template: |
-  ## Changes
-
   $CHANGES
 
