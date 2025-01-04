@@ -10,12 +10,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@DiscriminatorValue("LINK")
 @Table(name = "links")
-public class LinksEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class LinksEntity extends MediaEntity {
 
     @Column(nullable = false)
     private String urls;
@@ -26,31 +23,22 @@ public class LinksEntity {
     @Column
     private int endSec;
 
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "media_id", nullable = false)
-    private MediaEntity media;
-
     public static LinksEntity from(Links links) {
         LinksEntity linksEntity = new LinksEntity();
         linksEntity.urls = links.urls();
         linksEntity.startSec = links.startSec();
         linksEntity.endSec = links.endSec();
-        linksEntity.media = MediaEntity.from(links.media());
 
         return linksEntity;
     }
 
+    @Override
     public Links toModel() {
         return Links.builder()
-                .id(id)
+                .id(this.getId())
                 .urls(urls)
                 .startSec(startSec)
                 .endSec(endSec)
-                .media(media.toModel())
                 .build();
     }
 }
