@@ -1,7 +1,6 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.game.GameResults;
-import com.games.balancegameback.domain.media.Links;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
@@ -26,13 +25,24 @@ public class GameResultsEntity {
     private GamesEntity games;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "media_id")
-    private MediaEntity media;
+    @JoinColumn(name = "images_id")
+    private ImagesEntity images;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "links_id")
+    private LinksEntity links;
 
     public static GameResultsEntity from(GameResults gameResults) {
         GameResultsEntity gameResultsEntity = new GameResultsEntity();
         gameResultsEntity.games = GamesEntity.from(gameResults.games());
-        gameResultsEntity.media = MediaEntity.from(gameResults.media());
+
+        if (gameResults.images() != null) {
+            gameResultsEntity.images = ImagesEntity.from(gameResults.images());
+        }
+
+        if (gameResults.links() != null) {
+            gameResultsEntity.links = LinksEntity.from(gameResults.links());
+        }
 
         return gameResultsEntity;
     }
@@ -41,7 +51,8 @@ public class GameResultsEntity {
         return GameResults.builder()
                 .id(id)
                 .games(games.toModel())
-                .media(media.toModel())
+                .images(images != null ? images.toModel() : null)
+                .links(links != null ? links.toModel() : null)
                 .build();
     }
 }
