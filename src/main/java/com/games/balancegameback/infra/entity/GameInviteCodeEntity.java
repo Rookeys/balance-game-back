@@ -1,7 +1,6 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.game.GameInviteCode;
-import com.games.balancegameback.domain.game.GameResources;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;

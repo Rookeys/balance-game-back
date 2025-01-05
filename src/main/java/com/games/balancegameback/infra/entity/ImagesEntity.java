@@ -18,8 +18,16 @@ public class ImagesEntity extends MediaEntity {
 
     public static ImagesEntity from(Images images) {
         ImagesEntity imagesEntity = new ImagesEntity();
-        imagesEntity.fileName = images.fileName();
-        imagesEntity.fileUrl = images.fileUrl();
+        imagesEntity.fileName = images.getFileName();
+        imagesEntity.fileUrl = images.getFileUrl();
+
+        if (images.getGames() != null) {
+            imagesEntity.games = GamesEntity.from(images.getGames());
+        }
+
+        if (images.getUsers() != null) {
+            imagesEntity.users = UsersEntity.from(images.getUsers());
+        }
 
         return imagesEntity;
     }

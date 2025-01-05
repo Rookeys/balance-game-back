@@ -24,11 +24,11 @@ public abstract class MediaEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
-    private UsersEntity users;
+    protected UsersEntity users;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "games_id")
-    private GamesEntity games;
+    protected GamesEntity games;
 
     public abstract Media toModel();
 }
