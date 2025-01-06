@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,13 +35,13 @@ public class PresignedUrlController {
     @Operation(summary = "다중 업로드 API", description = "AWS S3 저장소에 업로드할 수 있는 다중 URL 발급")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 발급 성공"),
-            @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음.")
-            // @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음."),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @PostMapping(value = "/multiple")
-    public List<String> getPreSignedUrl(@RequestBody PresignedUrlsRequest request,
-                                        @RequestHeader("Authorization") String token,
-                                        @RequestParam(value = "roomId") Long roomId) {
-        return mediaService.getPreSignedUrls(roomId, token, request);
+    public List<String> getPreSignedUrl(@RequestBody PresignedUrlsRequest urlRequest,
+                                        @RequestParam(value = "roomId") Long roomId,
+                                        HttpServletRequest request) {
+        return mediaService.getPreSignedUrls(roomId, urlRequest, request);
     }
 }

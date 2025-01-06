@@ -8,6 +8,7 @@ import lombok.ToString;
 public enum ErrorCode {
 
     RUNTIME_EXCEPTION(400, "400", "400 Bad Request"),
+    INVITE_CODE_NULL_EXCEPTION(400, "400_1", "Invite Code Null"),
     ACCESS_DENIED_EXCEPTION(401, "401", "401 UnAuthorized"),
     NOT_ALLOW_WRITE_EXCEPTION(401, "401_1", "Not Allow"),
     NOT_ALLOW_RESIGN_EXCEPTION(401, "401_2", "Already resigned user."),

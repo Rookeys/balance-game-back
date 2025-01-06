@@ -50,6 +50,7 @@ public class GamesEntity {
 
     public static GamesEntity from(Games games) {
         GamesEntity gamesEntity = new GamesEntity();
+        gamesEntity.id = games.id();
         gamesEntity.title = games.title();
         gamesEntity.description = games.description();
         gamesEntity.isNamePublic = games.isNamePublic();
