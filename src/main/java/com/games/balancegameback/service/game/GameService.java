@@ -16,7 +16,7 @@ public class GameService {
 
     private final GameRoomService gameRoomService;
 
-    // 게임 저장
+    // 게임방 생성
     public void saveGame(GameRequest gameRequest, HttpServletRequest request) {
         gameRoomService.saveGame(gameRequest, request);
     }
@@ -29,5 +29,15 @@ public class GameService {
     // 내가 만든 게임들 리스트 반환
     public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId, HttpServletRequest request) {
         return gameRoomService.getMyGameList(pageable, cursorId, request);
+    }
+
+    // 게임방 설정 업데이트
+    public void updateGameStatus(Long roomId, GameRequest gameRequest, HttpServletRequest request) {
+        gameRoomService.updateGameStatus(roomId, gameRequest, request);
+    }
+
+    // 게임방 삭제
+    public void deleteGame(Long roomId, HttpServletRequest request) {
+        gameRoomService.deleteGame(roomId, request);
     }
 }
