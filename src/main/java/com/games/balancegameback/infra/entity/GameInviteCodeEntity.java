@@ -4,6 +4,7 @@ import com.games.balancegameback.domain.game.GameInviteCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -26,15 +27,19 @@ public class GameInviteCodeEntity {
     @CreatedDate
     private LocalDateTime createdDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column
+    @LastModifiedDate
+    private LocalDateTime updatedDate;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "games_id")
     private GamesEntity games;
 
     public static GameInviteCodeEntity from(GameInviteCode gameInviteCode) {
         GameInviteCodeEntity gameInviteCodeEntity = new GameInviteCodeEntity();
-        gameInviteCodeEntity.inviteCode = gameInviteCode.inviteCode();
-        gameInviteCodeEntity.isActive = gameInviteCode.isActive();
-        gameInviteCodeEntity.games = GamesEntity.from(gameInviteCode.games());
+        gameInviteCodeEntity.inviteCode = gameInviteCode.getInviteCode();
+        gameInviteCodeEntity.isActive = gameInviteCode.getIsActive();
+        gameInviteCodeEntity.games = GamesEntity.from(gameInviteCode.getGames());
 
         return gameInviteCodeEntity;
     }

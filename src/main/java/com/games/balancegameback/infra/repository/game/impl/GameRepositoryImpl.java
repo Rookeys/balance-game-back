@@ -28,8 +28,9 @@ public class GameRepositoryImpl implements GameRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public void save(Games games) {
-        gameRepository.save(GamesEntity.from(games));
+    public Games save(Games games) {
+        GamesEntity entity = gameRepository.save(GamesEntity.from(games));
+        return entity.toModel();
     }
 
     @Override

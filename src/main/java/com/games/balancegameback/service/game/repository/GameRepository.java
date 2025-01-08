@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface GameRepository {
 
-    void save(Games games);
+    Games save(Games games);
 
     GameResponse findById(Long roomId);
 

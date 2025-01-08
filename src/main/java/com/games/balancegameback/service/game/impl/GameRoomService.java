@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 public class GameRoomService {
 
     private final GameRepository gameRepository;
+    private final GameInviteService gameInviteService;
     private final UserUtils userUtils;
 
     public void saveGame(GameRequest gameRequest, HttpServletRequest request) {
@@ -39,8 +40,11 @@ public class GameRoomService {
                 .users(users)
                 .build();
 
-        gameRepository.save(games);
-        // inviteCode 저장 로직 추가 예정.
+        games = gameRepository.save(games);
+
+        if (games.accessType().equals(AccessType.PROTECTED)) {
+            gameInviteService.createInviteCode(gameRequest.getInviteCode(), games);
+        }
     }
 
     public GameResponse getGameStatus(Long roomId, HttpServletRequest request) {
@@ -59,10 +63,6 @@ public class GameRoomService {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(roomId, users);
 
-        if (gameRequest.getAccessType().equals(AccessType.PROTECTED)) {
-            // inviteCode 가 수정되었는지 확인 후 수정되었다면 업데이트
-        }
-
         Games games = Games.builder()
                 .id(roomId)
                 .title(gameRequest.getTitle())
@@ -72,6 +72,7 @@ public class GameRoomService {
                 .category(gameRequest.getCategory())
                 .build();
 
+        gameInviteService.updateInviteCode(gameRequest.getInviteCode(), games);
         gameRepository.update(games);
     }
 
@@ -80,6 +81,7 @@ public class GameRoomService {
         this.existsHost(roomId, users);
 
         gameRepository.deleteById(roomId);
+        gameInviteService.deleteInviteCode(roomId);
         // 트리거에 해당 로직이 실행되었을 때 리소스들 중 연결되어 있는 방이 없으면 삭제하는 로직 추가 예정.
     }
 
