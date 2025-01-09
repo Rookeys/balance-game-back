@@ -1,8 +1,12 @@
 package com.games.balancegameback.service.game;
 
+import com.games.balancegameback.domain.game.Games;
+import com.games.balancegameback.domain.media.Images;
+import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameRequest;
 import com.games.balancegameback.dto.game.GameResponse;
+import com.games.balancegameback.service.game.impl.GameResourceService;
 import com.games.balancegameback.service.game.impl.GameRoomService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class GameService {
 
     private final GameRoomService gameRoomService;
+    private final GameResourceService gameResourceService;
 
     // 게임방 생성
     public void saveGame(GameRequest gameRequest, HttpServletRequest request) {
@@ -39,5 +44,15 @@ public class GameService {
     // 게임방 삭제
     public void deleteGame(Long roomId, HttpServletRequest request) {
         gameRoomService.deleteGame(roomId, request);
+    }
+
+    // 게임 리소스에 유튜브 링크 추가
+    public void saveLinkResource(Games games, Links links) {
+        gameResourceService.saveLinkResource(games, links);
+    }
+
+    // 게임 리소스에 이미지 추가
+    public void saveImageResource(Games games, Images images) {
+        gameResourceService.saveImageResource(games, images);
     }
 }

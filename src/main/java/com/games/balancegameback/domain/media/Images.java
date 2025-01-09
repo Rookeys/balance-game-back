@@ -8,13 +8,15 @@ import lombok.Getter;
 @Getter
 public class Images extends Media {
 
-    private final String fileName;
-    private final String fileUrl;
+    private String fileUrl;
 
     @Builder
-    public Images(Long id, Games games, Users users, String fileName, String fileUrl) {
+    public Images(Long id, Games games, Users users, String fileUrl) {
         super(id, games, users);
-        this.fileName = fileName;
+        this.fileUrl = fileUrl;
+    }
+
+    public void update(String fileUrl) {
         this.fileUrl = fileUrl;
     }
 }

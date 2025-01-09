@@ -1,9 +1,15 @@
 package com.games.balancegameback.service.media;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
+import com.games.balancegameback.dto.media.ImageRequest;
+import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.dto.media.PresignedUrlRequest;
 import com.games.balancegameback.dto.media.PresignedUrlsRequest;
 import com.games.balancegameback.service.game.repository.GameRepository;
+import com.games.balancegameback.service.media.impl.ImageService;
+import com.games.balancegameback.service.media.impl.LinkService;
 import com.games.balancegameback.service.media.impl.PresignedUrlService;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +23,8 @@ import java.util.List;
 public class MediaService {
 
     private final PresignedUrlService presignedUrlService;
+    private final ImageService imageService;
+    private final LinkService linkService;
     private final GameRepository gameRepository;
     private final UserUtils userUtils;
 
@@ -27,14 +35,32 @@ public class MediaService {
 
     // Presigned URL 발급 (다중)
     public List<String> getPreSignedUrls(Long roomId, PresignedUrlsRequest urlRequest, HttpServletRequest request) {
-        // game 로직 완성 후 validate 로직 추가 예정.
+        this.validateRequest(roomId, request);
         return presignedUrlService.getPreSignedUrls(urlRequest.getPrefix(), urlRequest.getLength());
+    }
+
+    // 유저 프로필 이미지 저장
+    public void saveImageForUser(ImageRequest imageRequest, HttpServletRequest request) {
+        imageService.saveImageForUser(imageRequest, request);
+    }
+
+    // 이미지 저장 및 게임 리소스 추가
+    public void saveImageForGame(Long roomId, ImageRequest imageRequest, HttpServletRequest request) {
+        this.validateRequest(roomId, request);
+        imageService.saveImageForGame(roomId, imageRequest);
+    }
+
+    // 링크 저장 및 게임 리소스 추가
+    public void saveLink(Long roomId, LinkRequest linkRequest, HttpServletRequest request) {
+        linkService.saveLink(roomId, linkRequest, request);
     }
 
     // 발급 요청한 사람이 해당 게임방 주인이 맞는지 확인.
     private void validateRequest(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
 
-
+        if (!gameRepository.existsByIdAndUsers(roomId, users)) {
+            throw new UnAuthorizedException("정보가 일치하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
+        }
     }
 }

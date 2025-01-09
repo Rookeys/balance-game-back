@@ -3,12 +3,12 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.Games;
-import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
+import com.games.balancegameback.service.game.repository.GameInviteRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -25,6 +25,7 @@ import java.util.List;
 public class GameRepositoryImpl implements GameRepository {
 
     private final GameJpaRepository gameRepository;
+    private final GameInviteRepository gameInviteRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -39,11 +40,7 @@ public class GameRepositoryImpl implements GameRepository {
                 new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
         Games games = gamesEntity.toModel();
-        String inviteCode = null;
-
-        if (games.accessType().equals(AccessType.PROTECTED)) {
-            inviteCode = "inviteCode 로직 완성 후 수정 예정.";
-        }
+        String inviteCode = gameInviteRepository.findByGamesId(games.id()).getInviteCode();
 
         return GameResponse.builder()
                 .roomId(roomId)
@@ -54,6 +51,14 @@ public class GameRepositoryImpl implements GameRepository {
                 .inviteCode(inviteCode)
                 .category(games.category())
                 .build();
+    }
+
+    @Override
+    public Games findByRoomId(Long roomId) {
+        GamesEntity gamesEntity = gameRepository.findById(roomId).orElseThrow(() ->
+                new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        return gamesEntity.toModel();
     }
 
     @Override

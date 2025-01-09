@@ -11,14 +11,10 @@ import lombok.Getter;
 public class ImagesEntity extends MediaEntity {
 
     @Column(nullable = false)
-    private String fileName;
-
-    @Column(nullable = false)
     private String fileUrl;
 
     public static ImagesEntity from(Images images) {
         ImagesEntity imagesEntity = new ImagesEntity();
-        imagesEntity.fileName = images.getFileName();
         imagesEntity.fileUrl = images.getFileUrl();
 
         if (images.getGames() != null) {
@@ -36,7 +32,6 @@ public class ImagesEntity extends MediaEntity {
     public Images toModel() {
         return Images.builder()
                 .id(this.getId())
-                .fileName(fileName)
                 .fileUrl(fileUrl)
                 .build();
     }

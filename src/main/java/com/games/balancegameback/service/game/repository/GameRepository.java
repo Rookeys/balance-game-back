@@ -13,6 +13,8 @@ public interface GameRepository {
 
     GameResponse findById(Long roomId);
 
+    Games findByRoomId(Long roomId);
+
     Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable);
 
     boolean existsByIdAndUsers(Long roomId, Users users);
