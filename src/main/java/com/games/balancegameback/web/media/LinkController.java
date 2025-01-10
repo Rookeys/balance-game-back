@@ -24,7 +24,7 @@ public class LinkController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "저장 성공")
     })
-    @PostMapping(value = "/resources/link")
+    @PostMapping(value = "/link")
     public ResponseEntity<Void> saveLink(@RequestParam Long roomId,
                                          @RequestBody @Valid LinkRequest linkRequest,
                                          HttpServletRequest request) {

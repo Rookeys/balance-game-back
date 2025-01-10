@@ -1,10 +1,8 @@
 package com.games.balancegameback.domain.game;
 
-import com.games.balancegameback.domain.media.Images;
-import com.games.balancegameback.domain.media.Links;
 import lombok.Builder;
 
-public record GameResults(Long id, Games games, Images images, Links links) {
+public record GameResults(Long id, GameResources gameResources) {
 
     @Builder
     public GameResults {

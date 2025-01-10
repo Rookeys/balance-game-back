@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class GameRoomService {
     private final GameInviteService gameInviteService;
     private final UserUtils userUtils;
 
+    @Transactional
     public void saveGame(GameRequest gameRequest, HttpServletRequest request) {
         if (gameRequest.getAccessType().equals(AccessType.PROTECTED) && gameRequest.getInviteCode() == null) {
             throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
@@ -59,6 +61,7 @@ public class GameRoomService {
         return gameRepository.findGamesWithResources(cursorId, users, pageable);
     }
 
+    @Transactional
     public void updateGameStatus(Long roomId, GameRequest gameRequest, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(roomId, users);
@@ -76,6 +79,7 @@ public class GameRoomService {
         gameRepository.update(games);
     }
 
+    @Transactional
     public void deleteGame(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(roomId, users);

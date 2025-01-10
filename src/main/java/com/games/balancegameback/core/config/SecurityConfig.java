@@ -27,8 +27,8 @@ public class SecurityConfig {
                 // 권한 설정
                 .authorizeHttpRequests(auth -> {
                     auth
-                            .requestMatchers("/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
-                            .requestMatchers("/user/**").authenticated() // 인증된 사용자만 접근 가능
+//                            .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
+//                            .requestMatchers("/api/v1/**").authenticated() // 인증된 사용자만 접근 가능
                             .anyRequest().permitAll(); // 그 외 모든 요청은 허용
                 })
 

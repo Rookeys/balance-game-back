@@ -36,7 +36,7 @@ public class ImageController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "저장 성공")
     })
-    @PostMapping(value = "/resources/image")
+    @PostMapping(value = "/image")
     public ResponseEntity<Void> saveImageForGame(@RequestParam Long roomId,
                                                  @RequestBody @Valid ImageRequest imageRequest,
                                                  HttpServletRequest request) {

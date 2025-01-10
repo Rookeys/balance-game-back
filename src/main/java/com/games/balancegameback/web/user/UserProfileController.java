@@ -23,7 +23,7 @@ public class UserProfileController {
 
     @Operation(summary = "프로필 정보 출력 API", description = "프로필 정보를 출력합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "수정 성공")
+            @ApiResponse(responseCode = "200", description = "출력 성공")
     })
     @GetMapping(value = "/profile")
     public UserResponse getProfile(HttpServletRequest request) {
