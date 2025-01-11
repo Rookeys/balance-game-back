@@ -25,7 +25,8 @@ import java.util.Set;
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "**/swagger", "**/v3/api-docs", "**/users/login", "**/users/signup, **/media/**"
+            "**/swagger-ui/**", "**/v3/api-docs", "**/users/login", "**/users/test/login",
+            "**/users/signup", "**/media/**"
     );
 
     private final JwtTokenProvider jwtTokenProvider;

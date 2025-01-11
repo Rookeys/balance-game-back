@@ -11,15 +11,19 @@ import lombok.Getter;
 public class ImagesEntity extends MediaEntity {
 
     @Column(nullable = false)
-    private String fileName;
-
-    @Column(nullable = false)
     private String fileUrl;
 
     public static ImagesEntity from(Images images) {
         ImagesEntity imagesEntity = new ImagesEntity();
-        imagesEntity.fileName = images.fileName();
-        imagesEntity.fileUrl = images.fileUrl();
+        imagesEntity.fileUrl = images.getFileUrl();
+
+        if (images.getGames() != null) {
+            imagesEntity.games = GamesEntity.from(images.getGames());
+        }
+
+        if (images.getUsers() != null) {
+            imagesEntity.users = UsersEntity.from(images.getUsers());
+        }
 
         return imagesEntity;
     }
@@ -28,7 +32,8 @@ public class ImagesEntity extends MediaEntity {
     public Images toModel() {
         return Images.builder()
                 .id(this.getId())
-                .fileName(fileName)
+                .users(users == null ? null : users.toModel())
+                .games(games == null ? null : games.toModel())
                 .fileUrl(fileUrl)
                 .build();
     }

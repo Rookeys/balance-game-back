@@ -21,28 +21,12 @@ public class GameResultsEntity {
     private LocalDateTime createdDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id")
-    private GamesEntity games;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "images_id")
-    private ImagesEntity images;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "links_id")
-    private LinksEntity links;
+    @JoinColumn(name = "game_resources_id")
+    private GameResourcesEntity gameResources;
 
     public static GameResultsEntity from(GameResults gameResults) {
         GameResultsEntity gameResultsEntity = new GameResultsEntity();
-        gameResultsEntity.games = GamesEntity.from(gameResults.games());
-
-        if (gameResults.images() != null) {
-            gameResultsEntity.images = ImagesEntity.from(gameResults.images());
-        }
-
-        if (gameResults.links() != null) {
-            gameResultsEntity.links = LinksEntity.from(gameResults.links());
-        }
+        gameResultsEntity.gameResources = GameResourcesEntity.from(gameResults.gameResources());
 
         return gameResultsEntity;
     }
@@ -50,9 +34,7 @@ public class GameResultsEntity {
     public GameResults toModel() {
         return GameResults.builder()
                 .id(id)
-                .games(games.toModel())
-                .images(images != null ? images.toModel() : null)
-                .links(links != null ? links.toModel() : null)
+                .gameResources(gameResources.toModel())
                 .build();
     }
 }

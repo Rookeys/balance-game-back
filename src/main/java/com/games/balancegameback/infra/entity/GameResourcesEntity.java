@@ -42,15 +42,15 @@ public class GameResourcesEntity {
 
     public static GameResourcesEntity from(GameResources gameResources) {
         GameResourcesEntity gameResourcesEntity = new GameResourcesEntity();
-        gameResourcesEntity.title = gameResources.title();
-        gameResourcesEntity.games = GamesEntity.from(gameResources.games());
+        gameResourcesEntity.title = gameResources.getTitle();
+        gameResourcesEntity.games = GamesEntity.from(gameResources.getGames());
 
-        if (gameResources.images() != null) {
-            gameResourcesEntity.images = ImagesEntity.from(gameResources.images());
+        if (gameResources.getImages() != null) {
+            gameResourcesEntity.images = ImagesEntity.from(gameResources.getImages());
         }
 
-        if (gameResources.links() != null) {
-            gameResourcesEntity.links = LinksEntity.from(gameResources.links());
+        if (gameResources.getLinks() != null) {
+            gameResourcesEntity.links = LinksEntity.from(gameResources.getLinks());
         }
 
         return gameResourcesEntity;

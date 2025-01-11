@@ -39,6 +39,20 @@ public class AuthService {
         userUtils.createToken(users.get(), response);
     }
 
+    public void testLogin(HttpServletResponse response) {
+        Optional<Users> users = userRepository.findByEmail("test@test.com");
+
+        if (users.isEmpty()) {
+            throw new UnAuthorizedException("유저를 찾을 수 없습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
+        }
+
+        if (users.get().isDeleted()) {
+            throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
+        }
+
+        userUtils.createToken(users.get(), response);
+    }
+
     public void logout(HttpServletRequest request) {
         String accessToken = jwtTokenProvider.resolveRefreshToken(request);
         String refreshToken = jwtTokenProvider.resolveRefreshToken(request);

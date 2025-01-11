@@ -1,12 +1,8 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.media.Links;
-import com.games.balancegameback.domain.media.Media;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -25,9 +21,13 @@ public class LinksEntity extends MediaEntity {
 
     public static LinksEntity from(Links links) {
         LinksEntity linksEntity = new LinksEntity();
-        linksEntity.urls = links.urls();
-        linksEntity.startSec = links.startSec();
-        linksEntity.endSec = links.endSec();
+        linksEntity.urls = links.getUrls();
+        linksEntity.startSec = links.getStartSec();
+        linksEntity.endSec = links.getEndSec();
+
+        if (links.getGames() != null) {
+            linksEntity.games = GamesEntity.from(links.getGames());
+        }
 
         return linksEntity;
     }
