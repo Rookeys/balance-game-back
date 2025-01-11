@@ -9,13 +9,11 @@ public class GameInviteCode {
     private Long id;
     private String inviteCode;
     private Boolean isActive;
-    private Games games;
 
     @Builder
-    public GameInviteCode(Long id, String inviteCode, Boolean isActive, Games games) {
+    public GameInviteCode(Long id, String inviteCode, Boolean isActive) {
         this.id = id;
         this.inviteCode = inviteCode;
         this.isActive = isActive;
-        this.games = games;
     }
 }

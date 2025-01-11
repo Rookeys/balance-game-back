@@ -6,7 +6,7 @@ import com.games.balancegameback.domain.user.Users;
 import lombok.Builder;
 
 public record Games(Long id, String title, String description, Boolean isNamePublic, AccessType accessType,
-                    Category category, Users users) {
+                    Category category, Users users, GameInviteCode gameInviteCode) {
 
     @Builder
     public Games {

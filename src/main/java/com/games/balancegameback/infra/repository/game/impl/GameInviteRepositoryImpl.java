@@ -14,14 +14,9 @@ public class GameInviteRepositoryImpl implements GameInviteRepository {
     private final GameInviteJpaRepository gameRepository;
 
     @Override
-    public void save(GameInviteCode gameInviteCode) {
-        gameRepository.save(GameInviteCodeEntity.from(gameInviteCode));
-    }
-
-    @Override
-    public GameInviteCode findByGamesId(Long roomId) {
-        GameInviteCodeEntity entity = gameRepository.findByGamesId(roomId);
-        return entity == null ? null : entity.toModel();
+    public GameInviteCode save(GameInviteCode gameInviteCode) {
+        GameInviteCodeEntity entity = gameRepository.save(GameInviteCodeEntity.from(gameInviteCode));
+        return entity.toModel();
     }
 
     @Override

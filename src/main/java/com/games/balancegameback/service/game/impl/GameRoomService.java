@@ -3,6 +3,7 @@ package com.games.balancegameback.service.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
+import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
@@ -32,6 +33,10 @@ public class GameRoomService {
             throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
         }
 
+        GameInviteCode gameInviteCode = gameInviteService.createInviteCode(
+                gameRequest.getAccessType().equals(AccessType.PROTECTED),
+                gameRequest.getInviteCode() != null ? gameRequest.getInviteCode() : null);
+
         Users users = userUtils.findUserByToken(request);
         Games games = Games.builder()
                 .title(gameRequest.getTitle())
@@ -40,15 +45,10 @@ public class GameRoomService {
                 .category(gameRequest.getCategory())
                 .isNamePublic(gameRequest.isNamePublic())
                 .users(users)
+                .gameInviteCode(gameInviteCode)
                 .build();
 
-        games = gameRepository.save(games);
-
-        if (games.accessType().equals(AccessType.PROTECTED)) {
-            gameInviteService.createInviteCode(gameRequest.getInviteCode(), games);
-        }
-
-        return games.id();
+        return gameRepository.save(games).id();
     }
 
     public GameResponse getGameStatus(Long roomId, HttpServletRequest request) {
@@ -87,7 +87,6 @@ public class GameRoomService {
         this.existsHost(roomId, users);
 
         gameRepository.deleteById(roomId);
-        gameInviteService.deleteInviteCode(roomId);
         // 트리거에 해당 로직이 실행되었을 때 리소스들 중 연결되어 있는 방이 없으면 삭제하는 로직 추가 예정.
     }
 

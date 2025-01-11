@@ -2,7 +2,6 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
-import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
@@ -43,8 +42,6 @@ public class GameRepositoryImpl implements GameRepository {
                 new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
         Games games = gamesEntity.toModel();
-        GameInviteCode gameInviteCode = gameInviteRepository.findByGamesId(games.id());
-        String inviteCode = gameInviteCode == null ? null : gameInviteCode.getInviteCode();
 
         return GameResponse.builder()
                 .roomId(roomId)
@@ -52,7 +49,7 @@ public class GameRepositoryImpl implements GameRepository {
                 .description(games.description())
                 .isNamePublic(games.isNamePublic())
                 .accessType(games.accessType())
-                .inviteCode(inviteCode)
+                .inviteCode(games.gameInviteCode().getInviteCode())
                 .category(games.category())
                 .build();
     }
@@ -69,14 +66,6 @@ public class GameRepositoryImpl implements GameRepository {
     public Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable) {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
-        if (cursorId == null) {
-            cursorId = jpaQueryFactory
-                    .select(games.id.max())
-                    .from(games)
-                    .where(games.users.email.eq(users.getEmail()))
-                    .fetchOne();
-        }
-
         List<GameStatusResponse> results = jpaQueryFactory
                 .select(Projections.constructor(GameStatusResponse.class,
                         games.id.as("roomId"),
@@ -85,7 +74,7 @@ public class GameRepositoryImpl implements GameRepository {
                 ))
                 .from(games)
                 .join(games.users).on(games.users.email.eq(users.getEmail()))
-                .where(cursorId != null ? games.id.lt(cursorId) : null)
+                .where(cursorId == null ? games.id.loe(this.findMaxId(users)) : games.id.lt(cursorId))
                 .orderBy(games.id.desc())
                 .limit(pageable.getPageSize() + 1) // 다음 페이지 확인을 위해 +1
                 .fetch();
@@ -114,6 +103,16 @@ public class GameRepositoryImpl implements GameRepository {
     @Override
     public void deleteById(Long roomId) {
         gameRepository.deleteById(roomId);
+    }
+
+    private Long findMaxId(Users users) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+
+        return jpaQueryFactory
+                .select(games.id.max())
+                .from(games)
+                .where(games.users.email.eq(users.getEmail()))
+                .fetchOne();
     }
 
     private List<GameListResponse> addThumbnailResources(List<GameStatusResponse> results) {

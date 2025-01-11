@@ -15,41 +15,27 @@ public class GameInviteService {
 
     private final GameInviteRepository gameInviteRepository;
 
-    public void createInviteCode(String inviteCode, Games games) {
+    public GameInviteCode createInviteCode(boolean isActive, String inviteCode) {
         GameInviteCode gameInviteCode = GameInviteCode.builder()
-                .isActive(true)
+                .isActive(isActive)
                 .inviteCode(inviteCode)
-                .games(games)
                 .build();
 
-        gameInviteRepository.save(gameInviteCode);
+        return gameInviteRepository.save(gameInviteCode);
     }
 
     public void updateInviteCode(String inviteCode, Games games) {
-        GameInviteCode gameInviteCode = gameInviteRepository.findByGamesId(games.id());
+        GameInviteCode gameInviteCode = games.gameInviteCode();
 
-        if (gameInviteCode == null) {
-            gameInviteCode = GameInviteCode.builder()
-                    .isActive(true)
-                    .inviteCode(inviteCode)
-                    .games(games)
-                    .build();
-        } else {
-            if (games.accessType().equals(AccessType.PROTECTED) && inviteCode != null) {
-                gameInviteCode.setIsActive(true);
-                gameInviteCode.setInviteCode(inviteCode);
-            }
+        if (games.accessType().equals(AccessType.PROTECTED) && inviteCode != null) {
+            gameInviteCode.setIsActive(true);
+            gameInviteCode.setInviteCode(inviteCode);
+        }
 
-            if (!games.accessType().equals(AccessType.PROTECTED)) {
-                gameInviteCode.setIsActive(false);
-            }
+        if (!games.accessType().equals(AccessType.PROTECTED)) {
+            gameInviteCode.setIsActive(false);
         }
 
         gameInviteRepository.save(gameInviteCode);
-    }
-
-    public void deleteInviteCode(Long roomId) {
-        GameInviteCode gameInviteCode = gameInviteRepository.findByGamesId(roomId);
-        gameInviteRepository.delete(gameInviteCode);
     }
 }

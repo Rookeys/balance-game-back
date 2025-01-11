@@ -4,9 +4,7 @@ import com.games.balancegameback.domain.game.GameInviteCode;
 
 public interface GameInviteRepository {
 
-    void save(GameInviteCode gameInviteCode);
-
-    GameInviteCode findByGamesId(Long roomId);
+    GameInviteCode save(GameInviteCode gameInviteCode);
 
     void delete(GameInviteCode gameInviteCode);
 }

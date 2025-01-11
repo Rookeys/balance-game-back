@@ -48,6 +48,10 @@ public class GamesEntity {
     @JoinColumn(name = "users_id")
     private UsersEntity users;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "game_invite_code_id")
+    private GameInviteCodeEntity gameInviteCode;
+
     public static GamesEntity from(Games games) {
         GamesEntity gamesEntity = new GamesEntity();
         gamesEntity.id = games.id();
@@ -57,6 +61,7 @@ public class GamesEntity {
         gamesEntity.accessType = games.accessType();
         gamesEntity.category = games.category();
         gamesEntity.users = UsersEntity.from(games.users());
+        gamesEntity.gameInviteCode = GameInviteCodeEntity.from(games.gameInviteCode());
 
         return gamesEntity;
     }
@@ -70,6 +75,7 @@ public class GamesEntity {
                 .accessType(accessType)
                 .category(category)
                 .users(users.toModel())
+                .gameInviteCode(gameInviteCode.toModel())
                 .build();
     }
 }

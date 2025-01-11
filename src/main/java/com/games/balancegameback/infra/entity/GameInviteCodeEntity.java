@@ -31,15 +31,10 @@ public class GameInviteCodeEntity {
     @LastModifiedDate
     private LocalDateTime updatedDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id")
-    private GamesEntity games;
-
     public static GameInviteCodeEntity from(GameInviteCode gameInviteCode) {
         GameInviteCodeEntity gameInviteCodeEntity = new GameInviteCodeEntity();
         gameInviteCodeEntity.inviteCode = gameInviteCode.getInviteCode();
         gameInviteCodeEntity.isActive = gameInviteCode.getIsActive();
-        gameInviteCodeEntity.games = GamesEntity.from(gameInviteCode.getGames());
 
         return gameInviteCodeEntity;
     }
@@ -49,7 +44,6 @@ public class GameInviteCodeEntity {
                 .id(id)
                 .inviteCode(inviteCode)
                 .isActive(isActive)
-                .games(games.toModel())
                 .build();
     }
 }
