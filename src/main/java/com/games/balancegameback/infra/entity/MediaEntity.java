@@ -3,7 +3,7 @@ package com.games.balancegameback.infra.entity;
 import com.games.balancegameback.domain.media.Media;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -18,9 +18,9 @@ public abstract class MediaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
+    @Column
+    @LastModifiedDate
+    private LocalDateTime updatedDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")

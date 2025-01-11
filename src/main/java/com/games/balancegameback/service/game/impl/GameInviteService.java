@@ -28,13 +28,21 @@ public class GameInviteService {
     public void updateInviteCode(String inviteCode, Games games) {
         GameInviteCode gameInviteCode = gameInviteRepository.findByGamesId(games.id());
 
-        if (games.accessType().equals(AccessType.PROTECTED) && inviteCode != null) {
-            gameInviteCode.setIsActive(true);
-            gameInviteCode.setInviteCode(inviteCode);
-        }
+        if (gameInviteCode == null) {
+            gameInviteCode = GameInviteCode.builder()
+                    .isActive(true)
+                    .inviteCode(inviteCode)
+                    .games(games)
+                    .build();
+        } else {
+            if (games.accessType().equals(AccessType.PROTECTED) && inviteCode != null) {
+                gameInviteCode.setIsActive(true);
+                gameInviteCode.setInviteCode(inviteCode);
+            }
 
-        if (!games.accessType().equals(AccessType.PROTECTED)) {
-            gameInviteCode.setIsActive(false);
+            if (!games.accessType().equals(AccessType.PROTECTED)) {
+                gameInviteCode.setIsActive(false);
+            }
         }
 
         gameInviteRepository.save(gameInviteCode);

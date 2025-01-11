@@ -32,6 +32,8 @@ public class ImagesEntity extends MediaEntity {
     public Images toModel() {
         return Images.builder()
                 .id(this.getId())
+                .users(users == null ? null : users.toModel())
+                .games(games == null ? null : games.toModel())
                 .fileUrl(fileUrl)
                 .build();
     }

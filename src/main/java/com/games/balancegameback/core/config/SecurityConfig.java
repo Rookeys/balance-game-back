@@ -38,6 +38,7 @@ public class SecurityConfig {
                 // 로그인 페이지 설정
                 .formLogin(form -> form
                         .loginPage("/api/v1/users/login")
+                        .loginPage("/api/v1/users/test/login")
                         .permitAll()
                 )
 

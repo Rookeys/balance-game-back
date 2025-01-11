@@ -2,10 +2,12 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameResponse;
+import com.games.balancegameback.dto.game.GameStatusResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameInviteRepository;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -40,7 +43,8 @@ public class GameRepositoryImpl implements GameRepository {
                 new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
         Games games = gamesEntity.toModel();
-        String inviteCode = gameInviteRepository.findByGamesId(games.id()).getInviteCode();
+        GameInviteCode gameInviteCode = gameInviteRepository.findByGamesId(games.id());
+        String inviteCode = gameInviteCode == null ? null : gameInviteCode.getInviteCode();
 
         return GameResponse.builder()
                 .roomId(roomId)
@@ -64,9 +68,6 @@ public class GameRepositoryImpl implements GameRepository {
     @Override
     public Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable) {
         QGamesEntity games = QGamesEntity.gamesEntity;
-        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
-        QImagesEntity images = QImagesEntity.imagesEntity;
-        QLinksEntity links = QLinksEntity.linksEntity;
 
         if (cursorId == null) {
             cursorId = jpaQueryFactory
@@ -76,21 +77,13 @@ public class GameRepositoryImpl implements GameRepository {
                     .fetchOne();
         }
 
-        List<GameListResponse> results = jpaQueryFactory
-                .select(Projections.constructor(GameListResponse.class,
+        List<GameStatusResponse> results = jpaQueryFactory
+                .select(Projections.constructor(GameStatusResponse.class,
                         games.id.as("roomId"),
                         games.title,
-                        games.description,
-                        // 이 부분은 Game Result 가 구현된 이후 랭킹 1, 2등 썸네일을 받아오는 것으로 교체 예정
-                        resources.images.fileUrl.coalesce(resources.links.urls).as("leftContent"),
-                        resources.links.urls.coalesce(resources.images.fileUrl).as("rightContent"),
-                        resources.title.as("leftTitle"),
-                        resources.title.as("rightTitle")
+                        games.description
                 ))
                 .from(games)
-                .leftJoin(resources).on(resources.games.id.eq(games.id))
-                .leftJoin(resources.images, images)
-                .leftJoin(resources.links, links)
                 .join(games.users).on(games.users.email.eq(users.getEmail()))
                 .where(cursorId != null ? games.id.lt(cursorId) : null)
                 .orderBy(games.id.desc())
@@ -103,7 +96,8 @@ public class GameRepositoryImpl implements GameRepository {
             hasNext = true;
         }
 
-        return new PageImpl<>(results, pageable, hasNext ? pageable.getPageSize() + 1 : results.size());
+        return new PageImpl<>(this.addThumbnailResources(results), pageable,
+                hasNext ? pageable.getPageSize() + 1 : results.size());
     }
 
     @Override
@@ -120,5 +114,26 @@ public class GameRepositoryImpl implements GameRepository {
     @Override
     public void deleteById(Long roomId) {
         gameRepository.deleteById(roomId);
+    }
+
+    private List<GameListResponse> addThumbnailResources(List<GameStatusResponse> results) {
+        List<GameListResponse> list = new ArrayList<>();
+
+        // 추후 게임 통계 기능이 개발되면 수정 예정.
+        for (GameStatusResponse gameStatusResponse : results) {
+            GameListResponse response = GameListResponse.builder()
+                    .roomId(gameStatusResponse.getRoomId())
+                    .description(gameStatusResponse.getDescription())
+                    .title(gameStatusResponse.getTitle())
+                    .leftContent(null)
+                    .rightContent(null)
+                    .leftTitle(null)
+                    .rightTitle(null)
+                    .build();
+
+            list.add(response);
+        }
+
+        return list;
     }
 }

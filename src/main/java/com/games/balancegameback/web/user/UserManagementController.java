@@ -3,8 +3,10 @@ package com.games.balancegameback.web.user;
 import com.games.balancegameback.dto.user.SignUpRequest;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,13 +35,15 @@ public class UserManagementController {
             @ApiResponse(responseCode = "401", description = "401_2 : 중복된 닉네임 또는 이메일")
     })
     @PostMapping(value = "/signup")
-    public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest signUpRequest, HttpServletResponse response) {
+    public ResponseEntity<Void> signUp(
+            @RequestBody @Valid SignUpRequest signUpRequest,
+            HttpServletResponse response) {
         userService.signUp(signUpRequest, response);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-
     @Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴 요청을 처리합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원 탈퇴 대기 전환"),
     })
@@ -49,14 +53,16 @@ public class UserManagementController {
         return ResponseEntity.ok("회원 탈퇴 대기 전환");
     }
 
-
     @Operation(summary = "회원 탈퇴 취소 API", description = "회원 탈퇴 요청을 취소합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원 탈퇴 취소 성공"),
     })
     @PostMapping(value = "/cancel")
-    public ResponseEntity<String> cancelResign(@RequestBody String email) {
+    public ResponseEntity<String> cancelResign(
+            @Parameter(name = "email", description = "유저 이메일", required = true, example = "user@example.com")
+            @RequestBody String email) {
         userService.cancelResign(email);
         return ResponseEntity.ok("회원 탈퇴 취소 성공");
     }
 }
+

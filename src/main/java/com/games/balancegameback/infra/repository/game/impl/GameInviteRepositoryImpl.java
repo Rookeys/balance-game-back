@@ -20,7 +20,8 @@ public class GameInviteRepositoryImpl implements GameInviteRepository {
 
     @Override
     public GameInviteCode findByGamesId(Long roomId) {
-        return gameRepository.findByGamesId(roomId).toModel();
+        GameInviteCodeEntity entity = gameRepository.findByGamesId(roomId);
+        return entity == null ? null : entity.toModel();
     }
 
     @Override

@@ -29,8 +29,8 @@ public class GameService {
     private final UserUtils userUtils;
 
     // 게임방 생성
-    public void saveGame(GameRequest gameRequest, HttpServletRequest request) {
-        gameRoomService.saveGame(gameRequest, request);
+    public Long saveGame(GameRequest gameRequest, HttpServletRequest request) {
+        return gameRoomService.saveGame(gameRequest, request);
     }
 
     // 게임 설정값 반환

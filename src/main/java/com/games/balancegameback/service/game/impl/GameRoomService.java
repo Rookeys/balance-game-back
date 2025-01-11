@@ -27,7 +27,7 @@ public class GameRoomService {
     private final UserUtils userUtils;
 
     @Transactional
-    public void saveGame(GameRequest gameRequest, HttpServletRequest request) {
+    public Long saveGame(GameRequest gameRequest, HttpServletRequest request) {
         if (gameRequest.getAccessType().equals(AccessType.PROTECTED) && gameRequest.getInviteCode() == null) {
             throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
         }
@@ -47,6 +47,8 @@ public class GameRoomService {
         if (games.accessType().equals(AccessType.PROTECTED)) {
             gameInviteService.createInviteCode(gameRequest.getInviteCode(), games);
         }
+
+        return games.id();
     }
 
     public GameResponse getGameStatus(Long roomId, HttpServletRequest request) {

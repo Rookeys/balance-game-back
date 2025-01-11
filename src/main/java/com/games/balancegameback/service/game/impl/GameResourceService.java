@@ -15,8 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class GameResourceService {
@@ -40,6 +38,8 @@ public class GameResourceService {
 
             gameResources.updateImage(gameResourceRequest.getTitle(), images);
             gameResourceRepository.save(gameResources);
+
+            // 연관 관계가 전부 끊긴 사진을 정리하는 트리거 추가 예정
         }
 
         if (gameResourceRequest.getLink() != null) {

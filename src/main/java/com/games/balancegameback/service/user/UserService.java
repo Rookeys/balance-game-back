@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {  // Facade 패턴 적용
+public class UserService {
 
     private final AuthService authService;
     private final UserManagementService userManagementService;
@@ -23,6 +23,11 @@ public class UserService {  // Facade 패턴 적용
     // 로그인
     public void login(LoginRequest loginRequest, HttpServletResponse response) {
         authService.login(loginRequest, response);
+    }
+
+    // 테스트용 로그인
+    public void testLogin(HttpServletResponse response) {
+        authService.testLogin(response);
     }
 
     // 회원 가입

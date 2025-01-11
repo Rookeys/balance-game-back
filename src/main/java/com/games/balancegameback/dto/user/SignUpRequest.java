@@ -37,7 +37,6 @@ public class SignUpRequest {
 
     public Users toDomain() {
         return Users.builder()
-                .uid(String.valueOf(UUID.randomUUID()))
                 .nickname(nickname)
                 .email(email)
                 .loginType(loginType)
