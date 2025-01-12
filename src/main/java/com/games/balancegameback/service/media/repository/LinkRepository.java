@@ -6,6 +6,8 @@ public interface LinkRepository {
 
     Links save(Links links);
 
+    void update(Links links);
+
     Links findById(Long id);
 
     void delete(Long id);

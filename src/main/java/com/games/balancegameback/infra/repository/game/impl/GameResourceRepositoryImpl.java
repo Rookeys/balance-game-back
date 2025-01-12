@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -34,8 +35,15 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     }
 
     @Override
+    public void update(GameResources gameResources) {
+        Optional<GameResourcesEntity> entity = gameResourceJpaRepository.findById(gameResources.getId());
+        entity.ifPresent(gameResourcesEntity -> gameResourcesEntity.update(gameResources));
+    }
+
+    @Override
     public GameResources findById(Long id) {
-        return gameResourceJpaRepository.findById(id).get().toModel();
+        return gameResourceJpaRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("해당 리소스는 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION)).toModel();
     }
 
     @Override

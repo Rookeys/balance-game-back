@@ -65,5 +65,10 @@ public class UsersEntity {
                 .isDeleted(isDeleted)
                 .build();
     }
+
+    public void update(Users user) {
+        this.nickname = user.getNickname();
+        this.isDeleted = user.isDeleted();
+    }
 }
 

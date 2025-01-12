@@ -9,6 +9,8 @@ public interface ImageRepository {
 
     Images save(Images images);
 
+    void update(Images images);
+
     List<Images> findByRoomId(Long roomId);
 
     Images findById(Long id);

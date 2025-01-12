@@ -21,10 +21,6 @@ public abstract class MediaEntity {
     @Column(nullable = false)
     protected MediaType mediaType = MediaType.IMAGE;
 
-    @Column
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     protected UsersEntity users;

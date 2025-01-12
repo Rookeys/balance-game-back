@@ -33,11 +33,9 @@ public class GameRoomService {
             throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
         }
 
-        GameInviteCode gameInviteCode = gameInviteService.createInviteCode(
-                gameRequest.getAccessType().equals(AccessType.PROTECTED),
-                gameRequest.getInviteCode() != null ? gameRequest.getInviteCode() : null);
-
         Users users = userUtils.findUserByToken(request);
+
+        // 게임방 생성
         Games games = Games.builder()
                 .title(gameRequest.getTitle())
                 .description(gameRequest.getDescription())
@@ -45,10 +43,19 @@ public class GameRoomService {
                 .category(gameRequest.getCategory())
                 .isNamePublic(gameRequest.isNamePublic())
                 .users(users)
-                .gameInviteCode(gameInviteCode)
                 .build();
 
-        return gameRepository.save(games).id();
+        // 초대 코드 생성 및 관계 설정
+        GameInviteCode gameInviteCode = GameInviteCode.builder()
+                .inviteCode(gameRequest.getInviteCode() != null ? gameRequest.getInviteCode() : "")
+                .isActive(gameRequest.getAccessType().equals(AccessType.PROTECTED))
+                .games(games) // 관계 설정
+                .build();
+
+        // 양방향 관계 설정
+        games.setGameInviteCode(gameInviteCode);
+
+        return gameRepository.save(games).getId();
     }
 
     public GameResponse getGameStatus(Long roomId, HttpServletRequest request) {
@@ -68,14 +75,8 @@ public class GameRoomService {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(roomId, users);
 
-        Games games = Games.builder()
-                .id(roomId)
-                .title(gameRequest.getTitle())
-                .description(gameRequest.getDescription())
-                .isNamePublic(gameRequest.isNamePublic())
-                .accessType(gameRequest.getAccessType())
-                .category(gameRequest.getCategory())
-                .build();
+        Games games = gameRepository.findByRoomId(roomId);
+        games.update(gameRequest);
 
         gameInviteService.updateInviteCode(gameRequest.getInviteCode(), games);
         gameRepository.update(games);

@@ -27,7 +27,7 @@ public class GameRequest {
     private AccessType accessType;
 
     @Schema(description = "초대 코드")
-    private String inviteCode;
+    private String inviteCode = "";
 
     @Schema(description = "카테고리 설정")
     @NotBlank(message = "카테고리 설정은 필수입니다.")

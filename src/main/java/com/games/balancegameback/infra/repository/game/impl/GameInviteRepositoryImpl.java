@@ -20,6 +20,24 @@ public class GameInviteRepositoryImpl implements GameInviteRepository {
     }
 
     @Override
+    public void update(GameInviteCode gameInviteCode) {
+        GameInviteCodeEntity entity = gameRepository.findById(gameInviteCode.getId()).orElseThrow();
+        entity.update(gameInviteCode);
+    }
+
+    @Override
+    public GameInviteCode findById(Long id) {
+        GameInviteCodeEntity entity = gameRepository.findById(id).orElseThrow();
+        return entity.toModel();
+    }
+
+    @Override
+    public GameInviteCode findByGameId(Long roomId) {
+        GameInviteCodeEntity entity = gameRepository.findByGamesId(roomId);
+        return entity.toModel();
+    }
+
+    @Override
     public void delete(GameInviteCode gameInviteCode) {
         gameRepository.delete(GameInviteCodeEntity.from(gameInviteCode));
     }

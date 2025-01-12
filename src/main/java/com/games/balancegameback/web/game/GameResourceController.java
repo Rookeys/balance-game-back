@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,7 +52,8 @@ public class GameResourceController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "리소스 정보 수정 완료"),
             @ApiResponse(responseCode = "400", description = "resource & room ID 값은 필수입니다."),
-            @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
+            @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다."),
+            @ApiResponse(responseCode = "404", description = "해당 리소스는 없습니다.")
     })
     @PutMapping(value = "")
     public ResponseEntity<String> updateResource(
@@ -74,7 +74,8 @@ public class GameResourceController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "리소스 삭제 완료"),
             @ApiResponse(responseCode = "400", description = "resource & room ID 값은 필수입니다."),
-            @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
+            @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다."),
+            @ApiResponse(responseCode = "404", description = "해당 리소스는 없습니다.")
     })
     @DeleteMapping(value = "")
     public ResponseEntity<String> deleteResource(

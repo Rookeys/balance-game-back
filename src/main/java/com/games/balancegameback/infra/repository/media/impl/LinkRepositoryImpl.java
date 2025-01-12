@@ -24,6 +24,12 @@ public class LinkRepositoryImpl implements LinkRepository {
     }
 
     @Override
+    public void update(Links links) {
+        LinksEntity entity = linkRepository.findById(links.getId()).orElseThrow();
+        entity.update(links);
+    }
+
+    @Override
     public Links findById(Long id) {
         Optional<LinksEntity> entity = linkRepository.findById(id);
         return entity.map(LinksEntity::toModel).orElse(null);

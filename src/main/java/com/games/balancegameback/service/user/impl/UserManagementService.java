@@ -43,7 +43,7 @@ public class UserManagementService {
         Users user = userUtils.findUserByToken(request);
         user.setDeleted(true);
 
-        userRepository.save(user);
+        userRepository.update(user);
         authService.logout(request);
     }
 
@@ -54,7 +54,7 @@ public class UserManagementService {
                     -> new NotFoundException("404", ErrorCode.NOT_FOUND_EXCEPTION));
 
             user.setDeleted(false);
-            userRepository.save(user);
+            userRepository.update(user);
         } else {
             throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
         }

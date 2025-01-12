@@ -3,6 +3,7 @@ package com.games.balancegameback.infra.entity;
 import com.games.balancegameback.domain.game.GameInviteCode;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -23,6 +24,11 @@ public class GameInviteCodeEntity {
     @Column
     private Boolean isActive = true;
 
+    @Setter
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "games_id", nullable = false)
+    private GamesEntity games;
+
     @Column(updatable = false)
     @CreatedDate
     private LocalDateTime createdDate;
@@ -32,9 +38,12 @@ public class GameInviteCodeEntity {
     private LocalDateTime updatedDate;
 
     public static GameInviteCodeEntity from(GameInviteCode gameInviteCode) {
+        if (gameInviteCode == null) return null;
+
         GameInviteCodeEntity gameInviteCodeEntity = new GameInviteCodeEntity();
         gameInviteCodeEntity.inviteCode = gameInviteCode.getInviteCode();
         gameInviteCodeEntity.isActive = gameInviteCode.getIsActive();
+        gameInviteCodeEntity.games = null;
 
         return gameInviteCodeEntity;
     }
@@ -44,7 +53,13 @@ public class GameInviteCodeEntity {
                 .id(id)
                 .inviteCode(inviteCode)
                 .isActive(isActive)
+                .games(null)
                 .build();
+    }
+
+    public void update(GameInviteCode gameInviteCode) {
+        this.inviteCode = gameInviteCode.getInviteCode();
+        this.isActive = gameInviteCode.getIsActive();
     }
 }
 

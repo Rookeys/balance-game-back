@@ -4,6 +4,10 @@ import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -12,6 +16,14 @@ public class ImagesEntity extends MediaEntity {
 
     @Column(nullable = false)
     private String fileUrl;
+
+    @Column(updatable = false)
+    @CreatedDate
+    private LocalDateTime createdDate;
+
+    @Column
+    @LastModifiedDate
+    private LocalDateTime updatedDate;
 
     public static ImagesEntity from(Images images) {
         ImagesEntity imagesEntity = new ImagesEntity();
@@ -38,6 +50,10 @@ public class ImagesEntity extends MediaEntity {
                 .mediaType(MediaType.IMAGE)
                 .fileUrl(fileUrl)
                 .build();
+    }
+
+    public void update(Images images) {
+        this.fileUrl = images.getFileUrl();
     }
 }
 

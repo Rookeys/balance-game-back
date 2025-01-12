@@ -65,5 +65,11 @@ public class GameResourcesEntity {
                 .links(links != null ? links.toModel() : null)
                 .build();
     }
+
+    public void update(GameResources gameResources) {
+        this.title = gameResources.getTitle();
+        this.images = gameResources.getImages() != null ? ImagesEntity.from(gameResources.getImages()) : null;
+        this.links = gameResources.getLinks() != null ? LinksEntity.from(gameResources.getLinks()) : null;
+    }
 }
 

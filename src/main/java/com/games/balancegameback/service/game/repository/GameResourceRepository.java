@@ -9,6 +9,8 @@ public interface GameResourceRepository {
 
     void save(GameResources gameResources);
 
+    void update(GameResources gameResources);
+
     GameResources findById(Long id);
 
     Page<GameResourceResponse> findByRoomId(Long roomId, Long cursorId, Pageable pageable);

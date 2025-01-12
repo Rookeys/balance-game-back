@@ -18,24 +18,32 @@ public class GameInviteService {
     public GameInviteCode createInviteCode(boolean isActive, String inviteCode) {
         GameInviteCode gameInviteCode = GameInviteCode.builder()
                 .isActive(isActive)
-                .inviteCode(inviteCode)
+                .inviteCode(inviteCode == null ? "" : inviteCode)
+                .games(null)
                 .build();
 
         return gameInviteRepository.save(gameInviteCode);
     }
 
-    public void updateInviteCode(String inviteCode, Games games) {
-        GameInviteCode gameInviteCode = games.gameInviteCode();
+    public void mappingGames(Games games) {
+        GameInviteCode gameInviteCode = gameInviteRepository.findByGameId(games.getId());
+        gameInviteCode.setGames(games);
 
-        if (games.accessType().equals(AccessType.PROTECTED) && inviteCode != null) {
+        gameInviteRepository.update(gameInviteCode);
+    }
+
+    public void updateInviteCode(String inviteCode, Games games) {
+        GameInviteCode gameInviteCode = gameInviteRepository.findById(games.getGameInviteCode().getId());
+
+        if (games.getAccessType().equals(AccessType.PROTECTED) && inviteCode != null) {
             gameInviteCode.setIsActive(true);
             gameInviteCode.setInviteCode(inviteCode);
         }
 
-        if (!games.accessType().equals(AccessType.PROTECTED)) {
+        if (!games.getAccessType().equals(AccessType.PROTECTED)) {
             gameInviteCode.setIsActive(false);
         }
 
-        gameInviteRepository.save(gameInviteCode);
+        gameInviteRepository.update(gameInviteCode);
     }
 }
