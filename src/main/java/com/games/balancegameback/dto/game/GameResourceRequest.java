@@ -9,10 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GameResourceRequest {
 
-    @Schema(description = "리소스 ID")
-    @NotBlank(message = "resource ID는 필수입니다.")
-    private Long resourceId;
-
     @Schema(description = "리소스 제목")
     private String title;
 

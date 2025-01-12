@@ -28,14 +28,14 @@ public class LinkController {
             @ApiResponse(responseCode = "201", description = "저장 성공")
     })
     @PostMapping(value = "/link")
-    public ResponseEntity<Void> saveLink(
+    public ResponseEntity<String> saveLink(
             @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "12345")
-            @RequestParam Long roomId,
+            @RequestParam(name = "roomId") Long roomId,
 
             @RequestBody @Valid LinkRequest linkRequest,
             HttpServletRequest request) {
         mediaService.saveLink(roomId, linkRequest, request);
-        return ResponseEntity.status(201).build();
+        return ResponseEntity.status(201).body("저장 성공");
     }
 }
 

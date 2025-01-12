@@ -1,12 +1,12 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.media.Links;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
 
 @Getter
 @Entity
-@DiscriminatorValue("LINK")
 @Table(name = "links")
 public class LinksEntity extends MediaEntity {
 
@@ -24,6 +24,7 @@ public class LinksEntity extends MediaEntity {
         linksEntity.urls = links.getUrls();
         linksEntity.startSec = links.getStartSec();
         linksEntity.endSec = links.getEndSec();
+        linksEntity.mediaType = links.getMediaType() == null ? MediaType.LINK : links.getMediaType();
 
         if (links.getGames() != null) {
             linksEntity.games = GamesEntity.from(links.getGames());
@@ -39,6 +40,7 @@ public class LinksEntity extends MediaEntity {
                 .urls(urls)
                 .startSec(startSec)
                 .endSec(endSec)
+                .mediaType(mediaType)
                 .build();
     }
 }

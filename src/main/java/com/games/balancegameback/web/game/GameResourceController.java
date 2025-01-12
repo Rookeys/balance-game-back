@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(value = "/api/v1/resource")
+@RequestMapping(value = "/api/v1/game/resource")
 @Tag(name = "Game Resource Controller", description = "Game Resource CRUD API")
 public class GameResourceController {
 
@@ -36,12 +36,12 @@ public class GameResourceController {
     @GetMapping(value = "")
     public Page<GameResourceResponse> getResources(
             @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "3")
-            @RequestParam Long roomId,
+            @RequestParam(name = "roomId") Long roomId,
 
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
-            @RequestParam(required = false) Long cursorId,
+            @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(description = "페이지 크기 및 정렬 설정", hidden = true)
+            @Parameter(name = "pageable", description = "페이지 크기 및 정렬 설정", hidden = true)
             @PageableDefault(size = 15) Pageable pageable,
 
             HttpServletRequest request) {
@@ -56,14 +56,17 @@ public class GameResourceController {
             @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
     })
     @PutMapping(value = "")
-    public ResponseEntity<Void> updateResource(
+    public ResponseEntity<String> updateResource(
             @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "3")
-            @RequestParam Long roomId,
+            @RequestParam(name = "roomId") Long roomId,
 
-            @RequestBody @Valid GameResourceRequest gameResourceRequest,
+            @Parameter(name = "resourceId", description = "등록된 리소스의 ID", required = true, example = "5")
+            @RequestParam(name = "resourceId") Long resourceId,
+
+            @RequestBody GameResourceRequest gameResourceRequest,
             HttpServletRequest request) {
-        gameService.updateResource(roomId, gameResourceRequest, request);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        gameService.updateResource(roomId, resourceId, gameResourceRequest, request);
+        return ResponseEntity.status(HttpStatus.OK).body("해당 리소스를 업데이트 했습니다.");
     }
 
     @Operation(summary = "게임 리소스 삭제 API", description = "등록된 리소스를 삭제할 수 있다.")
@@ -74,13 +77,16 @@ public class GameResourceController {
             @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
     })
     @DeleteMapping(value = "")
-    public ResponseEntity<Void> deleteResource(
+    public ResponseEntity<String> deleteResource(
             @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "3")
-            @RequestParam Long roomId,
+            @RequestParam(name = "roomId") Long roomId,
+
+            @Parameter(name = "resourceId", description = "등록된 리소스의 ID", required = true, example = "5")
+            @RequestParam(name = "resourceId") Long resourceId,
 
             HttpServletRequest request) {
-        gameService.deleteResource(roomId, request);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        gameService.deleteResource(roomId, resourceId, request);
+        return ResponseEntity.status(HttpStatus.OK).body("해당 리소스를 삭제했습니다.");
     }
 }
 

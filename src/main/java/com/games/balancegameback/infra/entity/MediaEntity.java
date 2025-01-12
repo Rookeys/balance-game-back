@@ -1,6 +1,7 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.media.Media;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -10,13 +11,15 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "media_type", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "media")
 public abstract class MediaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    protected MediaType mediaType = MediaType.IMAGE;
 
     @Column
     @LastModifiedDate

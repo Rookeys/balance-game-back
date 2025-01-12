@@ -7,6 +7,8 @@ import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
+import com.games.balancegameback.dto.media.ImageRequest;
+import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.impl.GameResourceService;
 import com.games.balancegameback.service.game.impl.GameRoomService;
 import com.games.balancegameback.service.game.repository.GameRepository;
@@ -54,13 +56,13 @@ public class GameService {
     }
 
     // 게임 리소스에 유튜브 링크 추가
-    public void saveLinkResource(Games games, Links links) {
-        gameResourceService.saveLinkResource(games, links);
+    public void saveLinkResource(Games games, LinkRequest linkRequest) {
+        gameResourceService.saveLinkResource(games, linkRequest);
     }
 
     // 게임 리소스에 이미지 추가
-    public void saveImageResource(Games games, Images images) {
-        gameResourceService.saveImageResource(games, images);
+    public void saveImageResource(Games games, ImageRequest imageRequest) {
+        gameResourceService.saveImageResource(games, imageRequest);
     }
 
     // 등록된 리소스 목록을 반환
@@ -71,15 +73,16 @@ public class GameService {
     }
 
     // 등록한 리소스의 정보를 수정함
-    public void updateResource(Long roomId, GameResourceRequest gameResourceRequest, HttpServletRequest request) {
+    public void updateResource(Long roomId, Long resourceId, GameResourceRequest gameResourceRequest,
+                               HttpServletRequest request) {
         this.validateRequest(roomId, request);
-        gameResourceService.updateResource(gameResourceRequest);
+        gameResourceService.updateResource(resourceId, gameResourceRequest);
     }
 
     // 리소스를 삭제함
-    public void deleteResource(Long roomId, HttpServletRequest request) {
+    public void deleteResource(Long roomId, Long resourceId, HttpServletRequest request) {
         this.validateRequest(roomId, request);
-        gameResourceService.deleteResource(roomId);
+        gameResourceService.deleteResource(resourceId);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.

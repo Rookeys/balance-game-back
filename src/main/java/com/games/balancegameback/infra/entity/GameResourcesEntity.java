@@ -17,7 +17,7 @@ public class GameResourcesEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column
     private String title;
 
     @Column(updatable = false)
@@ -29,20 +29,20 @@ public class GameResourcesEntity {
     private LocalDateTime updatedDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id")
+    @JoinColumn(name = "games_id", nullable = false)
     private GamesEntity games;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "images_id")
     private ImagesEntity images;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "links_id")
     private LinksEntity links;
 
     public static GameResourcesEntity from(GameResources gameResources) {
         GameResourcesEntity gameResourcesEntity = new GameResourcesEntity();
-        gameResourcesEntity.title = gameResources.getTitle();
+        gameResourcesEntity.title = gameResources.getTitle() != null ? gameResources.getTitle() : "";
         gameResourcesEntity.games = GamesEntity.from(gameResources.getGames());
 
         if (gameResources.getImages() != null) {
@@ -50,7 +50,7 @@ public class GameResourcesEntity {
         }
 
         if (gameResources.getLinks() != null) {
-            gameResourcesEntity.links = LinksEntity.from(gameResources.getLinks());
+            gameResourcesEntity.links = LinksEntity.from((gameResources.getLinks()));
         }
 
         return gameResourcesEntity;
@@ -59,7 +59,7 @@ public class GameResourcesEntity {
     public GameResources toModel() {
         return GameResources.builder()
                 .id(id)
-                .title(title)
+                .title(title != null ? title : "")
                 .games(games.toModel())
                 .images(images != null ? images.toModel() : null)
                 .links(links != null ? links.toModel() : null)
