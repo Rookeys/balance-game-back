@@ -9,7 +9,6 @@ import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.dto.game.GameStatusResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
-import com.games.balancegameback.service.game.repository.GameInviteRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -27,7 +26,6 @@ import java.util.List;
 public class GameRepositoryImpl implements GameRepository {
 
     private final GameJpaRepository gameRepository;
-    private final GameInviteRepository gameInviteRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -45,12 +43,12 @@ public class GameRepositoryImpl implements GameRepository {
 
         return GameResponse.builder()
                 .roomId(roomId)
-                .title(games.title())
-                .description(games.description())
-                .isNamePublic(games.isNamePublic())
-                .accessType(games.accessType())
-                .inviteCode(games.gameInviteCode().getInviteCode())
-                .category(games.category())
+                .title(games.getTitle())
+                .description(games.getDescription())
+                .isNamePublic(games.getIsNamePublic())
+                .accessType(games.getAccessType())
+                .inviteCode(games.getGameInviteCode().getInviteCode())
+                .category(games.getCategory())
                 .build();
     }
 
@@ -96,8 +94,8 @@ public class GameRepositoryImpl implements GameRepository {
 
     @Override
     public void update(Games games) {
-        GamesEntity gamesEntity = GamesEntity.from(games);
-        gameRepository.save(gamesEntity);
+        GamesEntity gamesEntity = gameRepository.findById(games.getId()).orElseThrow();
+        gamesEntity.update(games);
     }
 
     @Override

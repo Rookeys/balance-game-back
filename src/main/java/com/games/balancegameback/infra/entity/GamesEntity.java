@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.entity;
 
+import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
@@ -48,20 +49,29 @@ public class GamesEntity {
     @JoinColumn(name = "users_id")
     private UsersEntity users;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "game_invite_code_id")
+    @OneToOne(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
     private GameInviteCodeEntity gameInviteCode;
 
     public static GamesEntity from(Games games) {
+        if (games == null) return null;
+
         GamesEntity gamesEntity = new GamesEntity();
-        gamesEntity.id = games.id();
-        gamesEntity.title = games.title();
-        gamesEntity.description = games.description();
-        gamesEntity.isNamePublic = games.isNamePublic();
-        gamesEntity.accessType = games.accessType();
-        gamesEntity.category = games.category();
-        gamesEntity.users = UsersEntity.from(games.users());
-        gamesEntity.gameInviteCode = GameInviteCodeEntity.from(games.gameInviteCode());
+        gamesEntity.id = games.getId() == null ? null : games.getId();
+        gamesEntity.title = games.getTitle();
+        gamesEntity.description = games.getDescription();
+        gamesEntity.isNamePublic = games.getIsNamePublic();
+        gamesEntity.accessType = games.getAccessType();
+        gamesEntity.category = games.getCategory();
+        gamesEntity.users = UsersEntity.from(games.getUsers());
+
+        // GameInviteCodeEntity 설정
+        if (games.getGameInviteCode() != null) {
+            GameInviteCodeEntity inviteCodeEntity = GameInviteCodeEntity.from(games.getGameInviteCode());
+            gamesEntity.gameInviteCode = inviteCodeEntity;
+
+            // 순환 참조 방지: gamesEntity만 설정
+            inviteCodeEntity.setGames(gamesEntity);
+        }
 
         return gamesEntity;
     }
@@ -75,8 +85,22 @@ public class GamesEntity {
                 .accessType(accessType)
                 .category(category)
                 .users(users.toModel())
-                .gameInviteCode(gameInviteCode.toModel())
+                .gameInviteCode(this.gameInviteCode != null
+                        ? GameInviteCode.builder()
+                            .id(this.gameInviteCode.getId())
+                            .inviteCode(this.gameInviteCode.getInviteCode())
+                            .isActive(this.gameInviteCode.getIsActive())
+                            .build()
+                        : null)
                 .build();
+    }
+
+    public void update(Games games) {
+        this.title = games.getTitle();
+        this.description = games.getDescription();
+        this.isNamePublic = games.getIsNamePublic();
+        this.accessType = games.getAccessType();
+        this.category = games.getCategory();
     }
 }
 

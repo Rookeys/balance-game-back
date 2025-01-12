@@ -2,7 +2,6 @@ package com.games.balancegameback.core.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.Components;
 import org.springdoc.core.models.GroupedOpenApi;
@@ -48,7 +47,7 @@ public class SwaggerConfig {
     public GroupedOpenApi gameRoomApi() {
         return GroupedOpenApi.builder()
                 .group("games")
-                .pathsToMatch("/api/v1/game/**")
+                .pathsToMatch("/api/v1/game/room/**")
                 .displayName("Game's API")
                 .build();
     }
@@ -57,7 +56,7 @@ public class SwaggerConfig {
     public GroupedOpenApi gameResourceApi() {
         return GroupedOpenApi.builder()
                 .group("resources")
-                .pathsToMatch("/api/v1/resource/**")
+                .pathsToMatch("/api/v1/game/resource/**")
                 .displayName("Game Resource's API")
                 .build();
     }

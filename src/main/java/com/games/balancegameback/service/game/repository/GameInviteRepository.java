@@ -6,5 +6,11 @@ public interface GameInviteRepository {
 
     GameInviteCode save(GameInviteCode gameInviteCode);
 
+    void update(GameInviteCode gameInviteCode);
+
+    GameInviteCode findById(Long id);
+
+    GameInviteCode findByGameId(Long roomId);
+
     void delete(GameInviteCode gameInviteCode);
 }

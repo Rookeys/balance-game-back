@@ -1,7 +1,10 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.dto.game.GameResourceResponse;
+import com.games.balancegameback.dto.game.GameResourceTemporaryResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResourceJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
@@ -14,6 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,9 +35,15 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     }
 
     @Override
+    public void update(GameResources gameResources) {
+        Optional<GameResourcesEntity> entity = gameResourceJpaRepository.findById(gameResources.getId());
+        entity.ifPresent(gameResourcesEntity -> gameResourcesEntity.update(gameResources));
+    }
+
+    @Override
     public GameResources findById(Long id) {
-        Optional<GameResourcesEntity> entity = gameResourceJpaRepository.findById(id);
-        return entity.map(GameResourcesEntity::toModel).orElse(null);
+        return gameResourceJpaRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("해당 리소스는 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION)).toModel();
     }
 
     @Override
@@ -42,16 +52,15 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
 
-        List<GameResourceResponse> list = jpaQueryFactory
+        List<GameResourceTemporaryResponse> list = jpaQueryFactory
                 .select(Projections.constructor(
-                        GameResourceResponse.class,
+                        GameResourceTemporaryResponse.class,
                         resources.id.as("resourceId"),
                         resources.title,
                         images.fileUrl.as("fileUrl"),
                         links.urls.as("link"),
                         links.startSec,
-                        links.endSec,
-                        null
+                        links.endSec
                 ))
                 .from(resources)
                 .leftJoin(resources.images, images)
@@ -62,29 +71,45 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        int totalPlayNums = gameResultRepository.countByGameId(roomId);
         boolean hasNext = false;
-
-        for (GameResourceResponse resource : list) {
-            int winNums = gameResultRepository.countByGameResourcesId(resource.getResourceId());
-
-            if (totalPlayNums == 0) {
-                resource.update(0);
-            } else {
-                resource.update((double) winNums / totalPlayNums * 100);
-            }
-        }
-
         if (list.size() > pageable.getPageSize()) {
             list.removeLast();
             hasNext = true;
         }
 
-        return new PageImpl<>(list, pageable, hasNext ? pageable.getPageSize() + 1 : list.size());
+        int totalPlayNums = gameResultRepository.countByGameId(roomId);
+        List<GameResourceResponse> responseList = new ArrayList<>();
+
+        // 추후 Game Result 가 완성되고 통계 로직이 추가되면 교체 예정.
+        for (GameResourceTemporaryResponse resource : list) {
+            int winNums = gameResultRepository.countByGameResourcesId(resource.getResourceId());
+            GameResourceResponse response = GameResourceResponse.builder()
+                    .resourceId(resource.getResourceId())
+                    .title(resource.getTitle())
+                    .fileUrl(resource.getFileUrl())
+                    .link(resource.getLink())
+                    .startSec(resource.getStartSec())
+                    .endSec(resource.getEndSec())
+                    .build();
+
+            if (totalPlayNums == 0) {
+                response.update(0);
+            } else {
+                response.update((double) winNums / totalPlayNums * 100);
+            }
+
+            responseList.add(response);
+        }
+
+        return new PageImpl<>(responseList, pageable, hasNext ? pageable.getPageSize() + 1 : list.size());
     }
 
     @Override
     public void deleteById(Long id) {
+        if (!gameResourceJpaRepository.existsById(id)) {
+            throw new NotFoundException("Not Found Resource!", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
         gameResourceJpaRepository.deleteById(id);
     }
 }

@@ -27,8 +27,14 @@ public class SecurityConfig {
                 // 권한 설정
                 .authorizeHttpRequests(auth -> {
                     auth
-//                            .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
-//                            .requestMatchers("/api/v1/**").authenticated() // 인증된 사용자만 접근 가능
+                            .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
+                            .requestMatchers("/api/v1/users/test/login").permitAll()
+                            .requestMatchers("/api/v1/users/signup").permitAll()
+                            .requestMatchers("/api/v1/users/cancel").permitAll()
+                            .requestMatchers("/api/v1/users/**").authenticated()
+                            .requestMatchers("/api/v1/media/single").permitAll()
+                            .requestMatchers("/api/v1/media/**").authenticated()
+                            .requestMatchers("/api/v1/game/**").authenticated()
                             .anyRequest().permitAll(); // 그 외 모든 요청은 허용
                 })
 

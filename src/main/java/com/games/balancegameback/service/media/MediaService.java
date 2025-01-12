@@ -39,25 +39,25 @@ public class MediaService {
         return presignedUrlService.getPreSignedUrls(urlRequest.getPrefix(), urlRequest.getLength());
     }
 
-    // 유저 프로필 이미지 저장
-    public void saveImageForUser(ImageRequest imageRequest, HttpServletRequest request) {
-        imageService.saveImageForUser(imageRequest, request);
-    }
-
     // 이미지 저장 및 게임 리소스 추가
-    public void saveImageForGame(Long roomId, ImageRequest imageRequest, HttpServletRequest request) {
+    public void saveImage(Long roomId, ImageRequest imageRequest, HttpServletRequest request) {
         this.validateRequest(roomId, request);
-        imageService.saveImageForGame(roomId, imageRequest);
+        imageService.saveImage(roomId, imageRequest);
     }
 
     // 링크 저장 및 게임 리소스 추가
     public void saveLink(Long roomId, LinkRequest linkRequest, HttpServletRequest request) {
-        linkService.saveLink(roomId, linkRequest, request);
+        this.validateRequest(roomId, request);
+        linkService.saveLink(roomId, linkRequest);
     }
 
     // 발급 요청한 사람이 해당 게임방 주인이 맞는지 확인.
     private void validateRequest(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
+
+        if (users == null) {
+            throw new UnAuthorizedException("유효하지 않은 사용자입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
+        }
 
         if (!gameRepository.existsByIdAndUsers(roomId, users)) {
             throw new UnAuthorizedException("정보가 일치하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);

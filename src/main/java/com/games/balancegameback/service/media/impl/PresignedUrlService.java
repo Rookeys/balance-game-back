@@ -42,7 +42,7 @@ public class PresignedUrlService {
         URL url = presignedRequest.url();
 
         // 최종 S3 URL 생성
-        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, REGION, url);
+        return String.format("%s", url);
     }
 
     /**

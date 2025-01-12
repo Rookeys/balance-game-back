@@ -9,7 +9,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Entity
@@ -46,7 +45,7 @@ public class UsersEntity {
 
     public static UsersEntity from(Users user) {
         UsersEntity userEntity = new UsersEntity();
-        userEntity.uid = user.getUid() == null ? String.valueOf(UUID.randomUUID()) : user.getUid();
+        userEntity.uid = user.getUid();
         userEntity.nickname = user.getNickname();
         userEntity.email = user.getEmail();
         userEntity.loginType = user.getLoginType();
@@ -65,6 +64,11 @@ public class UsersEntity {
                 .userRole(userRole)
                 .isDeleted(isDeleted)
                 .build();
+    }
+
+    public void update(Users user) {
+        this.nickname = user.getNickname();
+        this.isDeleted = user.isDeleted();
     }
 }
 

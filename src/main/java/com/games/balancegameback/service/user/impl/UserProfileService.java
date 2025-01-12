@@ -21,12 +21,12 @@ public class UserProfileService {
 
     public UserResponse getProfile(HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        String fileUrl = imageRepository.findByUsers(users).getFileUrl();
+        Images images = imageRepository.findByUsers(users);
 
         return UserResponse.builder()
                 .nickname(users.getNickname())
                 .email(users.getEmail())
-                .fileUrl(fileUrl)
+                .fileUrl(images == null ? null : images.getFileUrl())
                 .build();
     }
 
@@ -36,7 +36,7 @@ public class UserProfileService {
 
         if (userRequest.getNickname() != null) {
             users.setNickname(userRequest.getNickname());
-            userRepository.save(users);
+            userRepository.update(users);
         }
 
         if (userRequest.getUrl() != null) {
@@ -44,15 +44,16 @@ public class UserProfileService {
 
             if (images != null) {   // 기존 프로필 사진이 존재할 시
                 images.update(userRequest.getUrl());
+                imageRepository.update(images);
                 // 추후 연 끊긴 S3 내 사진 제거 로직 추가 예정.
             } else {                // 프로필 사진을 처음 등록할 시
                 images = Images.builder()
                         .fileUrl(userRequest.getUrl())
                         .users(users)
                         .build();
-            }
 
-            imageRepository.save(images);
+                imageRepository.save(images);
+            }
         }
     }
 }
