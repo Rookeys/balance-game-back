@@ -39,7 +39,7 @@ public class UserUtils {
     /*
         로그인 및 회원 가입 요청 시 액세스 토큰과 정보가 유효한 지 확인함.
      */
-    public void validateToken(String code, LoginType loginType) {
+    public void validateToken(String accessToken, LoginType loginType) {
         String url;
 
         switch (loginType) {
@@ -50,7 +50,7 @@ public class UserUtils {
 
         // 요청 헤더 설정
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + code);
+        headers.set("Authorization", "Bearer " + accessToken);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         // RestTemplate에 타임아웃 설정
