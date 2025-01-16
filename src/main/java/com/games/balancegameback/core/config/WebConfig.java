@@ -23,7 +23,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(final CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000") // 추가 가능
+                .allowedOrigins("http://localhost:3000",
+                        "https://api.balancegame.site") // 추가 가능
                 .exposedHeaders("authorization", "refreshToken", "Set-Cookie")
                 .allowedHeaders("*")
                 .allowedMethods("*")
