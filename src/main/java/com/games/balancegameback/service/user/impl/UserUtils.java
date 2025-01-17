@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.user.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
@@ -61,10 +62,10 @@ public class UserUtils {
 
             // 응답 검증
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-                throw new UnAuthorizedException("토큰이 유효하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
+                throw new BadRequestException("토큰이 유효하지 않습니다.", ErrorCode.RUNTIME_EXCEPTION);
             }
         } catch (Exception e) {
-            throw new UnAuthorizedException("토큰 검증 중 문제가 발생했습니다: " + e.getMessage(), ErrorCode.ACCESS_DENIED_EXCEPTION);
+            throw new BadRequestException("토큰 검증 중 문제가 발생했습니다: " + e.getMessage(), ErrorCode.RUNTIME_EXCEPTION);
         }
     }
 
