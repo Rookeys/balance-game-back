@@ -35,7 +35,7 @@ spring:
 
   data:
     redis:
-      host: redis
+      host: redis-master
       port: 6379
 
 cloud:
