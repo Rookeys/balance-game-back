@@ -1,5 +1,6 @@
 package com.games.balancegameback.core.config;
 
+import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
@@ -14,6 +15,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
+                .addServersItem(new Server().url("https://api.balancegame.site"))
                 .info(new Info()
                         .title("밸런스 게임 API")
                         .version("v0.1")

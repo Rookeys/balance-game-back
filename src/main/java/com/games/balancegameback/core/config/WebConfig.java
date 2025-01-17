@@ -24,8 +24,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(final CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:3000",
-                        "https://api.balancegame.site",
-                        "http://api.balancegame.site")  // swagger 내 테스트를 위해 추가
+                        "http://localhost:8888",
+                        "https://api.balancegame.site")  // swagger 내 테스트를 위해 추가
                 .exposedHeaders("authorization", "refreshToken", "Set-Cookie")
                 .allowedHeaders("*")
                 .allowedMethods("*")
