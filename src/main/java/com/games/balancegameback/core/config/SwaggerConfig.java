@@ -15,7 +15,6 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
-                .addServersItem(new Server().url("https://api.balancegame.site"))
                 .info(new Info()
                         .title("밸런스 게임 API")
                         .version("v0.1")
