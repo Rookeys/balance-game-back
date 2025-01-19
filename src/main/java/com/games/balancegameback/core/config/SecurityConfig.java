@@ -31,7 +31,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/test/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel/resign").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/users/exists").permitAll()
