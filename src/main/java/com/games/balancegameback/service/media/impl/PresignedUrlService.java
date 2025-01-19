@@ -5,7 +5,6 @@ import com.games.balancegameback.core.exception.impl.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -23,7 +22,6 @@ public class PresignedUrlService {
     private String bucket;
 
     private final S3Presigner s3Presigner;
-    private static final Region REGION = Region.AP_NORTHEAST_2;
 
     /**
      * Presigned URL 발급

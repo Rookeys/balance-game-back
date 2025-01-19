@@ -26,7 +26,7 @@ public class UserManagementService {
 
     @Transactional
     public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
-        userUtils.validateToken(signUpRequest.getCode(), signUpRequest.getLoginType());
+        userUtils.validateToken(signUpRequest.getAccessToken(), signUpRequest.getLoginType());
 
         if (this.existsByNickname(signUpRequest.getNickname())) {
             throw new UnAuthorizedException("중복된 닉네임입니다.", ErrorCode.DUPLICATED_EXCEPTION);

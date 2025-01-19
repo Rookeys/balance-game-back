@@ -42,7 +42,7 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그 아웃 성공")
     })
-    @GetMapping(value = "/logout")
+    @PostMapping(value = "/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         userService.logout(request);
         return ResponseEntity.ok("로그 아웃 성공");
@@ -53,7 +53,7 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "재발급 성공")
     })
-    @GetMapping(value = "/reissue")
+    @PostMapping(value = "/reissue")
     public ResponseEntity<String> reissue(HttpServletRequest request, HttpServletResponse response) {
         userService.reissue(request, response);
         return ResponseEntity.ok("토큰 재발급 성공");
