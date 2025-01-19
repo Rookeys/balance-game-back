@@ -47,7 +47,7 @@ public class SwaggerConfig {
     public GroupedOpenApi gameRoomApi() {
         return GroupedOpenApi.builder()
                 .group("games")
-                .pathsToMatch("/api/v1/game/room/**")
+                .pathsToMatch("**/games/**")
                 .displayName("Game's API")
                 .build();
     }
@@ -56,7 +56,7 @@ public class SwaggerConfig {
     public GroupedOpenApi gameResourceApi() {
         return GroupedOpenApi.builder()
                 .group("resources")
-                .pathsToMatch("/api/v1/game/resource/**")
+                .pathsToMatch("**/resources/**")
                 .displayName("Game Resource's API")
                 .build();
     }
@@ -65,7 +65,7 @@ public class SwaggerConfig {
     public GroupedOpenApi mediaApi() {
         return GroupedOpenApi.builder()
                 .group("Media")
-                .pathsToMatch("/api/v1/media/**")
+                .pathsToMatch("**/media/**")
                 .displayName("Media's API")
                 .build();
     }
