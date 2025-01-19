@@ -56,7 +56,7 @@ public class SwaggerConfig {
     public GroupedOpenApi gameResourceApi() {
         return GroupedOpenApi.builder()
                 .group("resources")
-                .pathsToMatch("**/resources/**")
+                .pathsToMatch("**/resource/**")
                 .displayName("Game Resource's API")
                 .build();
     }
