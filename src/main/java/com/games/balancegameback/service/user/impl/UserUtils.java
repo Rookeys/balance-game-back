@@ -21,8 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
-
 @Log4j2
 @Service
 @RequiredArgsConstructor
@@ -69,20 +67,20 @@ public class UserUtils {
         if (loginType == LoginType.GOOGLE) {
             url += "?access_token=" + accessToken; // 구글의 경우 쿼리 파라미터로 토큰 전달
         } else {
-            headers.set("Authorization", "Bearer " + accessToken);
+            headers.setBearerAuth(accessToken);
         }
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
 
             // 응답 검증
-            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new BadRequestException("토큰이 유효하지 않습니다.", ErrorCode.RUNTIME_EXCEPTION);
             }
         } catch (Exception e) {
-            log.error("Error!!");
+            log.error("Error!! + {}", e.getMessage());
             throw new BadRequestException("토큰 검증 중 문제가 발생했습니다: " + e.getMessage(), ErrorCode.RUNTIME_EXCEPTION);
         }
     }
