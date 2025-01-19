@@ -34,7 +34,6 @@ public class PresignedUrlController {
     }
 
     @Operation(summary = "다중 업로드 API", description = "AWS S3 저장소에 업로드할 수 있는 다중 URL 발급")
-    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 발급 성공"),
             @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음."),
