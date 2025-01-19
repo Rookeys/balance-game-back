@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -67,9 +68,9 @@ public class GameRoomController {
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(name = "pageable", hidden = true)
-            @PageableDefault(size = 15) Pageable pageable,
             HttpServletRequest request) {
+
+        Pageable pageable = PageRequest.of(0, 15);
         return gameService.getMyGameList(pageable, cursorId, request);
     }
 

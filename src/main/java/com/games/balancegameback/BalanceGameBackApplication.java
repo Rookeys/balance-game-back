@@ -13,7 +13,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 @OpenAPIDefinition(
         servers = {
-                @Server(url = "https://api.balancegame.site", description = "Default Server url")
+                @Server(url = "https://api.balancegame.site", description = "Default Server url"),
+                @Server(url = "http://localhost:8888", description = "Local Server url")
         }
 )
 public class BalanceGameBackApplication {

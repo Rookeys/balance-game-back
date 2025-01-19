@@ -1,10 +1,10 @@
 package com.games.balancegameback.core.config;
 
 import com.games.balancegameback.core.jwt.JwtAuthenticationTokenFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -28,34 +28,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
-                            .requestMatchers("/api/v1/users/test/login").permitAll()
-                            .requestMatchers("/api/v1/users/signup").permitAll()
-                            .requestMatchers("/api/v1/users/cancel").permitAll()
-                            .requestMatchers("/api/v1/users/**").authenticated()
-                            .requestMatchers("/api/v1/media/single").permitAll()
-                            .requestMatchers("/api/v1/media/**").authenticated()
-                            .requestMatchers("/api/v1/game/**").authenticated()
-                            .anyRequest().permitAll(); // 그 외 모든 요청은 허용
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/test/login").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
+                            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                            .anyRequest().authenticated(); // 그 외 모든 요청은 검증 필요
                 })
 
                 // JWT 필터 추가
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // 로그인 페이지 설정
-                .formLogin(form -> form
-                        .loginPage("/api/v1/users/login")
-                        .loginPage("/api/v1/users/test/login")
-                        .permitAll()
-                )
-
-                // 로그아웃 설정
-                .logout(logout -> logout
-                        .logoutUrl("/api/v1/users/logout")
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                        })
-                )
-
                 .build();
     }
 }

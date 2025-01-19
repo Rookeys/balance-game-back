@@ -80,6 +80,7 @@ public class JwtTokenProvider {
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7);
         }
+
         return null;
     }
 

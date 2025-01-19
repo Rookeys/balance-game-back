@@ -12,8 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,10 +40,9 @@ public class GameResourceController {
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(name = "pageable", description = "페이지 크기 및 정렬 설정", hidden = true)
-            @PageableDefault(size = 15) Pageable pageable,
-
             HttpServletRequest request) {
+
+        Pageable pageable = PageRequest.of(0, 15);
         return gameService.getResources(roomId, cursorId, pageable, request);
     }
 

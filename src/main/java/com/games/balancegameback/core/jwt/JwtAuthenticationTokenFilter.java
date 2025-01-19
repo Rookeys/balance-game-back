@@ -10,11 +10,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -22,15 +24,17 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
+@Log4j2
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "**/swagger-ui/**", "**/v3/api-docs", "**/users/login", "**/users/test/login",
-            "**/users/signup", "**/media/**"
+            "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/users/login", "/api/v1/users/test/login",
+            "/api/v1/users/signup", "/api/v1/media/single"
     );
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisRepository redisRepository;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @SneakyThrows
     @Override
@@ -48,13 +52,21 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
 
         try {
-            if (accessToken == null && refreshToken != null) {
+            if (accessToken == null && refreshToken == null) {
+                setResponse(response, ErrorCode.EMPTY_JWT_CLAIMS);
+                return;
+            }
+
+            if (accessToken == null) {
                 handleRefreshToken(refreshToken, path, filterChain, request, response);
                 return;
             }
 
-            if (accessToken != null && isValidAccessToken(accessToken)) {
+            if (isValidAccessToken(accessToken)) {
                 setAuthentication(accessToken);
+            } else {
+                setResponse(response, ErrorCode.INVALID_TOKEN_EXCEPTION);
+                return;
             }
         } catch (JwtException e) {
             handleJwtException(e, response);
@@ -68,7 +80,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     }
 
     private boolean skipPath(String path) {
-        return EXCLUDED_PATHS.stream().anyMatch(path::contains);
+        return EXCLUDED_PATHS.stream().anyMatch(excludedPath -> pathMatcher.match(excludedPath, path));
     }
 
     private void handleRefreshToken(String refreshToken, String path, FilterChain filterChain,

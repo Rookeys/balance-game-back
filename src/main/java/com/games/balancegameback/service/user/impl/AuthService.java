@@ -24,7 +24,7 @@ public class AuthService {
     private final UserUtils userUtils;
 
     public void login(LoginRequest loginRequest, HttpServletResponse response) {
-        userUtils.validateToken(loginRequest.getCode(), loginRequest.getLoginType());
+        userUtils.validateToken(loginRequest.getAccessToken(), loginRequest.getLoginType());
         Optional<Users> users = userRepository.findByEmail(loginRequest.getEmail());
 
         if (users.isEmpty()) {
