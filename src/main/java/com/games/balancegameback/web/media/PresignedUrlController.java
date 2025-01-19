@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1/media")
-@Tag(name = "Presigned URL Controller", description = "Media Upload & Update API")
+@Tag(name = "Presigned Url Controller", description = "Media Upload & Update API")
 public class PresignedUrlController {
 
     private final MediaService mediaService;
@@ -41,13 +41,8 @@ public class PresignedUrlController {
             @ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @PostMapping(value = "/multiple")
-    public List<String> getPreSignedUrl(
-            @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "12345")
-            @RequestParam(value = "roomId") Long roomId,
-
-            @RequestBody PresignedUrlsRequest urlRequest,
-            HttpServletRequest request) {
-        return mediaService.getPreSignedUrls(roomId, urlRequest, request);
+    public List<String> getPreSignedUrl(@RequestBody PresignedUrlsRequest urlRequest) {
+        return mediaService.getPreSignedUrls(urlRequest);
     }
 }
 

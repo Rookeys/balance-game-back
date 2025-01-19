@@ -23,8 +23,8 @@ public class ImageService {
     private final GameService gameService;
 
     @Transactional
-    public void saveImage(Long roomId, ImageRequest imageRequest) {
-        Games games = gameRepository.findByRoomId(roomId);
+    public void saveImage(Long gameId, ImageRequest imageRequest) {
+        Games games = gameRepository.findByRoomId(gameId);
         gameService.saveImageResource(games, imageRequest);
     }
 

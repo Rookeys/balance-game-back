@@ -33,6 +33,8 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/exists").permitAll()
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated(); // 그 외 모든 요청은 검증 필요
                 })

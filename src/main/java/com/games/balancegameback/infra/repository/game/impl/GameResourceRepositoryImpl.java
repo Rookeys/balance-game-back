@@ -47,7 +47,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     }
 
     @Override
-    public Page<GameResourceResponse> findByRoomId(Long roomId, Long cursorId, Pageable pageable) {
+    public Page<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable) {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
@@ -65,7 +65,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .from(resources)
                 .leftJoin(resources.images, images)
                 .leftJoin(resources.links, links)
-                .where(resources.games.id.eq(roomId),
+                .where(resources.games.id.eq(gameId),
                         cursorId != null ? resources.id.gt(cursorId) : null)
                 .orderBy(resources.id.asc())
                 .limit(pageable.getPageSize() + 1)
@@ -77,7 +77,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
             hasNext = true;
         }
 
-        int totalPlayNums = gameResultRepository.countByGameId(roomId);
+        int totalPlayNums = gameResultRepository.countByGameId(gameId);
         List<GameResourceResponse> responseList = new ArrayList<>();
 
         // 추후 Game Result 가 완성되고 통계 로직이 추가되면 교체 예정.

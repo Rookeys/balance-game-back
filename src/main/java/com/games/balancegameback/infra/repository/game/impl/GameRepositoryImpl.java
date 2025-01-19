@@ -88,8 +88,8 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     @Override
-    public boolean existsByIdAndUsers(Long roomId, Users users) {
-        return gameRepository.existsByIdAndUsers(roomId, UsersEntity.from(users));
+    public boolean existsByIdAndUsers(Long gameId, Users users) {
+        return gameRepository.existsByIdAndUsers(gameId, UsersEntity.from(users));
     }
 
     @Override

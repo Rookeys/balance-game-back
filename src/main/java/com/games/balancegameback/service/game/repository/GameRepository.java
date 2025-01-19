@@ -17,7 +17,7 @@ public interface GameRepository {
 
     Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable);
 
-    boolean existsByIdAndUsers(Long roomId, Users users);
+    boolean existsByIdAndUsers(Long gameId, Users users);
 
     void update(Games games);
 

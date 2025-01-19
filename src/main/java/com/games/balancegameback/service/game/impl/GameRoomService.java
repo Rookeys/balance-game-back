@@ -58,11 +58,11 @@ public class GameRoomService {
         return gameRepository.save(games).getId();
     }
 
-    public GameResponse getGameStatus(Long roomId, HttpServletRequest request) {
+    public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        this.existsHost(roomId, users);
+        this.existsHost(gameId, users);
 
-        return gameRepository.findById(roomId);
+        return gameRepository.findById(gameId);
     }
 
     public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId, HttpServletRequest request) {
@@ -71,11 +71,11 @@ public class GameRoomService {
     }
 
     @Transactional
-    public void updateGameStatus(Long roomId, GameRequest gameRequest, HttpServletRequest request) {
+    public void updateGameStatus(Long gameId, GameRequest gameRequest, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        this.existsHost(roomId, users);
+        this.existsHost(gameId, users);
 
-        Games games = gameRepository.findByRoomId(roomId);
+        Games games = gameRepository.findByRoomId(gameId);
         games.update(gameRequest);
 
         gameInviteService.updateInviteCode(gameRequest.getInviteCode(), games);
@@ -83,16 +83,16 @@ public class GameRoomService {
     }
 
     @Transactional
-    public void deleteGame(Long roomId, HttpServletRequest request) {
+    public void deleteGame(Long gameId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        this.existsHost(roomId, users);
+        this.existsHost(gameId, users);
 
-        gameRepository.deleteById(roomId);
+        gameRepository.deleteById(gameId);
         // 트리거에 해당 로직이 실행되었을 때 리소스들 중 연결되어 있는 방이 없으면 삭제하는 로직 추가 예정.
     }
 
-    private void existsHost(Long roomId, Users users) {
-        if (!gameRepository.existsByIdAndUsers(roomId, users)) {
+    private void existsHost(Long gameId, Users users) {
+        if (!gameRepository.existsByIdAndUsers(gameId, users)) {
             throw new UnAuthorizedException("게임 주인이 아닙니다.", ErrorCode.NOT_ALLOW_WRITE_EXCEPTION);
         }
     }

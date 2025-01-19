@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(value = "/api/v1/media")
-@Tag(name = "Link Controller", description = "Link CRUD API")
-public class LinkController {
+@RequestMapping(value = "/api/v1")
+@Tag(name = "Media Link Controller", description = "Link CRUD API")
+public class MediaLinkController {
 
     private final MediaService mediaService;
 
@@ -27,15 +27,15 @@ public class LinkController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "저장 성공")
     })
-    @PostMapping(value = "/link")
-    public ResponseEntity<String> saveLink(
-            @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "12345")
-            @RequestParam(name = "roomId") Long roomId,
+    @PostMapping(value = "/games/{gameId}/media/links")
+    public ResponseEntity<Boolean> saveLink(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "12345")
+            @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid LinkRequest linkRequest,
             HttpServletRequest request) {
-        mediaService.saveLink(roomId, linkRequest, request);
-        return ResponseEntity.status(201).body("저장 성공");
+        mediaService.saveLink(gameId, linkRequest, request);
+        return ResponseEntity.status(201).body(Boolean.TRUE);
     }
 }
 

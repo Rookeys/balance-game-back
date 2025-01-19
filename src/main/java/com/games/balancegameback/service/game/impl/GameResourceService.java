@@ -26,8 +26,8 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
-    public Page<GameResourceResponse> getResources(Pageable pageable, Long roomId, Long cursorId) {
-        return gameResourceRepository.findByRoomId(roomId, cursorId, pageable);
+    public Page<GameResourceResponse> getResources(Pageable pageable, Long gameId, Long cursorId) {
+        return gameResourceRepository.findByGameId(gameId, cursorId, pageable);
     }
 
     @Transactional

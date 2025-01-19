@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(value = "/api/v1/media")
+@RequestMapping(value = "/api/v1")
 @Tag(name = "Image Controller", description = "Image CRUD API")
 public class ImageController {
 
@@ -27,15 +27,15 @@ public class ImageController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "저장 성공")
     })
-    @PostMapping(value = "/image")
-    public ResponseEntity<String> saveImageForGame(
-            @Parameter(name = "roomId", description = "게임방의 ID", required = true, example = "13")
-            @RequestParam(name = "roomId") Long roomId,
+    @PostMapping(value = "/games/{gameId}/media/images")
+    public ResponseEntity<Boolean> saveImageForGame(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "13")
+            @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid ImageRequest imageRequest,
             HttpServletRequest request) {
-        mediaService.saveImage(roomId, imageRequest, request);
-        return ResponseEntity.status(201).body("저장 성공");
+        mediaService.saveImage(gameId, imageRequest, request);
+        return ResponseEntity.status(201).body(Boolean.TRUE);
     }
 }
 

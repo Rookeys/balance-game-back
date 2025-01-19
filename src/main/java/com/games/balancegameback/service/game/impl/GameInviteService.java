@@ -15,23 +15,6 @@ public class GameInviteService {
 
     private final GameInviteRepository gameInviteRepository;
 
-    public GameInviteCode createInviteCode(boolean isActive, String inviteCode) {
-        GameInviteCode gameInviteCode = GameInviteCode.builder()
-                .isActive(isActive)
-                .inviteCode(inviteCode == null ? "" : inviteCode)
-                .games(null)
-                .build();
-
-        return gameInviteRepository.save(gameInviteCode);
-    }
-
-    public void mappingGames(Games games) {
-        GameInviteCode gameInviteCode = gameInviteRepository.findByGameId(games.getId());
-        gameInviteCode.setGames(games);
-
-        gameInviteRepository.update(gameInviteCode);
-    }
-
     public void updateInviteCode(String inviteCode, Games games) {
         GameInviteCode gameInviteCode = gameInviteRepository.findById(games.getGameInviteCode().getId());
 

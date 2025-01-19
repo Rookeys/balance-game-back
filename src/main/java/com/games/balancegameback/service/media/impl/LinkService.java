@@ -21,11 +21,11 @@ public class LinkService {
     /**
      * 유튜브 링크 저장
      *
-     * @param roomId     게임방 ID
+     * @param gameId     게임방 ID
      * @param linkRequest 링크 정보 DTO
      */
-    public void saveLink(Long roomId, LinkRequest linkRequest) {
-        Games games = gameRepository.findByRoomId(roomId);
+    public void saveLink(Long gameId, LinkRequest linkRequest) {
+        Games games = gameRepository.findByRoomId(gameId);
         gameService.saveLinkResource(games, linkRequest);
     }
 

@@ -13,7 +13,7 @@ public interface GameResourceRepository {
 
     GameResources findById(Long id);
 
-    Page<GameResourceResponse> findByRoomId(Long roomId, Long cursorId, Pageable pageable);
+    Page<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable);
 
     void deleteById(Long id);
 }

@@ -36,8 +36,8 @@ public class GameService {
     }
 
     // 게임 설정값 반환
-    public GameResponse getGameStatus(Long roomId, HttpServletRequest request) {
-        return gameRoomService.getGameStatus(roomId, request);
+    public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
+        return gameRoomService.getGameStatus(gameId, request);
     }
 
     // 내가 만든 게임들 리스트 반환
@@ -46,13 +46,13 @@ public class GameService {
     }
 
     // 게임방 설정 업데이트
-    public void updateGameStatus(Long roomId, GameRequest gameRequest, HttpServletRequest request) {
-        gameRoomService.updateGameStatus(roomId, gameRequest, request);
+    public void updateGameStatus(Long gameId, GameRequest gameRequest, HttpServletRequest request) {
+        gameRoomService.updateGameStatus(gameId, gameRequest, request);
     }
 
     // 게임방 삭제
-    public void deleteGame(Long roomId, HttpServletRequest request) {
-        gameRoomService.deleteGame(roomId, request);
+    public void deleteGame(Long gameId, HttpServletRequest request) {
+        gameRoomService.deleteGame(gameId, request);
     }
 
     // 게임 리소스에 유튜브 링크 추가
@@ -66,10 +66,10 @@ public class GameService {
     }
 
     // 등록된 리소스 목록을 반환
-    public Page<GameResourceResponse> getResources(Long roomId, Long cursorId, Pageable pageable,
+    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                    HttpServletRequest request) {
-        this.validateRequest(roomId, request);
-        return gameResourceService.getResources(pageable, roomId, cursorId);
+        this.validateRequest(gameId, request);
+        return gameResourceService.getResources(pageable, gameId, cursorId);
     }
 
     // 등록한 리소스의 정보를 수정함

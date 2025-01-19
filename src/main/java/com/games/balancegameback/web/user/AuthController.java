@@ -30,11 +30,11 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/login")
-    public ResponseEntity<String> login(
+    public ResponseEntity<Boolean> login(
             @RequestBody @Valid LoginRequest loginRequest,
             HttpServletResponse response) {
         userService.login(loginRequest, response);
-        return ResponseEntity.ok("로그인 성공");
+        return ResponseEntity.ok(Boolean.TRUE);
     }
 
     @Operation(summary = "로그 아웃 API", description = "사용자를 로그 아웃 시킵니다.")
@@ -43,9 +43,9 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "로그 아웃 성공")
     })
     @PostMapping(value = "/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
+    public ResponseEntity<Boolean> logout(HttpServletRequest request) {
         userService.logout(request);
-        return ResponseEntity.ok("로그 아웃 성공");
+        return ResponseEntity.ok(Boolean.TRUE);
     }
 
     @Operation(summary = "토큰 재발급 API", description = "RefreshToken 으로 AccessToken 을 재발급합니다.")
@@ -53,10 +53,10 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "재발급 성공")
     })
-    @PostMapping(value = "/reissue")
-    public ResponseEntity<String> reissue(HttpServletRequest request, HttpServletResponse response) {
+    @PostMapping(value = "/refresh")
+    public ResponseEntity<Boolean> reissue(HttpServletRequest request, HttpServletResponse response) {
         userService.reissue(request, response);
-        return ResponseEntity.ok("토큰 재발급 성공");
+        return ResponseEntity.ok(Boolean.TRUE);
     }
 
     @Operation(summary = "테스트 전용 로그인 API", description = "토큰을 발급합니다.")
@@ -67,9 +67,9 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/test/login")
-    public ResponseEntity<String> testLogin(HttpServletResponse response) {
+    public ResponseEntity<Boolean> testLogin(HttpServletResponse response) {
         userService.testLogin(response);
-        return ResponseEntity.ok("로그인 성공");
+        return ResponseEntity.ok(Boolean.TRUE);
     }
 }
 
