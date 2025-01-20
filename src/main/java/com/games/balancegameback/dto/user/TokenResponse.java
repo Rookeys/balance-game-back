@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TokenResponse {
 
-    private Long accessToken;
-    private Long refreshToken;
+    private Long accessTokenExpiresAt;
+    private Long refreshTokenExpiresAt;
 }

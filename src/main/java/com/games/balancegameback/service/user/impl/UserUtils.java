@@ -111,8 +111,8 @@ public class UserUtils {
     */
     public TokenResponse getTokenValidTime() {
         return TokenResponse.builder()
-                .accessToken(accessTokenValidTime / 1000)
-                .refreshToken(refreshTokenValidTime / 1000)
+                .accessTokenExpiresAt(accessTokenValidTime / 1000)
+                .refreshTokenExpiresAt(refreshTokenValidTime / 1000)
                 .build();
     }
 }
