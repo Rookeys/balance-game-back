@@ -4,6 +4,7 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.user.LoginRequest;
+import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
 import com.games.balancegameback.service.jwt.JwtTokenProvider;
 import com.games.balancegameback.service.user.UserRepository;
@@ -23,7 +24,7 @@ public class AuthService {
     private final RedisRepository redisRepository;
     private final UserUtils userUtils;
 
-    public void login(LoginRequest loginRequest, HttpServletResponse response) {
+    public TokenResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         userUtils.validateToken(loginRequest.getAccessToken(), loginRequest.getLoginType());
         Optional<Users> users = userRepository.findByEmail(loginRequest.getEmail());
 
@@ -36,20 +37,14 @@ public class AuthService {
         }
 
         userUtils.createToken(users.get(), response);
+        return userUtils.getTokenValidTime();
     }
 
-    public void testLogin(HttpServletResponse response) {
+    public TokenResponse testLogin(HttpServletResponse response) {
         Optional<Users> users = userRepository.findByEmail("test@test.com");
 
-        if (users.isEmpty()) {
-            throw new UnAuthorizedException("유저를 찾을 수 없습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
-        }
-
-        if (users.get().isDeleted()) {
-            throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
-        }
-
         userUtils.createToken(users.get(), response);
+        return userUtils.getTokenValidTime();
     }
 
     public void logout(HttpServletRequest request) {
@@ -60,7 +55,7 @@ public class AuthService {
         jwtTokenProvider.expireToken(accessToken);
     }
 
-    public void reissue(HttpServletRequest request, HttpServletResponse response) {
+    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         String token = jwtTokenProvider.resolveRefreshToken(request);
 
         String accessToken = jwtTokenProvider.reissueAccessToken(token);
@@ -68,6 +63,8 @@ public class AuthService {
 
         jwtTokenProvider.setHeaderAccessToken(response, accessToken);
         jwtTokenProvider.setHeaderRefreshToken(response, refreshToken);
+
+        return userUtils.getTokenValidTime();
     }
 }
 

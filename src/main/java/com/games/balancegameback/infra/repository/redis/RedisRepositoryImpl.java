@@ -1,7 +1,7 @@
 package com.games.balancegameback.infra.repository.redis;
 
 import com.games.balancegameback.core.exception.ErrorCode;
-import com.games.balancegameback.core.exception.impl.InvalidTokenException;
+import com.games.balancegameback.core.exception.impl.JwtExpiredException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -60,7 +60,7 @@ public class RedisRepositoryImpl implements RedisRepository {
      */
     public boolean isTokenInBlacklist(String token) {
         if (Boolean.TRUE.equals(redisTemplate.hasKey(token))) {
-            throw new InvalidTokenException("4001", ErrorCode.INVALID_TOKEN_EXCEPTION);
+            throw new JwtExpiredException("4002", ErrorCode.JWT_TOKEN_EXPIRED);
         }
 
         return false;

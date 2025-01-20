@@ -21,7 +21,8 @@ public enum ErrorCode {
     UNSUPPORTED_JWT_TOKEN(4003, "4003", "JWT token is unsupported"),
     EMPTY_JWT_CLAIMS( 4004, "4004", "JWT claims string is empty"),
     JWT_SIGNATURE_MISMATCH(4005, "4005", "JWT signature does not match"),
-    JWT_COMPLEX_ERROR(4006, "4006", "JWT Complex error");
+    JWT_COMPLEX_ERROR(4006, "4006", "JWT Complex error"),
+    JWT_NOT_ALLOW_REQUEST(4007, "4007", "JWT not allow request");
 
     private final int status;
     private final String code;

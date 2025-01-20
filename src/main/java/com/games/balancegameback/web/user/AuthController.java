@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.user;
 
 import com.games.balancegameback.dto.user.LoginRequest;
+import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,11 +31,10 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/login")
-    public ResponseEntity<Boolean> login(
+    public TokenResponse login(
             @RequestBody @Valid LoginRequest loginRequest,
             HttpServletResponse response) {
-        userService.login(loginRequest, response);
-        return ResponseEntity.ok(Boolean.TRUE);
+        return userService.login(loginRequest, response);
     }
 
     @Operation(summary = "로그 아웃 API", description = "사용자를 로그 아웃 시킵니다.")
@@ -54,9 +54,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "재발급 성공")
     })
     @PostMapping(value = "/refresh")
-    public ResponseEntity<Boolean> reissue(HttpServletRequest request, HttpServletResponse response) {
-        userService.reissue(request, response);
-        return ResponseEntity.ok(Boolean.TRUE);
+    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
+        return userService.refresh(request, response);
     }
 
     @Operation(summary = "테스트 전용 로그인 API", description = "토큰을 발급합니다.")
@@ -67,9 +66,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/test/login")
-    public ResponseEntity<Boolean> testLogin(HttpServletResponse response) {
-        userService.testLogin(response);
-        return ResponseEntity.ok(Boolean.TRUE);
+    public TokenResponse testLogin(HttpServletResponse response) {
+        return userService.testLogin(response);
     }
 }
 

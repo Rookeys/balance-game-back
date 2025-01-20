@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.jwt;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.CustomJwtException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
@@ -105,7 +106,7 @@ public class JwtTokenProvider {
     private String validateRefreshTokenAndGetEmail(String refreshToken) {
         String email = redisRepository.getValues(refreshToken).get("email");
         if (email == null) {
-            throw new InvalidTokenException("Invalid refresh token", ErrorCode.ACCESS_DENIED_EXCEPTION);
+            throw new CustomJwtException(ErrorCode.ACCESS_DENIED_EXCEPTION, "Invalid refresh token");
         }
         return email;
     }
@@ -117,8 +118,14 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException e) {
-            return false;
+        } catch (MalformedJwtException e) {
+            throw new CustomJwtException(ErrorCode.INVALID_TOKEN_EXCEPTION, "4001");
+        } catch (ExpiredJwtException e) {
+            throw new CustomJwtException(ErrorCode.JWT_TOKEN_EXPIRED, "4002");
+        } catch (UnsupportedJwtException e) {
+            throw new CustomJwtException(ErrorCode.UNSUPPORTED_JWT_TOKEN, "4003");
+        } catch (SignatureException e) {
+            throw new CustomJwtException(ErrorCode.JWT_SIGNATURE_MISMATCH, "4005");
         }
     }
 
