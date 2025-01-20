@@ -8,15 +8,13 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
 public class RedisRepositoryImpl implements RedisRepository {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * RefreshToken 및 이메일 저장
@@ -24,10 +22,8 @@ public class RedisRepositoryImpl implements RedisRepository {
      * @param email 사용자 이메일
      */
     public void setValues(String token, String email) {
-        ValueOperations<String, Object> operations = redisTemplate.opsForValue();
-        Map<String, String> tokenData = new HashMap<>();
-        tokenData.put("email", email);
-        operations.set(token, tokenData, Duration.ofDays(7)); // 7일 TTL
+        ValueOperations<String, String> operations = redisTemplate.opsForValue();
+        operations.set(token, email, Duration.ofDays(7)); // 7일 TTL
     }
 
     /**
@@ -35,13 +31,8 @@ public class RedisRepositoryImpl implements RedisRepository {
      * @param token Refresh Token
      * @return 이메일 및 관련 데이터 맵
      */
-    public Map<String, String> getValues(String token) {
-        ValueOperations<String, Object> operations = redisTemplate.opsForValue();
-        Object object = operations.get(token);
-        if (object instanceof Map) {
-            return (Map<String, String>) object;
-        }
-        return null;
+    public String getValues(String token) {
+        return redisTemplate.opsForValue().get(token);
     }
 
     /**
@@ -72,8 +63,8 @@ public class RedisRepositoryImpl implements RedisRepository {
      * @param expiration 만료 시간 (밀리초)
      */
     public void addTokenToBlacklist(String token, long expiration) {
-        ValueOperations<String, Object> operations = redisTemplate.opsForValue();
-        operations.set(token, true, expiration, TimeUnit.MILLISECONDS);
+        ValueOperations<String, String> operations = redisTemplate.opsForValue();
+        operations.set(token, "true", expiration, TimeUnit.MILLISECONDS);
     }
 
     /**

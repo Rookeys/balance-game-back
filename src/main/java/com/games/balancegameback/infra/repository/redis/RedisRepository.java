@@ -1,12 +1,10 @@
 package com.games.balancegameback.infra.repository.redis;
 
-import java.util.Map;
-
 public interface RedisRepository {
 
     void setValues(String token, String email);
 
-    Map<String, String> getValues(String token);
+    String getValues(String token);
 
     boolean isRefreshTokenValid(String token);
 

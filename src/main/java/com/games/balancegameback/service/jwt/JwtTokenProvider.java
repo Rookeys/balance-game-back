@@ -2,6 +2,7 @@ package com.games.balancegameback.service.jwt;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.CustomJwtException;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
@@ -20,7 +21,8 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import com.games.balancegameback.core.exception.impl.InvalidTokenException;
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 
 @Component
@@ -104,11 +106,7 @@ public class JwtTokenProvider {
     }
 
     private String validateRefreshTokenAndGetEmail(String refreshToken) {
-        String email = redisRepository.getValues(refreshToken).get("email");
-        if (email == null) {
-            throw new CustomJwtException(ErrorCode.ACCESS_DENIED_EXCEPTION, "Invalid refresh token");
-        }
-        return email;
+        return redisRepository.getValues(refreshToken);
     }
 
     public boolean validateToken(String token) {
@@ -138,9 +136,8 @@ public class JwtTokenProvider {
     }
 
     public UserRole getRoles(String email) {
-        return userRepository.findByEmail(email)
-                .map(Users::getUserRole)
-                .orElseThrow(() -> new InvalidTokenException("User not found", ErrorCode.NOT_FOUND_EXCEPTION));
+        Optional<Users> users = userRepository.findByEmail(email);
+        return users.isPresent() ? users.get().getUserRole() : UserRole.USER;
     }
 
     public Authentication getAuthentication(String token) {
