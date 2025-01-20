@@ -54,8 +54,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "재발급 성공")
     })
     @PostMapping(value = "/refresh")
-    public TokenResponse reissue(HttpServletRequest request, HttpServletResponse response) {
-        return userService.reissue(request, response);
+    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
+        return userService.refresh(request, response);
     }
 
     @Operation(summary = "테스트 전용 로그인 API", description = "토큰을 발급합니다.")

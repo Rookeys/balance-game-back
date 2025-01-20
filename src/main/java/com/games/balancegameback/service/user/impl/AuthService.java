@@ -55,7 +55,7 @@ public class AuthService {
         jwtTokenProvider.expireToken(accessToken);
     }
 
-    public TokenResponse reissue(HttpServletRequest request, HttpServletResponse response) {
+    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         String token = jwtTokenProvider.resolveRefreshToken(request);
 
         String accessToken = jwtTokenProvider.reissueAccessToken(token);

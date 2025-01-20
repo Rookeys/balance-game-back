@@ -63,8 +63,8 @@ public class UserService {
     }
 
     // 토큰 재발급
-    public TokenResponse reissue(HttpServletRequest request, HttpServletResponse response) {
-        return authService.reissue(request, response);
+    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
+        return authService.refresh(request, response);
     }
 }
 
