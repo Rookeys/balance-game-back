@@ -8,9 +8,5 @@ public interface RedisRepository {
 
     boolean isRefreshTokenValid(String token);
 
-    boolean isTokenInBlacklist(String token);
-
-    void addTokenToBlacklist(String token, long expiration);
-
     void delValues(String token);
 }
