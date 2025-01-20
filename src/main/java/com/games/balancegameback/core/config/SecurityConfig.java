@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,6 +24,7 @@ public class SecurityConfig {
         return http
                 // CSRF 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
 
                 // 권한 설정
                 .authorizeHttpRequests(auth -> {
@@ -31,7 +33,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/test/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel/resign").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/users/exists").permitAll()
