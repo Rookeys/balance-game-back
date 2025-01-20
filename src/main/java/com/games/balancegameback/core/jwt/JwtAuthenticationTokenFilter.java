@@ -1,6 +1,7 @@
 package com.games.balancegameback.core.jwt;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.CustomJwtException;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
 import com.games.balancegameback.service.jwt.JwtTokenProvider;
 import io.jsonwebtoken.*;
@@ -53,26 +54,18 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
         try {
             if (accessToken == null && refreshToken == null) {
-                setResponse(response, ErrorCode.EMPTY_JWT_CLAIMS);
-                return;
+                throw new CustomJwtException(ErrorCode.EMPTY_JWT_CLAIMS, "4004");
             }
 
-            if (accessToken == null) {
-                handleRefreshToken(refreshToken, path, filterChain, request, response);
-                return;
-            }
-
-            if (isValidAccessToken(accessToken)) {
-                setAuthentication(accessToken);
+            if (accessToken != null) {
+                if (isValidAccessToken(accessToken)) {
+                    setAuthentication(accessToken);
+                }
             } else {
-                setResponse(response, ErrorCode.INVALID_TOKEN_EXCEPTION);
-                return;
+                handleRefreshToken(refreshToken, path, filterChain, request, response);
             }
-        } catch (JwtException e) {
-            handleJwtException(e, response);
-            return;
-        } catch (RuntimeException e) {
-            setResponse(response, ErrorCode.JWT_COMPLEX_ERROR);
+        } catch (CustomJwtException e) {
+            setResponse(response, e.getErrorCode());
             return;
         }
 
@@ -83,6 +76,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         return EXCLUDED_PATHS.stream().anyMatch(excludedPath -> pathMatcher.match(excludedPath, path));
     }
 
+    private boolean isValidAccessToken(String accessToken) {
+        return jwtTokenProvider.validateToken(accessToken) && !redisRepository.isTokenInBlacklist(accessToken);
+    }
+
     private void handleRefreshToken(String refreshToken, String path, FilterChain filterChain,
                                     HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException, JSONException {
@@ -90,21 +87,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 && path.contains("/reissue")) {
             filterChain.doFilter(request, response);
         } else {
-            setResponse(response, ErrorCode.INVALID_TOKEN_EXCEPTION);
-        }
-    }
-
-    private boolean isValidAccessToken(String accessToken) {
-        return jwtTokenProvider.validateToken(accessToken) && !redisRepository.isTokenInBlacklist(accessToken);
-    }
-
-    private void handleJwtException(JwtException e, HttpServletResponse response) throws IOException, JSONException {
-        switch (e) {
-            case MalformedJwtException ignored -> setResponse(response, ErrorCode.INVALID_TOKEN_EXCEPTION);
-            case ExpiredJwtException ignored -> setResponse(response, ErrorCode.JWT_TOKEN_EXPIRED);
-            case UnsupportedJwtException ignored ->
-                    setResponse(response, ErrorCode.UNSUPPORTED_JWT_TOKEN);
-            case null, default -> setResponse(response, ErrorCode.JWT_COMPLEX_ERROR);
+            throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
         }
     }
 
