@@ -32,7 +32,9 @@ public class SecurityConfig {
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/test/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/logout").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/refresh").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel/resign").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()

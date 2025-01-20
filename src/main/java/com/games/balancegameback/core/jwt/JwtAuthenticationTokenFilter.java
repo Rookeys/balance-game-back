@@ -32,6 +32,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple", "/api/v1/users/exists"
     );
 
+    private static final Set<String> REQUIRED_PATHS = Set.of(
+            "/api/v1/users/refresh", "/api/v1/users/logout"
+    );
+
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisRepository redisRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
@@ -56,12 +60,19 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                 throw new CustomJwtException(ErrorCode.EMPTY_JWT_CLAIMS, "4004");
             }
 
-            if (accessToken != null) {
+            if (accessToken != null && refreshToken != null) {
+                throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "잘못된 요청입니다.");
+            }
+
+            if (refreshToken == null) {
                 if (isValidAccessToken(accessToken)) {
                     setAuthentication(accessToken);
                 }
-            } else {
+            }
+
+            if (accessToken == null) {
                 handleRefreshToken(refreshToken, path, filterChain, request, response);
+                return;
             }
         } catch (CustomJwtException e) {
             setResponse(response, e.getErrorCode());
@@ -75,15 +86,19 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         return EXCLUDED_PATHS.stream().anyMatch(excludedPath -> pathMatcher.match(excludedPath, path));
     }
 
+    private boolean requiredPath(String path) {
+        return REQUIRED_PATHS.stream().anyMatch(requiredPath -> pathMatcher.match(requiredPath, path));
+    }
+
     private boolean isValidAccessToken(String accessToken) {
-        return jwtTokenProvider.validateToken(accessToken) && !redisRepository.isTokenInBlacklist(accessToken);
+        return jwtTokenProvider.validateToken(accessToken);
     }
 
     private void handleRefreshToken(String refreshToken, String path, FilterChain filterChain,
                                     HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException, JSONException {
         if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
-                && path.contains("/refresh")) {
+                && requiredPath(path)) {
             filterChain.doFilter(request, response);
         } else {
             throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
