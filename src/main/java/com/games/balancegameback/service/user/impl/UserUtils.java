@@ -6,6 +6,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.LoginType;
+import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
 import com.games.balancegameback.service.jwt.JwtTokenProvider;
 import com.games.balancegameback.service.user.UserRepository;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,6 +32,12 @@ public class UserUtils {
     private final UserRepository userRepository;
     private final RedisRepository redisRepository;
     private final RestTemplate restTemplate;
+
+    @Value("${jwt.accessTokenExpiration}")
+    private long accessTokenValidTime;
+
+    @Value("${jwt.refreshTokenExpiration}")
+    private long refreshTokenValidTime;
 
     public Users findUserByToken(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveAccessToken(request);
@@ -96,5 +104,15 @@ public class UserUtils {
         jwtTokenProvider.setHeaderRefreshToken(response, refreshToken);
 
         redisRepository.setValues(refreshToken, users.getEmail());
+    }
+
+    /**
+    *   AccessToken & RefreshToken 제한 시간 출력.
+    */
+    public TokenResponse getTokenValidTime() {
+        return TokenResponse.builder()
+                .accessToken(accessTokenValidTime / 1000)
+                .refreshToken(refreshTokenValidTime / 1000)
+                .build();
     }
 }

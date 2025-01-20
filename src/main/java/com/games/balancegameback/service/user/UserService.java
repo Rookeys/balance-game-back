@@ -1,9 +1,6 @@
 package com.games.balancegameback.service.user;
 
-import com.games.balancegameback.dto.user.LoginRequest;
-import com.games.balancegameback.dto.user.SignUpRequest;
-import com.games.balancegameback.dto.user.UserRequest;
-import com.games.balancegameback.dto.user.UserResponse;
+import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.service.user.impl.AuthService;
 import com.games.balancegameback.service.user.impl.UserProfileService;
 import com.games.balancegameback.service.user.impl.UserManagementService;
@@ -21,13 +18,13 @@ public class UserService {
     private final UserProfileService userProfileService;
 
     // 로그인
-    public void login(LoginRequest loginRequest, HttpServletResponse response) {
-        authService.login(loginRequest, response);
+    public TokenResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+        return authService.login(loginRequest, response);
     }
 
     // 테스트용 로그인
-    public void testLogin(HttpServletResponse response) {
-        authService.testLogin(response);
+    public TokenResponse testLogin(HttpServletResponse response) {
+        return authService.testLogin(response);
     }
 
     // 회원 가입
@@ -66,8 +63,8 @@ public class UserService {
     }
 
     // 토큰 재발급
-    public void reissue(HttpServletRequest request, HttpServletResponse response) {
-        authService.reissue(request, response);
+    public TokenResponse reissue(HttpServletRequest request, HttpServletResponse response) {
+        return authService.reissue(request, response);
     }
 }
 

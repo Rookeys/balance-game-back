@@ -2,7 +2,6 @@ package com.games.balancegameback.service.jwt;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.CustomJwtException;
-import com.games.balancegameback.core.exception.impl.JwtExpiredException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
