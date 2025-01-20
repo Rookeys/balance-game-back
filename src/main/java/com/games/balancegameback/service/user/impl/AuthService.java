@@ -48,11 +48,8 @@ public class AuthService {
     }
 
     public void logout(HttpServletRequest request) {
-        String accessToken = jwtTokenProvider.resolveRefreshToken(request);
         String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
-
         redisRepository.delValues(refreshToken);
-        jwtTokenProvider.expireToken(accessToken);
     }
 
     public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {

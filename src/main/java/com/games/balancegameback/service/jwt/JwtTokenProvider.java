@@ -20,7 +20,8 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import com.games.balancegameback.core.exception.impl.InvalidTokenException;
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 
 @Component
@@ -104,10 +105,11 @@ public class JwtTokenProvider {
     }
 
     private String validateRefreshTokenAndGetEmail(String refreshToken) {
-        String email = redisRepository.getValues(refreshToken).get("email");
-        if (email == null) {
-            throw new CustomJwtException(ErrorCode.ACCESS_DENIED_EXCEPTION, "Invalid refresh token");
+        String email = redisRepository.getValues(refreshToken);
+        if (email.equals("blacklist")) {
+            throw new CustomJwtException(ErrorCode.JWT_BLACKLIST, "블랙리스트에 등록된 토큰입니다.");
         }
+
         return email;
     }
 
@@ -138,29 +140,14 @@ public class JwtTokenProvider {
     }
 
     public UserRole getRoles(String email) {
-        return userRepository.findByEmail(email)
-                .map(Users::getUserRole)
-                .orElseThrow(() -> new InvalidTokenException("User not found", ErrorCode.NOT_FOUND_EXCEPTION));
+        Optional<Users> users = userRepository.findByEmail(email);
+        return users.isPresent() ? users.get().getUserRole() : UserRole.USER;
     }
 
     public Authentication getAuthentication(String token) {
         String email = extractEmail(token);
         UserDetails userDetails = customUserDetailService.loadUserByUsername(email);
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
-
-    public void expireToken(String token) {
-        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        Date expiration = claims.getExpiration();
-        Date now = new Date();
-        if (now.after(expiration)) {
-            redisRepository.addTokenToBlacklist(token, expiration.getTime() - now.getTime());
-        }
     }
 
     public String extractEmail(String token) {
