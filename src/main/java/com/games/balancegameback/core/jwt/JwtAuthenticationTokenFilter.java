@@ -83,7 +83,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                                     HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException, JSONException {
         if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
-                && path.contains("/reissue")) {
+                && path.contains("/refresh")) {
             filterChain.doFilter(request, response);
         } else {
             throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
