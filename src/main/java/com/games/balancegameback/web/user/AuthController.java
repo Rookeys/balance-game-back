@@ -31,10 +31,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/login")
-    public TokenResponse login(
-            @RequestBody @Valid LoginRequest loginRequest,
-            HttpServletResponse response) {
-        return userService.login(loginRequest, response);
+    public TokenResponse login(@RequestBody @Valid LoginRequest loginRequest) {
+        return userService.login(loginRequest);
     }
 
     @Operation(summary = "로그 아웃 API", description = "사용자를 로그 아웃 시킵니다.")
@@ -54,8 +52,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "재발급 성공")
     })
     @PostMapping(value = "/refresh")
-    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
-        return userService.refresh(request, response);
+    public TokenResponse refresh(HttpServletRequest request) {
+        return userService.refresh(request);
     }
 
     @Operation(summary = "테스트 전용 로그인 API", description = "토큰을 발급합니다.")
@@ -66,8 +64,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/test/login")
-    public TokenResponse testLogin(HttpServletResponse response) {
-        return userService.testLogin(response);
+    public TokenResponse testLogin() {
+        return userService.testLogin();
     }
 }
 

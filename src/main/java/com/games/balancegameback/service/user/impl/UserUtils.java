@@ -96,21 +96,22 @@ public class UserUtils {
     /**
      *   AccessToken & RefreshToken 생성 및 헤더 삽입.
      */
-    public void createToken(Users users, HttpServletResponse response) {
+    public TokenResponse createToken(Users users) {
         String accessToken = jwtTokenProvider.createAccessToken(users.getEmail(), users.getUserRole());
         String refreshToken = jwtTokenProvider.createRefreshToken(users.getEmail(), users.getUserRole());
 
-        jwtTokenProvider.setHeaderAccessToken(response, accessToken);
-        jwtTokenProvider.setHeaderRefreshToken(response, refreshToken);
-
         redisRepository.setValues(refreshToken, users.getEmail());
+
+        return this.getTokenValidTime(accessToken, refreshToken);
     }
 
     /**
     *   AccessToken & RefreshToken 제한 시간 출력.
     */
-    public TokenResponse getTokenValidTime() {
+    public TokenResponse getTokenValidTime(String accessToken, String refreshToken) {
         return TokenResponse.builder()
+                .accessToken("Bearer " + accessToken)
+                .refreshToken("Bearer " + refreshToken)
                 .accessTokenExpiresAt(accessTokenValidTime / 1000)
                 .refreshTokenExpiresAt(refreshTokenValidTime / 1000)
                 .build();

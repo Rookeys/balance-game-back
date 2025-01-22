@@ -18,18 +18,18 @@ public class UserService {
     private final UserProfileService userProfileService;
 
     // 로그인
-    public TokenResponse login(LoginRequest loginRequest, HttpServletResponse response) {
-        return authService.login(loginRequest, response);
+    public TokenResponse login(LoginRequest loginRequest) {
+        return authService.login(loginRequest);
     }
 
     // 테스트용 로그인
-    public TokenResponse testLogin(HttpServletResponse response) {
-        return authService.testLogin(response);
+    public TokenResponse testLogin() {
+        return authService.testLogin();
     }
 
     // 회원 가입
-    public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
-        userManagementService.signUp(signUpRequest, response);
+    public TokenResponse signUp(SignUpRequest signUpRequest) {
+        return userManagementService.signUp(signUpRequest);
     }
 
     // 이름 중복 확인
@@ -63,8 +63,8 @@ public class UserService {
     }
 
     // 토큰 재발급
-    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
-        return authService.refresh(request, response);
+    public TokenResponse refresh(HttpServletRequest request) {
+        return authService.refresh(request);
     }
 }
 

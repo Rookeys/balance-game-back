@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.user;
 
 import com.games.balancegameback.dto.user.SignUpRequest;
+import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,10 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +31,8 @@ public class UserManagementController {
             @ApiResponse(responseCode = "401", description = "401_2 : 중복된 닉네임 또는 이메일")
     })
     @PostMapping(value = "/signup")
-    public ResponseEntity<Boolean> signUp(
-            @RequestBody @Valid SignUpRequest signUpRequest,
-            HttpServletResponse response) {
-        userService.signUp(signUpRequest, response);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Boolean.TRUE);
+    public TokenResponse signUp(@RequestBody @Valid SignUpRequest signUpRequest) {
+        return userService.signUp(signUpRequest);
     }
 
     @Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴 요청을 처리합니다.")

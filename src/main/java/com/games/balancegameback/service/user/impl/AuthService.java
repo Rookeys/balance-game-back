@@ -24,7 +24,7 @@ public class AuthService {
     private final RedisRepository redisRepository;
     private final UserUtils userUtils;
 
-    public TokenResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+    public TokenResponse login(LoginRequest loginRequest) {
         userUtils.validateToken(loginRequest.getAccessToken(), loginRequest.getLoginType());
         Optional<Users> users = userRepository.findByEmail(loginRequest.getEmail());
 
@@ -36,15 +36,12 @@ public class AuthService {
             throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
         }
 
-        userUtils.createToken(users.get(), response);
-        return userUtils.getTokenValidTime();
+        return userUtils.createToken(users.get());
     }
 
-    public TokenResponse testLogin(HttpServletResponse response) {
+    public TokenResponse testLogin() {
         Optional<Users> users = userRepository.findByEmail("test@test.com");
-
-        userUtils.createToken(users.get(), response);
-        return userUtils.getTokenValidTime();
+        return userUtils.createToken(users.get());
     }
 
     public void logout(HttpServletRequest request) {
@@ -52,16 +49,13 @@ public class AuthService {
         redisRepository.delValues(refreshToken);
     }
 
-    public TokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
+    public TokenResponse refresh(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveRefreshToken(request);
 
         String accessToken = jwtTokenProvider.reissueAccessToken(token);
         String refreshToken = jwtTokenProvider.reissueRefreshToken(token);
 
-        jwtTokenProvider.setHeaderAccessToken(response, accessToken);
-        jwtTokenProvider.setHeaderRefreshToken(response, refreshToken);
-
-        return userUtils.getTokenValidTime();
+        return userUtils.getTokenValidTime(accessToken, refreshToken);
     }
 }
 
