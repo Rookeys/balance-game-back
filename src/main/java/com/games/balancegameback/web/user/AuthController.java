@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.user;
 
-import com.games.balancegameback.dto.user.LoginRequest;
+import com.games.balancegameback.dto.user.KakaoRequest;
+import com.games.balancegameback.dto.user.LoginResponse;
 import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +27,13 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검사 실패, 조건에 맞지 않는 값이 발견됨"),
-            @ApiResponse(responseCode = "401", description = "401 : 존재하지 않는 유저"),
-            @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
+            @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저"),
+            @ApiResponse(responseCode = "401", description = "401_3 : 다른 소셜 플랫폼 기반 가입자")
     })
-    @PostMapping(value = "/login")
-    public TokenResponse login(@RequestBody @Valid LoginRequest loginRequest) {
-        return userService.login(loginRequest);
+    @PostMapping(value = "/login/kakao")
+    public LoginResponse kakaoLogin(@RequestBody @Valid KakaoRequest kakaoRequest,
+                               HttpServletRequest request) {
+        return userService.kakaoLogin(kakaoRequest, request);
     }
 
     @Operation(summary = "로그 아웃 API", description = "사용자를 로그 아웃 시킵니다.")
@@ -64,7 +65,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
     })
     @PostMapping(value = "/test/login")
-    public TokenResponse testLogin() {
+    public LoginResponse testLogin() {
         return userService.testLogin();
     }
 }
