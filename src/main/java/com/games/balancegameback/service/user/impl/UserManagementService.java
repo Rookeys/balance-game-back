@@ -5,6 +5,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.user.SignUpRequest;
+import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +26,7 @@ public class UserManagementService {
     }
 
     @Transactional
-    public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
+    public TokenResponse signUp(SignUpRequest signUpRequest) {
         userUtils.validateToken(signUpRequest.getAccessToken(), signUpRequest.getLoginType());
 
         if (this.existsByNickname(signUpRequest.getNickname())) {
@@ -35,7 +36,7 @@ public class UserManagementService {
         Users users = signUpRequest.toDomain();
         userRepository.save(users);
 
-        userUtils.createToken(users, response);
+        return userUtils.createToken(users);
     }
 
     @Transactional
