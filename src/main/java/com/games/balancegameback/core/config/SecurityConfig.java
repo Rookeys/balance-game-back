@@ -31,7 +31,7 @@ public class SecurityConfig {
                     auth
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/test/login").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/login/kakao").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/logout").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/refresh").permitAll()

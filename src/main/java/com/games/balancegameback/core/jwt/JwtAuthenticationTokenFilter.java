@@ -29,7 +29,7 @@ import java.util.Set;
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/users/login", "/api/v1/users/test/login",
+            "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/users/login", "/api/v1/users/test/login/kakao",
             "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple", "/api/v1/users/exists"
     );
 
