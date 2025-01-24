@@ -4,11 +4,8 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.dto.user.SignUpRequest;
-import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,20 +20,6 @@ public class UserManagementService {
 
     public boolean existsByNickname(String nickname) {
         return userRepository.existsByNickname(nickname);
-    }
-
-    @Transactional
-    public TokenResponse signUp(SignUpRequest signUpRequest) {
-        userUtils.validateToken(signUpRequest.getAccessToken(), signUpRequest.getLoginType());
-
-        if (this.existsByNickname(signUpRequest.getNickname())) {
-            throw new UnAuthorizedException("중복된 닉네임입니다.", ErrorCode.DUPLICATED_EXCEPTION);
-        }
-
-        Users users = signUpRequest.toDomain();
-        userRepository.save(users);
-
-        return userUtils.createToken(users);
     }
 
     @Transactional
