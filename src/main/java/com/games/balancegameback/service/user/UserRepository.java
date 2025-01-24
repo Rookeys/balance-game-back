@@ -8,7 +8,7 @@ public interface UserRepository {
 
     Optional<Users> findByEmail(String email);
 
-    void save(Users users);
+    Users save(Users users);
 
     void update(Users users);
 

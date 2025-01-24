@@ -18,18 +18,13 @@ public class UserService {
     private final UserProfileService userProfileService;
 
     // 로그인
-    public TokenResponse login(LoginRequest loginRequest) {
-        return authService.login(loginRequest);
+    public LoginResponse kakaoLogin(KakaoRequest kakaoRequest, HttpServletRequest request) {
+        return authService.kakaoLogin(kakaoRequest, request);
     }
 
     // 테스트용 로그인
-    public TokenResponse testLogin() {
+    public LoginResponse testLogin() {
         return authService.testLogin();
-    }
-
-    // 회원 가입
-    public TokenResponse signUp(SignUpRequest signUpRequest) {
-        return userManagementService.signUp(signUpRequest);
     }
 
     // 이름 중복 확인

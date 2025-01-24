@@ -21,8 +21,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void save(Users users) {
-        userRepository.save(UsersEntity.from(users));
+    public Users save(Users users) {
+        UsersEntity usersEntity = userRepository.save(UsersEntity.from(users));
+        return usersEntity.toModel();
     }
 
     @Override

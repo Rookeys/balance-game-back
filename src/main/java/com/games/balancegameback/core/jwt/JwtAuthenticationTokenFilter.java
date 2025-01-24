@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.security.core.Authentication;
@@ -28,8 +29,8 @@ import java.util.Set;
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/users/login", "/api/v1/users/test/login",
-            "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple", "/api/v1/users/exists"
+            "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/users/login/kakao", "/api/v1/users/test/login",
+            "/api/v1/media/single", "/api/v1/media/multiple", "/api/v1/users/exists"
     );
 
     private static final Set<String> REQUIRED_PATHS = Set.of(
