@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.user;
 
 import com.games.balancegameback.dto.user.KakaoRequest;
+import com.games.balancegameback.dto.user.LoginRequest;
 import com.games.balancegameback.dto.user.LoginResponse;
 import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserService;
@@ -23,7 +24,7 @@ public class AuthController {
 
     private final UserService userService;
 
-    @Operation(summary = "로그인 API", description = "사용자의 로그인 정보를 받아 토큰을 발급합니다.")
+    @Operation(summary = "카카오 로그인(서버 처리) API", description = "사용자의 로그인 정보를 받아 토큰을 발급합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검사 실패, 조건에 맞지 않는 값이 발견됨"),
@@ -34,6 +35,18 @@ public class AuthController {
     public LoginResponse kakaoLogin(@RequestBody @Valid KakaoRequest kakaoRequest,
                                HttpServletRequest request) {
         return userService.kakaoLogin(kakaoRequest, request);
+    }
+
+    @Operation(summary = "로그인(Next-Auth) API", description = "사용자의 로그인 정보를 받아 토큰을 발급합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "400", description = "유효성 검사 실패, 조건에 맞지 않는 값이 발견됨"),
+            @ApiResponse(responseCode = "401", description = "401 : 존재하지 않는 유저"),
+            @ApiResponse(responseCode = "401", description = "401_2 : 회원 탈퇴한 유저")
+    })
+    @PostMapping(value = "/login")
+    public LoginResponse login(@RequestBody @Valid LoginRequest loginRequest) {
+        return userService.login(loginRequest);
     }
 
     @Operation(summary = "로그 아웃 API", description = "사용자를 로그 아웃 시킵니다.")
