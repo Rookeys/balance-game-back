@@ -6,10 +6,7 @@ import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.LoginType;
 import com.games.balancegameback.domain.user.enums.UserRole;
-import com.games.balancegameback.dto.user.KakaoRequest;
-import com.games.balancegameback.dto.user.KakaoResponse;
-import com.games.balancegameback.dto.user.LoginResponse;
-import com.games.balancegameback.dto.user.TokenResponse;
+import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
 import com.games.balancegameback.service.jwt.JwtTokenProvider;
 import com.games.balancegameback.service.media.repository.ImageRepository;
@@ -63,6 +60,23 @@ public class AuthService {
 
         if (!users.get().getLoginType().equals(LoginType.KAKAO)) {
             throw new UnAuthorizedException("다른 소셜 플랫폼 가입 유저입니다.", ErrorCode.NOT_ALLOW_OTHER_FORMATS);
+        }
+
+        if (users.get().isDeleted()) {
+            throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
+        }
+
+        Images images = imageRepository.findByUsers(users.get());
+
+        return userUtils.createToken(users.get(), images != null ? images.getFileUrl() : null);
+    }
+
+    public LoginResponse login(LoginRequest loginRequest) {
+        userUtils.validateToken(loginRequest.getAccessToken(), loginRequest.getLoginType());
+        Optional<Users> users = userRepository.findByEmail(loginRequest.getEmail());
+
+        if (users.isEmpty()) {
+            throw new UnAuthorizedException("유저를 찾을 수 없습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
         if (users.get().isDeleted()) {

@@ -5,7 +5,6 @@ import com.games.balancegameback.service.user.impl.AuthService;
 import com.games.balancegameback.service.user.impl.UserProfileService;
 import com.games.balancegameback.service.user.impl.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +16,19 @@ public class UserService {
     private final UserManagementService userManagementService;
     private final UserProfileService userProfileService;
 
-    // 로그인
+    // 카카오 로그인(서버 처리)
     public LoginResponse kakaoLogin(KakaoRequest kakaoRequest, HttpServletRequest request) {
         return authService.kakaoLogin(kakaoRequest, request);
+    }
+
+    // 로그인 (next-auth 방식)
+    public LoginResponse login(LoginRequest loginRequest) {
+        return authService.login(loginRequest);
+    }
+
+    // 회원 가입
+    public LoginResponse signUp(SignUpRequest signUpRequest) {
+        return userManagementService.signUp(signUpRequest);
     }
 
     // 테스트용 로그인

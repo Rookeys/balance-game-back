@@ -1,7 +1,7 @@
 package com.games.balancegameback.web.user;
 
+import com.games.balancegameback.dto.user.LoginResponse;
 import com.games.balancegameback.dto.user.SignUpRequest;
-import com.games.balancegameback.dto.user.TokenResponse;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,6 +22,18 @@ import org.springframework.web.bind.annotation.*;
 public class UserManagementController {
 
     private final UserService userService;
+
+    @Operation(summary = "회원 가입 API", description = "유저의 정보를 입력받아 회원 가입을 처리합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "회원 가입 성공"),
+            @ApiResponse(responseCode = "400", description = "유효성 검사 실패, 조건에 맞지 않는 값이 발견됨"),
+            @ApiResponse(responseCode = "401", description = "401 : 소셜 로그인 측 토큰 불량"),
+            @ApiResponse(responseCode = "401", description = "401_2 : 중복된 닉네임 또는 이메일")
+    })
+    @PostMapping(value = "/signup")
+    public LoginResponse signUp(@RequestBody @Valid SignUpRequest signUpRequest) {
+        return userService.signUp(signUpRequest);
+    }
 
     @Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴 요청을 처리합니다.")
     @SecurityRequirement(name = "bearerAuth")
