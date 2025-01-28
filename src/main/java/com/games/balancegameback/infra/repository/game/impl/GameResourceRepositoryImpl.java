@@ -5,11 +5,14 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceTemporaryResponse;
+import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
+import com.games.balancegameback.dto.game.gameplay.GamePlayResourceLinkResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResourceJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,6 +47,48 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     public GameResources findById(Long id) {
         return gameResourceJpaRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("해당 리소스는 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION)).toModel();
+    }
+
+    @Override
+    public List<GamePlayResourceResponse> findByIds(List<Long> ids) {
+        QGameResourcesEntity gameResource = QGameResourcesEntity.gameResourcesEntity;
+
+        List<GameResources> gameResourcesList = jpaQueryFactory
+                .selectFrom(gameResource)
+                .where(gameResource.id.in(ids))
+                .fetch()
+                .stream()
+                .map(GameResourcesEntity::toModel)
+                .toList();
+
+        return gameResourcesList.stream()
+                .map(resource -> {
+                    GamePlayResourceLinkResponse gameResourceLink = GamePlayResourceLinkResponse.builder()
+                            .link(resource.getLinks().getUrls())
+                            .startSec(resource.getLinks().getStartSec())
+                            .endSec(resource.getLinks().getEndSec())
+                            .build();
+
+                    return GamePlayResourceResponse.builder()
+                            .resourceId(resource.getId())
+                            .title(resource.getTitle())
+                            .fileUrl(resource.getImages().getFileUrl())
+                            .gameResourceLink(gameResourceLink)
+                            .build();
+                }).toList();
+    }
+
+    @Override
+    public List<Long> findByRandomId(Long gameId, int roundNumber) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+
+        return jpaQueryFactory
+                .select(resources.id)
+                .from(resources)
+                .where(resources.games.id.eq(gameId))
+                .orderBy(Expressions.numberTemplate(Double.class, "function('RAND')").asc())
+                .limit(roundNumber)
+                .fetch();
     }
 
     @Override

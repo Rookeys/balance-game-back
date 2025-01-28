@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
+import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.infra.repository.game.GameResultJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,5 +20,10 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     @Override
     public int countByGameResourcesId(Long resourcesId) {
         return gameResultJpaRepository.countByGameResourcesId(resourcesId);
+    }
+
+    @Override
+    public void save(GameResults gameResults) {
+
     }
 }

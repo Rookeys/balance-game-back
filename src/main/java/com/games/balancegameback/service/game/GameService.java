@@ -7,8 +7,12 @@ import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
+import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
+import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
+import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
+import com.games.balancegameback.service.game.impl.GamePlayService;
 import com.games.balancegameback.service.game.impl.GameResourceService;
 import com.games.balancegameback.service.game.impl.GameRoomService;
 import com.games.balancegameback.service.game.repository.GameRepository;
@@ -27,6 +31,7 @@ public class GameService {
 
     private final GameRoomService gameRoomService;
     private final GameResourceService gameResourceService;
+    private final GamePlayService gamePlayService;
     private final GameRepository gameRepository;
     private final UserUtils userUtils;
 
@@ -77,6 +82,16 @@ public class GameService {
                                HttpServletRequest request) {
         this.validateRequest(roomId, request);
         gameResourceService.updateResource(resourceId, gameResourceRequest);
+    }
+
+    // 게임방 생성 및 게임 시작
+    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest request) {
+        return gamePlayService.createPlayRoom(gameId, request);
+    }
+
+    // 게임방 생성 및 게임 시작
+    public GamePlayResponse updatePlayRoom(Long gameId, Long playId, GamePlayRequest request) {
+        return gamePlayService.updatePlayRoom(gameId, playId, request);
     }
 
     // 리소스를 삭제함

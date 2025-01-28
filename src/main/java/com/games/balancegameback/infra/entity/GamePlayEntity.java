@@ -35,6 +35,9 @@ public class GamePlayEntity {
     @Column(name = "selected_resource_id")
     private List<Long> selectedResources; // 살아남은 리소스 ID
 
+    @Column
+    private boolean gameEnded = false;
+
     @Column(updatable = false)
     @CreatedDate
     private LocalDateTime createdDate;
@@ -44,12 +47,30 @@ public class GamePlayEntity {
     private LocalDateTime updatedDate;
 
     public static GamePlayEntity from(GamePlay gamePlay) {
+        GamePlayEntity gamePlayEntity = new GamePlayEntity();
+        gamePlayEntity.id = gamePlay.getId();
+        gamePlayEntity.games = GamesEntity.from(gamePlay.getGames());
+        gamePlayEntity.roundNumber = gamePlay.getRoundNumber();
+        gamePlayEntity.allResources = gamePlay.getAllResources();
+        gamePlayEntity.selectedResources = gamePlay.getSelectedResources();
+        gamePlayEntity.gameEnded = gamePlay.isGameEnded();
 
+        return gamePlayEntity;
     }
 
-    public GamePlayEntity toModel() {
-        return GamePlayEntity.builder()
+    public GamePlay toModel() {
+        return GamePlay.builder()
                 .id(id)
+                .games(games.toModel())
+                .roundNumber(roundNumber)
+                .allResources(allResources)
+                .selectedResources(selectedResources)
+                .gameEnded(gameEnded)
                 .build();
+    }
+
+    public void update(GamePlay gamePlay) {
+        this.allResources = gamePlay.getAllResources();
+        this.selectedResources = gamePlay.getSelectedResources();
     }
 }
