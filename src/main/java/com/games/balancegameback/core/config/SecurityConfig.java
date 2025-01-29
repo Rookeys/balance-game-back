@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // ADMIN 역할만 접근 가능
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/exists").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/test/login").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/login/kakao").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/login").permitAll()
@@ -39,7 +40,8 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/cancel/resign").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/v1/users/exists").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/games/{gameId}/play").permitAll()
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/games/{gameId}/play/{playId}").permitAll()
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated(); // 그 외 모든 요청은 검증 필요
                 })

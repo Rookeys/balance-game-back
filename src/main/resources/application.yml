@@ -73,12 +73,9 @@ cloud:
   aws:
     s3:
       bucket: balance-game
-    region:
-      auto: false
-      static: ap-northeast-2
     credentials:
-      accessKey: ENC(QiAuZ2EVou3O2rWWcbTL4D4K3u0xyR+I83y9lic55xE=)
-      secretKey: ENC(WPfcWOajvrVSXhTa24QI6Vh7yufF/kT/xlLFh+BPR49qajaUGYnQW6vPu4c2nIDKO0qbhDJLoJ0=)
+      accessKey: ENC(cmMaXTdPrdrP1nmg38xCxlXrrL+parj7xDzoi4+MHzc=)
+      secretKey: ENC(s2lBQF5LlVub1rwF997ULV4EgKplIYN9+2lx/91x8qKbefrNOQnqKzn0MrcsezAXky1tYSJmDTg=)
     stack:
       auto: false
 

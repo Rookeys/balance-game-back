@@ -64,9 +64,9 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         return gameResourcesList.stream()
                 .map(resource -> {
                     GamePlayResourceLinkResponse gameResourceLink = GamePlayResourceLinkResponse.builder()
-                            .link(resource.getLinks().getUrls())
-                            .startSec(resource.getLinks().getStartSec())
-                            .endSec(resource.getLinks().getEndSec())
+                            .link(resource.getLinks() == null ? null : resource.getLinks().getUrls())
+                            .startSec(resource.getLinks() == null ? 0 : resource.getLinks().getStartSec())
+                            .endSec(resource.getLinks() == null ? 0 : resource.getLinks().getEndSec())
                             .build();
 
                     return GamePlayResourceResponse.builder()

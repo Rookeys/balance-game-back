@@ -44,8 +44,8 @@ public class GamePlay {
             throw new BadRequestException("Resource ID not found", ErrorCode.RUNTIME_EXCEPTION);
         }
 
-        this.getAllResources().remove(gamePlayRequest.getWinResourceId());
-        this.getAllResources().remove(gamePlayRequest.getLoseResourceId());
+        this.allResources.remove(gamePlayRequest.getWinResourceId());
+        this.allResources.remove(gamePlayRequest.getLoseResourceId());
 
         this.selectedResources.add(gamePlayRequest.getWinResourceId());
     }

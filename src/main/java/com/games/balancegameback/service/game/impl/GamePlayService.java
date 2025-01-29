@@ -3,6 +3,8 @@ package com.games.balancegameback.service.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.domain.game.GamePlay;
+import com.games.balancegameback.domain.game.GameResources;
+import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
@@ -78,7 +80,7 @@ public class GamePlayService {
 
             // 모든 라운드가 끝난 경우 게임 종료
             if (gamePlay.getRoundNumber() == 1) {
-                this.endGame(gamePlay);
+                this.endGame(gamePlay, gamePlayRequest.getWinResourceId());
                 return null;
             }
         }
@@ -102,9 +104,15 @@ public class GamePlayService {
     /**
      * 게임 종료 처리
      */
-    private void endGame(GamePlay gamePlay) {
+    private void endGame(GamePlay gamePlay, Long resourceId) {
         gamePlay.setGameEnded(true);
+        GameResources gameResources = gameResourceRepository.findById(resourceId);
+        GameResults results = GameResults.builder()
+                .gameResources(gameResources)
+                .build();
+
         gamePlayRepository.update(gamePlay);
+        gameResultRepository.save(results);
     }
 
     /**
@@ -124,7 +132,7 @@ public class GamePlayService {
         gamePlay.setAllResources(new ArrayList<>(selectedResources));
         gamePlay.setSelectedResources(new ArrayList<>()); // 선택된 리소스 초기화
 
-        // 라운드 숫자 감소 (예: 64 -> 32 -> 16)
+        // 라운드 숫자 감소 (ex. 64 -> 32 -> 16)
         gamePlay.setRoundNumber(gamePlay.getRoundNumber() / 2);
     }
 }
