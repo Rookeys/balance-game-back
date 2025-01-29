@@ -3,8 +3,6 @@ package com.games.balancegameback.service.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.domain.game.GamePlay;
-import com.games.balancegameback.domain.game.GameResources;
-import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
@@ -40,10 +38,6 @@ public class GamePlayService {
 
         List<Long> resourceList = gameResourceRepository.findByRandomId(gameId, request.getRoundNumber());
         List<Long> selectedResourceIds = this.shuffle(resourceList);
-
-        for (Long resourceId : selectedResourceIds) {
-            resourceList.remove(resourceId);
-        }
 
         GamePlay gamePlay = GamePlay.builder()
                 .games(games)
