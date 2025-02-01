@@ -1,6 +1,7 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.domain.game.GameResults;
+import com.games.balancegameback.infra.entity.GameResultsEntity;
 import com.games.balancegameback.infra.repository.game.GameResultJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,6 @@ public class GameResultRepositoryImpl implements GameResultRepository {
 
     @Override
     public void save(GameResults gameResults) {
-
+        gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
     }
 }
