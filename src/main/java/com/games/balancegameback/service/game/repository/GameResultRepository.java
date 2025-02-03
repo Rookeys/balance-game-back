@@ -1,8 +1,13 @@
 package com.games.balancegameback.service.game.repository;
 
 import com.games.balancegameback.domain.game.GameResults;
+import com.games.balancegameback.dto.game.GameResultResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface GameResultRepository {
+
+    Page<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId, String searchQuery, Pageable pageable);
 
     int countByGameId(Long roomId);
 

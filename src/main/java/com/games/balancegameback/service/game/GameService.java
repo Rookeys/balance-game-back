@@ -14,6 +14,7 @@ import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.impl.GamePlayService;
 import com.games.balancegameback.service.game.impl.GameResourceService;
+import com.games.balancegameback.service.game.impl.GameResultService;
 import com.games.balancegameback.service.game.impl.GameRoomService;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
@@ -32,6 +33,7 @@ public class GameService {
     private final GameRoomService gameRoomService;
     private final GameResourceService gameResourceService;
     private final GamePlayService gamePlayService;
+    private final GameResultService gameResultService;
     private final GameRepository gameRepository;
     private final UserUtils userUtils;
 
@@ -98,6 +100,11 @@ public class GameService {
     public void deleteResource(Long roomId, Long resourceId, HttpServletRequest request) {
         this.validateRequest(roomId, request);
         gameResourceService.deleteResource(resourceId);
+    }
+
+    // 게임 결과창 출력
+    public Page<GameResultResponse> getResultRanking(Long gameId, Long cursorId, String searchQuery, Pageable pageable) {
+        return gameResultService.getResultRanking(gameId, cursorId, searchQuery, pageable);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.

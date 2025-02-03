@@ -42,6 +42,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/games/{gameId}/play").permitAll()
                             .requestMatchers(HttpMethod.PUT, "/api/v1/games/{gameId}/play/{playId}").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/results/**").permitAll()
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated(); // 그 외 모든 요청은 검증 필요
                 })

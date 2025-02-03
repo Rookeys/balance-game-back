@@ -28,8 +28,4 @@ public class GameResourceResponse {
 
     @Schema(description = "우승 비율")
     private double winRate;
-
-    public void update(double winRate) {
-        this.winRate = winRate;
-    }
 }

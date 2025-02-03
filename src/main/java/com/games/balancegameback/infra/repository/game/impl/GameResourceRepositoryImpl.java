@@ -125,9 +125,8 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         int totalPlayNums = gameResultRepository.countByGameId(gameId);
         List<GameResourceResponse> responseList = new ArrayList<>();
 
-        // 추후 Game Result 가 완성되고 통계 로직이 추가되면 교체 예정.
         for (GameResourceTemporaryResponse resource : list) {
-            int winNums = gameResultRepository.countByGameResourcesId(resource.getResourceId());
+            Double winRate = this.calculateWinRate(totalPlayNums, resource.getResourceId());
             GameResourceResponse response = GameResourceResponse.builder()
                     .resourceId(resource.getResourceId())
                     .title(resource.getTitle())
@@ -135,13 +134,8 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                     .link(resource.getLink())
                     .startSec(resource.getStartSec())
                     .endSec(resource.getEndSec())
+                    .winRate(winRate)
                     .build();
-
-            if (totalPlayNums == 0) {
-                response.update(0);
-            } else {
-                response.update((double) winNums / totalPlayNums * 100);
-            }
 
             responseList.add(response);
         }
@@ -156,5 +150,15 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         }
 
         gameResourceJpaRepository.deleteById(id);
+    }
+
+    private Double calculateWinRate(int totalPlayNums, Long resourceId) {
+        int winGames = gameResultRepository.countByGameResourcesId(resourceId);
+
+        if (totalPlayNums == 0) {
+            totalPlayNums = 1; // 0으로 나누는 것을 방지하기 위해 최소 1 설정
+        }
+
+        return (double) (((winGames / totalPlayNums)) * 100);
     }
 }
