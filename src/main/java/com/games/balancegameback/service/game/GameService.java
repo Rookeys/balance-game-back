@@ -104,8 +104,10 @@ public class GameService {
     }
 
     // 게임 결과창 출력
-    public Page<GameResultResponse> getResultRanking(Long gameId, Long cursorId, String searchQuery, Pageable pageable) {
-        return gameResultService.getResultRanking(gameId, cursorId, searchQuery, pageable);
+    public Page<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
+                                                     GameResourceSearchRequest request,
+                                                     Pageable pageable) {
+        return gameResultService.getResultRanking(gameId, cursorId, request, pageable);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.

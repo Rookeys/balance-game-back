@@ -2,13 +2,14 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.domain.media.enums.MediaType;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResultJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,14 +25,32 @@ import java.util.Objects;
 public class GameResultRepositoryImpl implements GameResultRepository {
 
     private final GameResultJpaRepository gameResultJpaRepository;
+    private final GameResourceRepositoryImpl gameResourceRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Page<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId, String searchQuery, Pageable pageable) {
+    public Page<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId,
+                                                          GameResourceSearchRequest request,
+                                                          Pageable pageable) {
         QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
         QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
+
+        // 동적 필터 적용
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(gameResources.games.id.eq(gameId));
+
+        if (cursorId != null) {
+            builder.and(gameResources.id.gt(cursorId));
+        }
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+        }
+
+        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType(),
+                                                gameResourceRepository.getWinRateSubQuery(gameId));
 
         List<GameResultResponse> list = jpaQueryFactory
                 .select(Projections.constructor(
@@ -42,16 +61,15 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                         images.fileUrl.coalesce(links.urls).as("content"), // 이미지가 있으면 fileUrl, 없으면 링크 URL
                         links.startSec,
                         links.endSec,
-                        this.calculateWinRate(gameId).as("winRate")
+                        gameResourceRepository.getWinRateSubQuery(gameId)
                 ))
-                .from(gameResults)
-                .join(gameResults.gameResources, gameResources)
+                .from(gameResources)
+                .leftJoin(gameResults).on(gameResults.gameResources.eq(gameResources))
                 .leftJoin(gameResources.images, images)
                 .leftJoin(gameResources.links, links)
-                .where(gameResources.games.id.eq(gameId),
-                        cursorId != null ? gameResources.id.gt(cursorId) : null,
-                        gameResources.title.contains(searchQuery))
-                .orderBy(this.calculateWinRate(gameId).desc(), gameResources.id.asc()) // winRate 높은 순 정렬
+                .where(builder)
+                .groupBy(gameResources.id)
+                .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
@@ -89,23 +107,5 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     @Override
     public void save(GameResults gameResults) {
         gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
-    }
-
-    private NumberExpression<Double> calculateWinRate(Long gameId) {
-        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
-
-        Long totalGames = jpaQueryFactory
-                .select(gameResults.id.count())
-                .from(gameResults)
-                .where(gameResults.gameResources.games.id.eq(gameId))
-                .fetchOne();
-
-        if (totalGames == null || totalGames == 0) {
-            totalGames = 1L; // 0으로 나누는 것을 방지하기 위해 최소 1 설정
-        }
-
-        return Expressions.numberTemplate(
-                Double.class, "({0} / {1}) * 100", gameResults.id.count(), totalGames.doubleValue()
-        );
     }
 }

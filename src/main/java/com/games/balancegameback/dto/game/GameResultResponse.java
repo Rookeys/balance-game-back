@@ -2,11 +2,15 @@ package com.games.balancegameback.dto.game;
 
 import com.games.balancegameback.domain.media.enums.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GameResultResponse {
 
     @Schema(description = "리소스 ID")

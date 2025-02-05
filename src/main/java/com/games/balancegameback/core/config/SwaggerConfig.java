@@ -62,6 +62,15 @@ public class SwaggerConfig {
     }
 
     @Bean
+    public GroupedOpenApi gameResultApi() {
+        return GroupedOpenApi.builder()
+                .group("results")
+                .pathsToMatch("**/results/**")
+                .displayName("Game results API")
+                .build();
+    }
+
+    @Bean
     public GroupedOpenApi mediaApi() {
         return GroupedOpenApi.builder()
                 .group("Media")
