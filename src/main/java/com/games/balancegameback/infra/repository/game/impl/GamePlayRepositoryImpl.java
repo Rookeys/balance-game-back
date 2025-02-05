@@ -4,7 +4,6 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.GamePlay;
 import com.games.balancegameback.infra.entity.GamePlayEntity;
-import com.games.balancegameback.infra.entity.GamesEntity;
 import com.games.balancegameback.infra.repository.game.GamePlayJpaRepository;
 import com.games.balancegameback.service.game.repository.GamePlayRepository;
 import lombok.RequiredArgsConstructor;

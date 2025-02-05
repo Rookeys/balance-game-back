@@ -1,10 +1,13 @@
 package com.games.balancegameback.web.game;
 
+import com.games.balancegameback.domain.game.enums.SortType;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.service.game.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -40,10 +43,23 @@ public class GameResourceController {
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
+            @Parameter(name = "title", description = "검색할 리소스 제목", example = "스페셜 아이템")
+            @RequestParam(name = "title", required = false) String title,
+
+            @Parameter(name = "sortType", description = "정렬 방식",
+                    example = "winRateDesc",
+                    schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
+            @RequestParam(name = "sortType", required = false) SortType sortType,
+
             HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(0, 15);
-        return gameService.getResources(gameId, cursorId, pageable, request);
+        GameResourceSearchRequest condition = GameResourceSearchRequest.builder()
+                .title(title)
+                .sortType(sortType)
+                .build();
+
+        return gameService.getResources(gameId, cursorId, pageable, condition, request);
     }
 
     @Operation(summary = "게임 리소스 수정 API", description = "리소스의 제목이나 URL 등을 수정할 수 있다.")

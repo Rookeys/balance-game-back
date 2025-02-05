@@ -7,6 +7,7 @@ import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
@@ -26,8 +27,9 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
-    public Page<GameResourceResponse> getResources(Pageable pageable, Long gameId, Long cursorId) {
-        return gameResourceRepository.findByGameId(gameId, cursorId, pageable);
+    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+                                                   GameResourceSearchRequest request) {
+        return gameResourceRepository.findByGameId(gameId, cursorId, pageable, request);
     }
 
     @Transactional

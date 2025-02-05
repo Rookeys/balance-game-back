@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 @RequiredArgsConstructor
@@ -65,12 +66,24 @@ public class GameResultRepositoryImpl implements GameResultRepository {
 
     @Override
     public int countByGameId(Long roomId) {
-        return gameResultJpaRepository.countByGameResourcesGamesId(roomId);
+        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
+
+        return Objects.requireNonNull(jpaQueryFactory
+                .select(gameResults.id.count())
+                .from(gameResults)
+                .where(gameResults.gameResources.games.id.eq(roomId))
+                .fetchOne()).intValue();
     }
 
     @Override
     public int countByGameResourcesId(Long resourcesId) {
-        return gameResultJpaRepository.countByGameResourcesId(resourcesId);
+        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
+
+        return Objects.requireNonNull(jpaQueryFactory
+                .select(gameResults.id.count())
+                .from(gameResults)
+                .where(gameResults.gameResources.id.eq(resourcesId))
+                .fetchOne()).intValue();
     }
 
     @Override

@@ -3,7 +3,9 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.GameResources;
+import com.games.balancegameback.domain.game.enums.SortType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResourceTemporaryResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceLinkResponse;
@@ -11,8 +13,12 @@ import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResourceJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.*;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +26,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -97,27 +104,52 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     }
 
     @Override
-    public Page<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable) {
+    public Page<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable, GameResourceSearchRequest request) {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
+        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
 
-        List<GameResourceTemporaryResponse> list = jpaQueryFactory
+        // 동적 필터 적용
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(resources.games.id.eq(gameId));
+
+        if (cursorId != null) {
+            builder.and(resources.id.gt(cursorId));
+        }
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(resources.title.containsIgnoreCase(request.getTitle()));
+        }
+
+        JPQLQuery<Double> winRateSubQuery = JPAExpressions
+                .select(Expressions.numberTemplate(Double.class, "ROUND(({0} / NULLIF({1}, 0)) * 100, 2)",
+                        gameResults.id.count().doubleValue(),
+                        JPAExpressions.select(gameResults.id.count().doubleValue())
+                                .from(gameResults)
+                                .where(gameResults.gameResources.games.id.eq(gameId))))
+                .from(gameResults)
+                .where(gameResults.gameResources.id.eq(resources.id));
+
+        // 동적 정렬 조건
+        OrderSpecifier<?> orderSpecifier = getOrderSpecifier(request.getSortType(), winRateSubQuery);
+
+        List<GameResourceResponse> list = jpaQueryFactory
                 .select(Projections.constructor(
-                        GameResourceTemporaryResponse.class,
+                        GameResourceResponse.class,
                         resources.id.as("resourceId"),
                         resources.title,
                         images.fileUrl.as("fileUrl"),
                         links.urls.as("link"),
                         links.startSec,
-                        links.endSec
+                        links.endSec,
+                        winRateSubQuery
                 ))
                 .from(resources)
                 .leftJoin(resources.images, images)
                 .leftJoin(resources.links, links)
-                .where(resources.games.id.eq(gameId),
-                        cursorId != null ? resources.id.gt(cursorId) : null)
-                .orderBy(resources.id.asc())
+                .where(builder)
+                .orderBy(orderSpecifier) // 동적 정렬
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
@@ -127,25 +159,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
             hasNext = true;
         }
 
-        int totalPlayNums = gameResultRepository.countByGameId(gameId);
-        List<GameResourceResponse> responseList = new ArrayList<>();
-
-        for (GameResourceTemporaryResponse resource : list) {
-            Double winRate = this.calculateWinRate(totalPlayNums, resource.getResourceId());
-            GameResourceResponse response = GameResourceResponse.builder()
-                    .resourceId(resource.getResourceId())
-                    .title(resource.getTitle())
-                    .fileUrl(resource.getFileUrl())
-                    .link(resource.getLink())
-                    .startSec(resource.getStartSec())
-                    .endSec(resource.getEndSec())
-                    .winRate(winRate)
-                    .build();
-
-            responseList.add(response);
-        }
-
-        return new PageImpl<>(responseList, pageable, hasNext ? pageable.getPageSize() + 1 : list.size());
+        return new PageImpl<>(list, pageable, hasNext ? pageable.getPageSize() + 1 : list.size());
     }
 
     @Override
@@ -157,13 +171,18 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         gameResourceJpaRepository.deleteById(id);
     }
 
-    private Double calculateWinRate(int totalPlayNums, Long resourceId) {
-        int winGames = gameResultRepository.countByGameResourcesId(resourceId);
+    private OrderSpecifier<?> getOrderSpecifier(SortType sortType, JPQLQuery<Double> winRateSubQuery) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
 
-        if (totalPlayNums == 0) {
-            totalPlayNums = 1; // 0으로 나누는 것을 방지하기 위해 최소 1 설정
+        if (sortType == null) {
+            return resources.id.asc();
         }
 
-        return (double) (((winGames / totalPlayNums)) * 100);
+        return switch (sortType) {
+            case winRateAsc -> new OrderSpecifier<>(Order.ASC, winRateSubQuery);
+            case winRateDesc -> new OrderSpecifier<>(Order.DESC, winRateSubQuery);
+            case idDesc -> resources.id.desc();
+            default -> resources.id.asc();
+        };
     }
 }

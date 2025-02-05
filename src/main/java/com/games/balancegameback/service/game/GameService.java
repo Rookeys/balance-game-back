@@ -74,9 +74,10 @@ public class GameService {
 
     // 등록된 리소스 목록을 반환
     public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+                                                   GameResourceSearchRequest gameResourceSearchRequest,
                                                    HttpServletRequest request) {
         this.validateRequest(gameId, request);
-        return gameResourceService.getResources(pageable, gameId, cursorId);
+        return gameResourceService.getResources(gameId, cursorId, pageable, gameResourceSearchRequest);
     }
 
     // 등록한 리소스의 정보를 수정함
