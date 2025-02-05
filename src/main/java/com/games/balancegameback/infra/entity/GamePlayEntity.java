@@ -72,5 +72,7 @@ public class GamePlayEntity {
     public void update(GamePlay gamePlay) {
         this.allResources = gamePlay.getAllResources();
         this.selectedResources = gamePlay.getSelectedResources();
+        this.gameEnded = gamePlay.isGameEnded();
+        this.roundNumber = gamePlay.getRoundNumber();
     }
 }

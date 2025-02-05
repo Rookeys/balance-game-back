@@ -49,7 +49,7 @@ public class GamePlayService {
                 .gameEnded(false)
                 .build();
 
-        gamePlayRepository.save(gamePlay);
+        gamePlay = gamePlayRepository.save(gamePlay);
 
         List<GamePlayResourceResponse> selectedResources = gameResourceRepository.findByIds(selectedResourceIds);
 
@@ -57,6 +57,7 @@ public class GamePlayService {
         GamePlayResourceResponse rightResource = selectedResources.get(1);
 
         return GamePlayResponse.builder()
+                .id(gamePlay.getId())
                 .leftResource(leftResource)
                 .rightResource(rightResource)
                 .build();
@@ -69,7 +70,7 @@ public class GamePlayService {
     public GamePlayResponse updatePlayRoom(Long gameId, Long playRoomId, GamePlayRequest gamePlayRequest) {
         GamePlay gamePlay = gamePlayRepository.findById(playRoomId);
 
-        if (gamePlay.getAllResources().isEmpty()) {
+        if (gamePlay.isGameEnded()) {
             throw new BadRequestException("이미 끝난 게임입니다.", ErrorCode.CLOSED_PLAYROOM_EXCEPTION);
         }
 
@@ -79,9 +80,13 @@ public class GamePlayService {
             this.moveToNextRound(gamePlay);
 
             // 모든 라운드가 끝난 경우 게임 종료
-            if (gamePlay.getRoundNumber() == 1) {
+            if (gamePlay.getRoundNumber() <= 1) {
                 this.endGame(gamePlay, gamePlayRequest.getWinResourceId());
-                return null;
+                return GamePlayResponse.builder()
+                        .id(gamePlay.getId())
+                        .leftResource(null)
+                        .rightResource(null)
+                        .build();
             }
         }
 
@@ -96,6 +101,7 @@ public class GamePlayService {
         GamePlayResourceResponse rightResource = selectedResources.get(1);
 
         return GamePlayResponse.builder()
+                .id(playRoomId)
                 .leftResource(leftResource)
                 .rightResource(rightResource)
                 .build();
@@ -106,12 +112,13 @@ public class GamePlayService {
      */
     private void endGame(GamePlay gamePlay, Long resourceId) {
         gamePlay.setGameEnded(true);
+        gamePlayRepository.update(gamePlay);
+
         GameResources gameResources = gameResourceRepository.findById(resourceId);
         GameResults results = GameResults.builder()
                 .gameResources(gameResources)
                 .build();
 
-        gamePlayRepository.update(gamePlay);
         gameResultRepository.save(results);
     }
 

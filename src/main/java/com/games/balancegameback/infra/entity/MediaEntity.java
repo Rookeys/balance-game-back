@@ -4,6 +4,7 @@ import com.games.balancegameback.domain.media.Media;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
+@NoArgsConstructor
 @Table(name = "media")
 public abstract class MediaEntity {
 
@@ -19,7 +21,7 @@ public abstract class MediaEntity {
     private Long id;
 
     @Column(nullable = false)
-    protected MediaType mediaType = MediaType.IMAGE;
+    protected MediaType mediaType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
@@ -28,6 +30,11 @@ public abstract class MediaEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "games_id")
     protected GamesEntity games;
+
+    public MediaEntity(Long id, MediaType mediaType) {
+        this.id = id;
+        this.mediaType = mediaType;
+    }
 
     public abstract Media toModel();
 }

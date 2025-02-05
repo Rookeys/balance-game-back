@@ -45,8 +45,13 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
 
     @Override
     public GameResources findById(Long id) {
-        return gameResourceJpaRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("해당 리소스는 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION)).toModel();
+        Optional<GameResourcesEntity> entity = gameResourceJpaRepository.findById(id);
+
+        if (entity.isEmpty()) {
+            throw new NotFoundException("Not Found Data!!", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
+        return entity.get().toModel();
     }
 
     @Override

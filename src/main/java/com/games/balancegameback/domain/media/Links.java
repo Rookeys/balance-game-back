@@ -9,6 +9,7 @@ import lombok.Getter;
 @Getter
 public class Links extends Media {
 
+    private Long id;
     private String urls;
     private int startSec;
     private int endSec;

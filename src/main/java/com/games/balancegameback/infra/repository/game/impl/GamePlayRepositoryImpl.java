@@ -24,7 +24,10 @@ public class GamePlayRepositoryImpl implements GamePlayRepository {
 
     @Override
     public void update(GamePlay gamePlay) {
-        gamePlayRepository.findById(gamePlay.getId()).ifPresent(entity -> entity.update(gamePlay));
+        GamePlayEntity entity = gamePlayRepository.findById(gamePlay.getId())
+                .orElseThrow(() -> new NotFoundException("게임 플레이 정보를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        entity.update(gamePlay);
     }
 
     @Override
