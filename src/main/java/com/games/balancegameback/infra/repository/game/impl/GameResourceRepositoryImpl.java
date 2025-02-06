@@ -39,12 +39,6 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     }
 
     @Override
-    public void update(GameResources gameResources) {
-        Optional<GameResourcesEntity> entity = gameResourceJpaRepository.findById(gameResources.getId());
-        entity.ifPresent(gameResourcesEntity -> gameResourcesEntity.update(gameResources));
-    }
-
-    @Override
     public GameResources findById(Long id) {
         Optional<GameResourcesEntity> entity = gameResourceJpaRepository.findById(id);
 

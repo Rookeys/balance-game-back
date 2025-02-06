@@ -13,8 +13,6 @@ public interface GameResourceRepository {
 
     void save(GameResources gameResources);
 
-    void update(GameResources gameResources);
-
     GameResources findById(Long id);
 
     List<GamePlayResourceResponse> findByIds(List<Long> ids);

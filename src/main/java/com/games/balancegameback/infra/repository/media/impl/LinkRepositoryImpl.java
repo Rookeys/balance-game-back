@@ -1,5 +1,7 @@
 package com.games.balancegameback.infra.repository.media.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.infra.entity.LinksEntity;
 import com.games.balancegameback.infra.repository.media.LinkJpaRepository;
@@ -25,8 +27,10 @@ public class LinkRepositoryImpl implements LinkRepository {
 
     @Override
     public void update(Links links) {
-        LinksEntity entity = linkRepository.findById(links.getId()).orElseThrow();
-        entity.update(links);
+        LinksEntity link = linkRepository.findById(links.getId())
+                .orElseThrow(() -> new NotFoundException("이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        link.update(links);
     }
 
     @Override
