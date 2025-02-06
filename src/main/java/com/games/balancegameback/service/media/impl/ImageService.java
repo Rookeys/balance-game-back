@@ -1,11 +1,6 @@
 package com.games.balancegameback.service.media.impl;
 
-import com.games.balancegameback.core.exception.ErrorCode;
-import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.domain.game.Games;
-import com.games.balancegameback.domain.media.Images;
-import com.games.balancegameback.domain.media.Media;
-import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.service.game.GameService;
 import com.games.balancegameback.service.game.repository.GameRepository;

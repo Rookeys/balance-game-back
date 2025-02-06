@@ -49,7 +49,7 @@ public class GameRoomService {
         GameInviteCode gameInviteCode = GameInviteCode.builder()
                 .inviteCode(gameRequest.getInviteCode() != null ? gameRequest.getInviteCode() : "")
                 .isActive(gameRequest.getAccessType().equals(AccessType.PROTECTED))
-                .games(games) // 관계 설정
+                .games(games)
                 .build();
 
         // 양방향 관계 설정

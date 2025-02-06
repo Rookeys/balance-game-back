@@ -1,5 +1,7 @@
 package com.games.balancegameback.infra.repository.media.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.infra.entity.ImagesEntity;
@@ -27,8 +29,10 @@ public class ImageRepositoryImpl implements ImageRepository {
 
     @Override
     public void update(Images images) {
-        ImagesEntity entity = imageRepository.findById(images.getId()).orElseThrow();
-        entity.update(images);
+        ImagesEntity imagesEntity = imageRepository.findById(images.getId())
+                .orElseThrow(() -> new NotFoundException("이미지를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        imagesEntity.update(images);
     }
 
     @Override

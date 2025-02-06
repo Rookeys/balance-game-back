@@ -108,8 +108,8 @@ public class UserUtils {
     */
     public TokenResponse getTokenValidTime(String accessToken, String refreshToken) {
         return TokenResponse.builder()
-                .accessToken("Bearer " + accessToken)
-                .refreshToken("Bearer " + refreshToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .accessTokenExpiresAt(accessTokenValidTime / 1000)
                 .refreshTokenExpiresAt(refreshTokenValidTime / 1000)
                 .build();

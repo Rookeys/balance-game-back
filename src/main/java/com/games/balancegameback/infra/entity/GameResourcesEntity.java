@@ -42,6 +42,7 @@ public class GameResourcesEntity {
 
     public static GameResourcesEntity from(GameResources gameResources) {
         GameResourcesEntity gameResourcesEntity = new GameResourcesEntity();
+        gameResourcesEntity.id = gameResources.getId();
         gameResourcesEntity.title = gameResources.getTitle() != null ? gameResources.getTitle() : "";
         gameResourcesEntity.games = GamesEntity.from(gameResources.getGames());
 

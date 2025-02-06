@@ -7,6 +7,7 @@ import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
@@ -26,8 +27,9 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
-    public Page<GameResourceResponse> getResources(Pageable pageable, Long gameId, Long cursorId) {
-        return gameResourceRepository.findByGameId(gameId, cursorId, pageable);
+    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+                                                   GameResourceSearchRequest request) {
+        return gameResourceRepository.findByGameId(gameId, cursorId, pageable, request);
     }
 
     @Transactional
@@ -40,7 +42,7 @@ public class GameResourceService {
             imageRepository.update(images);
 
             gameResources.updateImage(gameResourceRequest.getTitle(), images);
-            gameResourceRepository.update(gameResources);
+            gameResourceRepository.save(gameResources);
 
             // 연관 관계가 전부 끊긴 사진을 정리하는 트리거 추가 예정
         }
@@ -52,7 +54,7 @@ public class GameResourceService {
             linkRepository.update(links);
 
             gameResources.updateLinks(gameResourceRequest.getTitle(), links);
-            gameResourceRepository.update(gameResources);
+            gameResourceRepository.save(gameResources);
         }
     }
 
