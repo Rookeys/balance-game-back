@@ -36,12 +36,6 @@ public class ImageRepositoryImpl implements ImageRepository {
     }
 
     @Override
-    public List<Images> findByRoomId(Long roomId) {
-        List<ImagesEntity> entityList = imageRepository.findByGamesId(roomId);
-        return entityList.stream().map(ImagesEntity::toModel).toList();
-    }
-
-    @Override
     public Images findById(Long id) {
         return imageRepository.findById(id)
                 .map(ImagesEntity::toModel)

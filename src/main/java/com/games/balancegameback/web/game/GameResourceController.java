@@ -54,12 +54,12 @@ public class GameResourceController {
             HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(0, 15);
-        GameResourceSearchRequest condition = GameResourceSearchRequest.builder()
+        GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)
                 .build();
 
-        return gameService.getResources(gameId, cursorId, pageable, condition, request);
+        return gameService.getResources(gameId, cursorId, pageable, searchRequest, request);
     }
 
     @Operation(summary = "게임 리소스 수정 API", description = "리소스의 제목이나 URL 등을 수정할 수 있다.")

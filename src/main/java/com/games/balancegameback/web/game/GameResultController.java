@@ -46,11 +46,11 @@ public class GameResultController {
             @RequestParam(name = "sortType", required = false) SortType sortType) {
 
         Pageable pageable = PageRequest.of(0, 15);
-        GameResourceSearchRequest request = GameResourceSearchRequest.builder()
+        GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)
                 .build();
 
-        return gameService.getResultRanking(gameId, cursorId, request, pageable);
+        return gameService.getResultRanking(gameId, cursorId, searchRequest, pageable);
     }
 }
