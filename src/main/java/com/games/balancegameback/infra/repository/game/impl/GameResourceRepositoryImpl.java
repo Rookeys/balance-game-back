@@ -2,6 +2,8 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.enums.SortType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
@@ -19,7 +21,6 @@ import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -131,13 +132,16 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = false;
-        if (list.size() > pageable.getPageSize()) {
-            list.removeLast();
-            hasNext = true;
-        }
+        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
+        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
 
-        return new PageImpl<>(list, pageable, hasNext ? pageable.getPageSize() + 1 : list.size());
+        Long totalElements = jpaQueryFactory
+                .select(resources.count())
+                .from(resources)
+                .where(builder)
+                .fetchOne();
+
+        return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.games.balancegameback.service.game.repository;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +16,7 @@ public interface GameRepository {
 
     Games findByRoomId(Long roomId);
 
-    Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable);
+    Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable, GameResourceSearchRequest searchRequest);
 
     boolean existsByIdAndUsers(Long gameId, Users users);
 

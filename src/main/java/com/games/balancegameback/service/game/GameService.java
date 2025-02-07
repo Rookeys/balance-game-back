@@ -48,8 +48,10 @@ public class GameService {
     }
 
     // 내가 만든 게임들 리스트 반환
-    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId, HttpServletRequest request) {
-        return gameRoomService.getMyGameList(pageable, cursorId, request);
+    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
+                                                GameResourceSearchRequest searchRequest,
+                                                HttpServletRequest request) {
+        return gameRoomService.getMyGameList(pageable, cursorId, searchRequest, request);
     }
 
     // 게임방 설정 업데이트

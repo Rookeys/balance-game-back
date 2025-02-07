@@ -37,6 +37,9 @@ public class GameResultController {
             @Parameter(name = "cursorId", description = "커서 ID", example = "4")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+
             @Parameter(name = "title", description = "검색할 리소스 제목", example = "포메")
             @RequestParam(name = "title", required = false) String title,
 
@@ -45,7 +48,7 @@ public class GameResultController {
                     schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
             @RequestParam(name = "sortType", required = false) SortType sortType) {
 
-        Pageable pageable = PageRequest.of(0, 15);
+        Pageable pageable = PageRequest.of(0, size);
         GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)

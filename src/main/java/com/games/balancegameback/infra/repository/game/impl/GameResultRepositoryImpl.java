@@ -1,5 +1,7 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
@@ -13,7 +15,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -39,7 +40,10 @@ public class GameResultRepositoryImpl implements GameResultRepository {
 
         // 동적 필터 적용
         BooleanBuilder builder = new BooleanBuilder();
+        BooleanBuilder totalCountBuilder = new BooleanBuilder();
+
         builder.and(gameResources.games.id.eq(gameId));
+        totalCountBuilder.and(gameResources.games.id.eq(gameId));
 
         if (cursorId != null) {
             builder.and(gameResources.id.gt(cursorId));
@@ -47,6 +51,7 @@ public class GameResultRepositoryImpl implements GameResultRepository {
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
             builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+            totalCountBuilder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
         }
 
         OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType(),
@@ -73,13 +78,16 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = false;
-        if (list.size() > pageable.getPageSize()) {
-            list.removeLast();
-            hasNext = true;
-        }
+        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
+        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
 
-        return new PageImpl<>(list, pageable, hasNext ? pageable.getPageSize() + 1 : list.size());
+        Long totalElements = jpaQueryFactory
+                .select(gameResources.count())
+                .from(gameResources)
+                .where(totalCountBuilder)
+                .fetchOne();
+
+        return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
     }
 
     @Override
