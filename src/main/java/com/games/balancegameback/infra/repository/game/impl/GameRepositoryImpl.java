@@ -2,9 +2,12 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.dto.game.GameStatusResponse;
 import com.games.balancegameback.infra.entity.*;
@@ -14,7 +17,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -61,7 +63,9 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     @Override
-    public Page<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable) {
+    public Page<GameListResponse> findGamesWithResources(Long cursorId, Users users,
+                                                         Pageable pageable,
+                                                         GameResourceSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
         List<GameStatusResponse> results = jpaQueryFactory
@@ -77,14 +81,16 @@ public class GameRepositoryImpl implements GameRepository {
                 .limit(pageable.getPageSize() + 1) // 다음 페이지 확인을 위해 +1
                 .fetch();
 
-        boolean hasNext = false;    // 요청보다 한 개 더 가져와서 hasNext 여부 판단.
-        if (results.size() > pageable.getPageSize()) {
-            results.removeLast();   // 마지막 요소를 제거해 페이징 크기를 유지.
-            hasNext = true;
-        }
+        boolean hasNext = PaginationUtils.hasNextPage(results, pageable.getPageSize());
+        PaginationUtils.removeLastIfHasNext(results, pageable.getPageSize());
 
-        return new PageImpl<>(this.addThumbnailResources(results), pageable,
-                hasNext ? pageable.getPageSize() + 1 : results.size());
+        Long totalElements = jpaQueryFactory
+                .select(games.count())
+                .from(games)
+                .where(games.users.email.eq(users.getEmail()))
+                .fetchOne();
+
+        return new CustomPageImpl<>(this.addThumbnailResources(results), pageable, totalElements, cursorId, hasNext);
     }
 
     @Override

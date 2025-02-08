@@ -1,12 +1,15 @@
 package com.games.balancegameback.web.user;
 
+import com.games.balancegameback.domain.game.enums.SortType;
 import com.games.balancegameback.dto.game.GameListResponse;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
 import com.games.balancegameback.service.game.GameService;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -60,13 +63,29 @@ public class UserProfileController {
     })
     @GetMapping(value = "/games")
     public Page<GameListResponse> getMyGameList(
-            @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
+            @Parameter(name = "cursorId", description = "커서 ID", example = "4")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
+
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+
+            @Parameter(name = "title", description = "검색할 리소스 제목", example = "포메")
+            @RequestParam(name = "title", required = false) String title,
+
+            @Parameter(name = "sortType", description = "정렬 방식",
+                    example = "winRateDesc",
+                    schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
+            @RequestParam(name = "sortType", required = false) SortType sortType,
 
             HttpServletRequest request) {
 
-        Pageable pageable = PageRequest.of(0, 15);
-        return gameService.getMyGameList(pageable, cursorId, request);
+        Pageable pageable = PageRequest.of(0, size);
+        GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
+                .title(title)
+                .sortType(sortType)
+                .build();
+
+        return gameService.getMyGameList(pageable, cursorId, searchRequest, request);
     }
 }
 

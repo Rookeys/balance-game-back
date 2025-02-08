@@ -9,6 +9,7 @@ import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameRequest;
+import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
@@ -65,9 +66,11 @@ public class GameRoomService {
         return gameRepository.findById(gameId);
     }
 
-    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId, HttpServletRequest request) {
+    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
+                                                GameResourceSearchRequest searchRequest,
+                                                HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        return gameRepository.findGamesWithResources(cursorId, users, pageable);
+        return gameRepository.findGamesWithResources(cursorId, users, pageable, searchRequest);
     }
 
     @Transactional

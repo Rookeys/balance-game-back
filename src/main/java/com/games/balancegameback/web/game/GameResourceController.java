@@ -43,6 +43,9 @@ public class GameResourceController {
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+
             @Parameter(name = "title", description = "검색할 리소스 제목", example = "스페셜 아이템")
             @RequestParam(name = "title", required = false) String title,
 
@@ -53,13 +56,13 @@ public class GameResourceController {
 
             HttpServletRequest request) {
 
-        Pageable pageable = PageRequest.of(0, 15);
-        GameResourceSearchRequest condition = GameResourceSearchRequest.builder()
+        Pageable pageable = PageRequest.of(0, size);
+        GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)
                 .build();
 
-        return gameService.getResources(gameId, cursorId, pageable, condition, request);
+        return gameService.getResources(gameId, cursorId, pageable, searchRequest, request);
     }
 
     @Operation(summary = "게임 리소스 수정 API", description = "리소스의 제목이나 URL 등을 수정할 수 있다.")
