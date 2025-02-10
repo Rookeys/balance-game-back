@@ -3,16 +3,13 @@ package com.games.balancegameback.infra.entity;
 import com.games.balancegameback.domain.game.GamePlay;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Entity
 @Table(name = "games_play")
-public class GamePlayEntity {
+public class GamePlayEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,14 +34,6 @@ public class GamePlayEntity {
 
     @Column
     private boolean gameEnded = false;
-
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @Column
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
 
     public static GamePlayEntity from(GamePlay gamePlay) {
         GamePlayEntity gamePlayEntity = new GamePlayEntity();

@@ -6,15 +6,11 @@ import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "games")
-public class GamesEntity {
+public class GamesEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,14 +32,6 @@ public class GamesEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Category category;
-
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @Column
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")

@@ -5,16 +5,13 @@ import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor
 @Table(name = "media")
-public abstract class MediaEntity {
+public abstract class MediaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
