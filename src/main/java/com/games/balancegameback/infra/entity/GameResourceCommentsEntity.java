@@ -18,11 +18,18 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
     @Column(nullable = false)
     private String comment;
 
+    @Column
+    private boolean like = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id", nullable = false)
+    private UsersEntity users;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private GameResourceCommentsEntity parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<GameResourceCommentsEntity> children = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,14 +38,22 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
 
     public static GameResourceCommentsEntity from(GameResourceComments gameResourceComments) {
         GameResourceCommentsEntity gameResourceCommentsEntity = new GameResourceCommentsEntity();
+        gameResourceCommentsEntity.id = gameResourceComments.getId();
         gameResourceCommentsEntity.comment = gameResourceComments.getComment();
+        gameResourceCommentsEntity.like = gameResourceComments.isLike();
         gameResourceCommentsEntity.gameResources = GameResourcesEntity.from(gameResourceComments.getGameResources());
 
         // 부모 댓글 설정
         if (gameResourceComments.getParentId() != null) {
-            GameResourceCommentsEntity parent = new GameResourceCommentsEntity();
-            parent.id = gameResourceComments.getParentId();
-            gameResourceCommentsEntity.parent = parent;
+            GameResourceCommentsEntity parantComments = new GameResourceCommentsEntity();
+            parantComments.id = gameResourceComments.getParentId();
+            parantComments.comment = gameResourceComments.getComment();
+            parantComments.like = gameResourceComments.isLike();
+
+            gameResourceCommentsEntity.parent = parantComments;
+        } else {
+            gameResourceCommentsEntity.parent = null;
+            gameResourceCommentsEntity.comment = gameResourceComments.getComment();
         }
 
         return gameResourceCommentsEntity;
@@ -48,11 +63,12 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
         return GameResourceComments.builder()
                 .id(id)
                 .comment(comment)
+                .like(like)
                 .parentId(parent != null ? parent.getId() : null)
                 .gameResources(gameResources.toModel())
                 .createdDate(this.getCreatedDate())
                 .updatedDate(this.getUpdatedDate())
-                .children(children.stream() // 대댓글 리스트 변환
+                .children(children.isEmpty() ? null : children.stream() // 대댓글 리스트 변환
                         .map(GameResourceCommentsEntity::toModel)
                         .toList())
                 .build();
