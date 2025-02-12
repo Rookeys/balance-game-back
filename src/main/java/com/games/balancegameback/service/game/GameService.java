@@ -3,8 +3,6 @@ package com.games.balancegameback.service.game;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.game.Games;
-import com.games.balancegameback.domain.media.Images;
-import com.games.balancegameback.domain.media.Links;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
@@ -12,10 +10,7 @@ import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
-import com.games.balancegameback.service.game.impl.GamePlayService;
-import com.games.balancegameback.service.game.impl.GameResourceService;
-import com.games.balancegameback.service.game.impl.GameResultService;
-import com.games.balancegameback.service.game.impl.GameRoomService;
+import com.games.balancegameback.service.game.impl.*;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +27,9 @@ public class GameService {
     private final GameResourceService gameResourceService;
     private final GamePlayService gamePlayService;
     private final GameResultService gameResultService;
+    private final GameResourceCommentService gameResourceCommentService;
+    private final GameResultCommentService gameResultCommentService;
+    private final GameCommentLikesService gameCommentLikesService;
     private final GameRepository gameRepository;
     private final UserUtils userUtils;
 
