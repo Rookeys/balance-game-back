@@ -5,7 +5,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
-import com.games.balancegameback.domain.game.enums.SortType;
+import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
@@ -111,7 +111,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         }
 
         // 동적 정렬 조건
-        OrderSpecifier<?> orderSpecifier = getOrderSpecifier(request.getSortType(), this.getWinRateSubQuery(gameId));
+        OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType(), this.getWinRateSubQuery(gameId));
 
         List<GameResourceResponse> list = jpaQueryFactory
                 .select(Projections.constructor(
@@ -153,14 +153,14 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         gameResourceJpaRepository.deleteById(id);
     }
 
-    public OrderSpecifier<?> getOrderSpecifier(SortType sortType, JPQLQuery<Double> winRateSubQuery) {
+    public OrderSpecifier<?> getOrderSpecifier(GameSortType gameSortType, JPQLQuery<Double> winRateSubQuery) {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
 
-        if (sortType == null) {
+        if (gameSortType == null) {
             return resources.id.asc();
         }
 
-        return switch (sortType) {
+        return switch (gameSortType) {
             case winRateAsc -> new OrderSpecifier<>(Order.ASC, winRateSubQuery);
             case winRateDesc -> new OrderSpecifier<>(Order.DESC, winRateSubQuery);
             case idDesc -> resources.id.desc();

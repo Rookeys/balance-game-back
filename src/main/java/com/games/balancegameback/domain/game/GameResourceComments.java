@@ -38,4 +38,8 @@ public class GameResourceComments {
         this.children = children;
         this.likes = likes;
     }
+
+    public void update(String comment) {
+        this.comment = comment;
+    }
 }

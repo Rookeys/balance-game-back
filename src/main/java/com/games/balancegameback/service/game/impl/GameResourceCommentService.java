@@ -1,14 +1,13 @@
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResourceComments;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.dto.game.GameResourceSearchRequest;
-import com.games.balancegameback.dto.game.comment.GameResourceCommentRequest;
-import com.games.balancegameback.dto.game.comment.GameResourceCommentResponse;
+import com.games.balancegameback.dto.game.comment.*;
 import com.games.balancegameback.service.game.repository.GameResourceCommentRepository;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
@@ -26,9 +25,16 @@ public class GameResourceCommentService {
     private final GameResourceRepository gameResourceRepository;
     private final UserUtils userUtils;
 
-    public CustomPageImpl<GameResourceCommentResponse> getCommentsByGameResource(Long resourceId, Long cursorId, Pageable pageable,
-                                                                                 GameResourceSearchRequest request) {
+    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long resourceId, Long cursorId,
+                                                                                             Pageable pageable,
+                                                                                             GameCommentSearchRequest request) {
         return commentsRepository.findByGameResourceComments(resourceId, cursorId, pageable, request);
+    }
+
+    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long parentId, Long cursorId,
+                                                                                                 Pageable pageable,
+                                                                                                 GameCommentSearchRequest request) {
+        return commentsRepository.findByGameResourceChildrenComments(parentId, cursorId, pageable, request);
     }
 
     @Transactional
@@ -36,6 +42,11 @@ public class GameResourceCommentService {
                            HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         GameResources gameResources = gameResourceRepository.findById(resourceId);
+
+        if (commentsRepository.existsByParentId(commentRequest.getParentId())) {
+            throw new BadRequestException("대댓글에 답글을 달 수 없습니다.", ErrorCode.RUNTIME_EXCEPTION);
+        }
+
         GameResourceComments comments = GameResourceComments.builder()
                 .comment(commentRequest.getComment())
                 .isDeleted(false)
@@ -50,7 +61,7 @@ public class GameResourceCommentService {
     }
 
     @Transactional
-    public void updateComment(Long commentId, GameResourceCommentRequest commentRequest, HttpServletRequest request) {
+    public void updateComment(Long commentId, GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         GameResourceComments comments = commentsRepository.findById(commentId);
 
@@ -58,6 +69,7 @@ public class GameResourceCommentService {
             throw new UnAuthorizedException("잘못된 접근입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
+        comments.update(commentRequest.getComment());
         commentsRepository.update(comments);
     }
 
