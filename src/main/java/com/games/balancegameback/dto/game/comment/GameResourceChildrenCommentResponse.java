@@ -31,4 +31,7 @@ public class GameResourceChildrenCommentResponse {
 
     @Schema(description = "좋아요 총합")
     private int like;
+
+    @Schema(description = "좋아요 클릭 유무")
+    private boolean isLiked;
 }

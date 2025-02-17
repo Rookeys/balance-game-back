@@ -27,14 +27,18 @@ public class GameResourceCommentService {
 
     public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long resourceId, Long cursorId,
                                                                                              Pageable pageable,
-                                                                                             GameCommentSearchRequest request) {
-        return commentsRepository.findByGameResourceComments(resourceId, cursorId, pageable, request);
+                                                                                             GameCommentSearchRequest searchRequest,
+                                                                                             HttpServletRequest request) {
+        Users users = userUtils.findUserByToken(request);
+        return commentsRepository.findByGameResourceComments(resourceId, cursorId, users, pageable, searchRequest);
     }
 
     public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long parentId, Long cursorId,
                                                                                                  Pageable pageable,
-                                                                                                 GameCommentSearchRequest request) {
-        return commentsRepository.findByGameResourceChildrenComments(parentId, cursorId, pageable, request);
+                                                                                                 GameCommentSearchRequest searchRequest,
+                                                                                                 HttpServletRequest request) {
+        Users users = userUtils.findUserByToken(request);
+        return commentsRepository.findByGameResourceChildrenComments(parentId, cursorId, users, pageable, searchRequest);
     }
 
     @Transactional

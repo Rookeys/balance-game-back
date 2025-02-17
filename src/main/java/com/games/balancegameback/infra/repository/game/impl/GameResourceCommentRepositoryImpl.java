@@ -6,7 +6,7 @@ import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResourceComments;
 import com.games.balancegameback.domain.game.enums.CommentSortType;
-import com.games.balancegameback.domain.game.enums.RecentSearchType;
+import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.comment.GameCommentSearchRequest;
 import com.games.balancegameback.dto.game.comment.GameResourceChildrenCommentResponse;
 import com.games.balancegameback.dto.game.comment.GameResourceParentCommentResponse;
@@ -17,12 +17,13 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -58,17 +59,20 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
 
     @Override
     public CustomPageImpl<GameResourceParentCommentResponse> findByGameResourceComments(Long resourceId, Long cursorId,
-                                                                                        Pageable pageable,
+                                                                                        Users users, Pageable pageable,
                                                                                         GameCommentSearchRequest request) {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
-        QUsersEntity users = QUsersEntity.usersEntity;
+        QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
+        QUsersEntity user = QUsersEntity.usersEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(resources.id.eq(resourceId));
         builder.and(comments.parent.isNull());  // 부모 댓글만 찾아옴.
 
         this.setOptions(builder, cursorId, request, comments);
+        // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
+        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : null;
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
@@ -77,16 +81,18 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         GameResourceParentCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
-                        users.nickname.as("nickname"),
+                        user.nickname.as("nickname"),
                         comments.children.size().as("children"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.isDeleted.as("isDeleted"),
-                        comments.likes.size().as("like")
+                        comments.likes.size().as("like"),
+                        this.isLikedExpression(users)
                 ))
                 .from(comments)
                 .where(builder)
-                .join(comments.users, users)
+                .join(comments.users, user)
+                .leftJoin(commentLikes).on(leftJoinCondition)
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -105,15 +111,18 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
 
     @Override
     public CustomPageImpl<GameResourceChildrenCommentResponse> findByGameResourceChildrenComments(Long parentId, Long cursorId,
-                                                                                                  Pageable pageable,
+                                                                                                  Users users, Pageable pageable,
                                                                                                   GameCommentSearchRequest request) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
-        QUsersEntity users = QUsersEntity.usersEntity;
+        QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
+        QUsersEntity user = QUsersEntity.usersEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(comments.parent.id.eq(parentId));   // 대댓글만 찾아옴.
 
         this.setOptions(builder, cursorId, request, comments);
+        // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
+        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : null;
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
@@ -122,14 +131,16 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         GameResourceChildrenCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
-                        users.nickname.as("nickname"),
+                        user.nickname.as("nickname"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
-                        comments.likes.size().as("like")
+                        comments.likes.size().as("like"),
+                        this.isLikedExpression(users)
                 ))
                 .from(comments)
                 .where(builder)
-                .join(comments.users, users)
+                .join(comments.users, user)
+                .leftJoin(commentLikes).on(leftJoinCondition)
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -160,12 +171,9 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         if (request.getContent() != null && !request.getContent().isEmpty()) {
             builder.and(comments.comment.containsIgnoreCase(request.getContent()));
         }
-
-        if (request.getRecentSearchType() != null) {
-            builder.and(getRecentFilter(request.getRecentSearchType()));
-        }
     }
 
+    // 정렬 방식 결정 쿼리
     private OrderSpecifier<?> getOrderSpecifier(CommentSortType sortType) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
 
@@ -181,14 +189,28 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         };
     }
 
-    private BooleanExpression getRecentFilter(RecentSearchType recentSearchType) {
-        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
-        LocalDateTime now = LocalDateTime.now();
+    // 미사용 -> 추후 메인 페이지 작업 때 사용 예정
+//    private BooleanExpression getRecentFilter(RecentSearchType recentSearchType) {
+//        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
+//        LocalDateTime now = LocalDateTime.now();
+//
+//        return switch (recentSearchType) {
+//            case DAY -> comments.createdDate.after(now.minusDays(1));   // 최근 1일
+//            case WEEK -> comments.createdDate.after(now.minusWeeks(1)); // 최근 1주
+//            case MONTH -> comments.createdDate.after(now.minusMonths(1)); // 최근 1달
+//        };
+//    }
 
-        return switch (recentSearchType) {
-            case DAY -> comments.createdDate.after(now.minusDays(1));   // 최근 1일
-            case WEEK -> comments.createdDate.after(now.minusWeeks(1)); // 최근 1주
-            case MONTH -> comments.createdDate.after(now.minusMonths(1)); // 최근 1달
-        };
+    // 좋아요를 눌렀는지 안 눌렀는지 확인하는 서브 쿼리
+    private BooleanExpression isLikedExpression(Users users) {
+        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
+        QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
+
+        return users != null ? JPAExpressions.selectOne()
+                .from(commentLikes)
+                .where(commentLikes.resourceComments.id.eq(comments.id)
+                        .and(commentLikes.users.email.eq(users.getEmail())))
+                .exists()
+                : Expressions.asBoolean(false);
     }
 }
