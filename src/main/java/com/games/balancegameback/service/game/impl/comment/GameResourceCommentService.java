@@ -1,4 +1,4 @@
-package com.games.balancegameback.service.game.impl;
+package com.games.balancegameback.service.game.impl.comment;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;

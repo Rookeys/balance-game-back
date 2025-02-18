@@ -7,4 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GameCommentLikesJpaRepository extends JpaRepository<GameCommentLikesEntity, Long> {
 
+    void deleteByUsersEmailAndResourceCommentsId(String email, Long commentId);
+
+    void deleteByUsersEmailAndResultCommentsId(String email, Long commentId);
 }

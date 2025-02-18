@@ -45,6 +45,11 @@ public class UserUtils {
                 .orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
     }
 
+    public String getEmail(HttpServletRequest request) {
+        String token = jwtTokenProvider.resolveAccessToken(request);
+        return jwtTokenProvider.extractEmail(token);
+    }
+
     /**
      *   AccessToken & RefreshToken 생성 및 바디 삽입,
      *   유저 정보 바디 삽입.
@@ -114,6 +119,4 @@ public class UserUtils {
                 .refreshTokenExpiresAt(refreshTokenValidTime / 1000)
                 .build();
     }
-
-
 }

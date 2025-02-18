@@ -2,15 +2,21 @@ package com.games.balancegameback.service.game;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.Games;
+import com.games.balancegameback.domain.game.enums.CommentType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
+import com.games.balancegameback.dto.game.comment.*;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.impl.*;
+import com.games.balancegameback.service.game.impl.comment.GameCommentLikesService;
+import com.games.balancegameback.service.game.impl.comment.GameResourceCommentService;
+import com.games.balancegameback.service.game.impl.comment.GameResultCommentService;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -106,6 +112,42 @@ public class GameService {
                                                      GameResourceSearchRequest request,
                                                      Pageable pageable) {
         return gameResultService.getResultRanking(gameId, cursorId, request, pageable);
+    }
+
+    // 게임 리소스(컷툰 식) 부모 댓글 리스트 출력
+    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long resourceId, Long cursorId,
+                                                                                             Pageable pageable,
+                                                                                             GameCommentSearchRequest searchRequest,
+                                                                                             HttpServletRequest request) {
+        return gameResourceCommentService.getParentCommentsByGameResource(resourceId, cursorId, pageable, searchRequest, request);
+    }
+
+    // 게임 리소스(컷툰 식) 대댓글 리스트 출력
+    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long parentId, Long cursorId,
+                                                                                                 Pageable pageable,
+                                                                                                 GameCommentSearchRequest searchRequest,
+                                                                                                 HttpServletRequest request) {
+        return gameResourceCommentService.getChildrenCommentsByGameResource(parentId, cursorId, pageable, searchRequest, request);
+    }
+
+    // 게임 리소스(컷툰 식) 댓글 작성
+    public void addComment(Long resourceId, GameResourceCommentRequest commentRequest, HttpServletRequest request) {
+        gameResourceCommentService.addComment(resourceId, commentRequest, request);
+    }
+
+    // 게임 리소스(컷툰 식) 댓글 수정
+    public void updateComment(Long commentId, GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
+        gameResourceCommentService.updateComment(commentId, commentRequest, request);
+    }
+
+    // 게임 리소스(컷툰 식) 댓글 삭제
+    public void deleteComment(Long commentId, HttpServletRequest request) {
+        gameResourceCommentService.deleteComment(commentId, request);
+    }
+
+    // 좋아요 처리 서비스
+    public void toggleLike(Long commentId, boolean isLiked, CommentType commentType, HttpServletRequest request) {
+        gameCommentLikesService.toggleLike(commentId, isLiked, commentType, request);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.
