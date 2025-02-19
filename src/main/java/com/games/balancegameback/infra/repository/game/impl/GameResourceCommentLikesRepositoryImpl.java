@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class GameCommentLikesRepositoryImpl implements GameCommentLikesRepository {
+public class GameResourceCommentLikesRepositoryImpl implements GameCommentLikesRepository {
 
     private final GameCommentLikesJpaRepository gameCommentLikesJpaRepository;
 

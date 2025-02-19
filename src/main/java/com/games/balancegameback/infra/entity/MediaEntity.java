@@ -21,7 +21,7 @@ public abstract class MediaEntity extends BaseTimeEntity {
     protected MediaType mediaType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id")
+    @JoinColumn(name = "users_uid")
     protected UsersEntity users;
 
     @ManyToOne(fetch = FetchType.LAZY)

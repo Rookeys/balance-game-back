@@ -22,7 +22,7 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
     private boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id", nullable = false)
+    @JoinColumn(name = "users_uid", nullable = false)
     private UsersEntity users;
 
     @ManyToOne(fetch = FetchType.LAZY)

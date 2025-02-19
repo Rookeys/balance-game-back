@@ -1,16 +1,38 @@
 package com.games.balancegameback.domain.game;
 
 import com.games.balancegameback.domain.user.Users;
+import com.games.balancegameback.infra.entity.GameCommentLikesEntity;
 import lombok.Builder;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record GameResultComments(Long id, String comment, boolean like, Users users, Games games, Long parentId,
-                                 LocalDateTime createdDate, LocalDateTime updatedDate, List<GameResultComments> children) {
+@Data
+public class GameResultComments {
+
+    private Long id;
+    private String comment;
+    private Users users;
+    private Games games;
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedDate;
+    private List<GameCommentLikesEntity> likes;
 
     @Builder
-    public GameResultComments {
+    public GameResultComments(Long id, String comment, Users users,Games games,
+                                LocalDateTime createdDate, LocalDateTime updatedDate,
+                                List<GameCommentLikesEntity> likes) {
+        this.id = id;
+        this.comment = comment;
+        this.users = users;
+        this.games = games;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
+        this.likes = likes;
+    }
 
+    public void update(String comment) {
+        this.comment = comment;
     }
 }

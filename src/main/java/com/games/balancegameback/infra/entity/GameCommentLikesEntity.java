@@ -6,8 +6,9 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "game_resource_comment_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"users_id", "comment_id"}) // 중복 좋아요 방지
+@Table(name = "game_comment_likes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"users_uid", "game_resource_comments_id"}),
+        @UniqueConstraint(columnNames = {"users_uid", "game_result_comments_id"})
 })
 public class GameCommentLikesEntity extends BaseTimeEntity {
 
@@ -16,7 +17,7 @@ public class GameCommentLikesEntity extends BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id", nullable = false)
+    @JoinColumn(name = "users_uid", nullable = false)
     private UsersEntity users;
 
     @ManyToOne(fetch = FetchType.LAZY)

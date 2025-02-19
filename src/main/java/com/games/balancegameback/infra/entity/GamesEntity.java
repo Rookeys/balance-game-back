@@ -34,7 +34,7 @@ public class GamesEntity extends BaseTimeEntity {
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id")
+    @JoinColumn(name = "users_uid")
     private UsersEntity users;
 
     @OneToOne(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
