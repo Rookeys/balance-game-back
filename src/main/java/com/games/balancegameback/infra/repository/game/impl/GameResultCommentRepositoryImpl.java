@@ -138,7 +138,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
         return users != null ? JPAExpressions.selectOne()
                 .from(commentLikes)
-                .where(commentLikes.resourceComments.id.eq(comments.id)
+                .where(commentLikes.resultComments.id.eq(comments.id)
                         .and(commentLikes.users.email.eq(users.getEmail())))
                 .exists()
                 : Expressions.asBoolean(false);

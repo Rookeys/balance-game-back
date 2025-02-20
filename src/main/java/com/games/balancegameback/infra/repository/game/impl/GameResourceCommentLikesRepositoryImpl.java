@@ -27,4 +27,14 @@ public class GameResourceCommentLikesRepositoryImpl implements GameCommentLikesR
     public void deleteByUsersEmailAndResultCommentsId(String email, Long commentId) {
         gameCommentLikesJpaRepository.deleteByUsersEmailAndResultCommentsId(email, commentId);
     }
+
+    @Override
+    public boolean existsByUsersEmailAndResourceCommentsId(String email, Long commentId) {
+        return gameCommentLikesJpaRepository.existsByUsersEmailAndResourceCommentsId(email, commentId);
+    }
+
+    @Override
+    public boolean existsByUsersEmailAndResultCommentsId(String email, Long commentId) {
+        return gameCommentLikesJpaRepository.existsByUsersEmailAndResultCommentsId(email, commentId);
+    }
 }

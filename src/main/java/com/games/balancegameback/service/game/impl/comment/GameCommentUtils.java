@@ -49,14 +49,17 @@ public class GameCommentUtils {
     private void save(String email, Long commentId, boolean isResourceComment) {
         Users users = usersRepository.findByEmail(email);
 
-        if (isResourceComment) {
+        if (isResourceComment) {    // 리소스 댓글인지 결과창 댓글인지 구별
             GameResourceComments comment = resourceCommentsRepository.findById(commentId);
             GameCommentLikes likes = GameCommentLikes.builder()
                     .users(users)
                     .resourceComments(comment)
                     .build();
 
-            likesRepository.save(likes);
+            // 이미 저장되어 있는 상태와 동일한 요청의 경우엔 스킵, 저장한 이력이 없으면 저장.
+            if (!likesRepository.existsByUsersEmailAndResourceCommentsId(email, comment.getId())) {
+                likesRepository.save(likes);
+            }
         } else {
             GameResultComments comment = resultCommentsRepository.findById(commentId);
             GameCommentLikes likes = GameCommentLikes.builder()
@@ -64,12 +67,14 @@ public class GameCommentUtils {
                     .resultComments(comment)
                     .build();
 
-            likesRepository.save(likes);
+            if (!likesRepository.existsByUsersEmailAndResultCommentsId(email, comment.getId())) {
+                likesRepository.save(likes);
+            }
         }
     }
 
     private void delete(String email, Long commentId, boolean isResourceComment) {
-        if (isResourceComment) {
+        if (isResourceComment) {    // 리소스 댓글인지 결과창 댓글인지 구별
             likesRepository.deleteByUsersEmailAndResourceCommentsId(email, commentId);
         } else {
             likesRepository.deleteByUsersEmailAndResultCommentsId(email, commentId);
