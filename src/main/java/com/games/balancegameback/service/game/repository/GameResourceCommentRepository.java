@@ -26,5 +26,5 @@ public interface GameResourceCommentRepository {
                                                                                            Users users, Pageable pageable,
                                                                                            GameCommentSearchRequest request);
 
-    boolean existsByParentId(Long id);
+    boolean existsByResourceIdAndParentId(Long resourceId, Long parentId);
 }

@@ -41,8 +41,7 @@ public class UserUtils {
 
     public Users findUserByToken(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveAccessToken(request);
-        return token == null ? null : userRepository.findByEmail(jwtTokenProvider.extractEmail(token))
-                .orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+        return token == null ? null : userRepository.findByEmail(jwtTokenProvider.extractEmail(token));
     }
 
     public String getEmail(HttpServletRequest request) {

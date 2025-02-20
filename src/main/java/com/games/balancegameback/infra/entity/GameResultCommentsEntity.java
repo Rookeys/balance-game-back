@@ -51,4 +51,8 @@ public class GameResultCommentsEntity extends BaseTimeEntity {
                 .likes(likes)
                 .build();
     }
+
+    public void update(GameResultComments gameResultComments) {
+        this.comment = gameResultComments.getComment();
+    }
 }

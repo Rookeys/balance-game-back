@@ -47,7 +47,8 @@ public class GameCommentUtils {
     }
 
     private void save(String email, Long commentId, boolean isResourceComment) {
-        Users users = usersRepository.findByEmail(email).orElseThrow();
+        Users users = usersRepository.findByEmail(email);
+
         if (isResourceComment) {
             GameResourceComments comment = resourceCommentsRepository.findById(commentId);
             GameCommentLikes likes = GameCommentLikes.builder()

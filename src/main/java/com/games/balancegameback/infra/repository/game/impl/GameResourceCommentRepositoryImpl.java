@@ -61,13 +61,12 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     public CustomPageImpl<GameResourceParentCommentResponse> findByGameResourceComments(Long resourceId, Long cursorId,
                                                                                         Users users, Pageable pageable,
                                                                                         GameCommentSearchRequest request) {
-        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
         QUsersEntity user = QUsersEntity.usersEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
-        builder.and(resources.id.eq(resourceId));
+        builder.and(comments.gameResources.id.eq(resourceId));
         builder.and(comments.parent.isNull());  // 부모 댓글만 찾아옴.
 
         this.setOptions(builder, cursorId, request, comments);
@@ -158,8 +157,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     }
 
     @Override
-    public boolean existsByParentId(Long id) {
-        return gameResourceCommentRepository.existsByParentId(id);
+    public boolean existsByResourceIdAndParentId(Long resourceId, Long parentId) {
+        return gameResourceCommentRepository.existsByGameResourcesIdAndParentId(resourceId, parentId);
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,

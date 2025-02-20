@@ -140,8 +140,8 @@ public class JwtTokenProvider {
     }
 
     public UserRole getRoles(String email) {
-        Optional<Users> users = userRepository.findByEmail(email);
-        return users.isPresent() ? users.get().getUserRole() : UserRole.USER;
+        Users users = userRepository.findByEmail(email);
+        return users.getUserRole();
     }
 
     public Authentication getAuthentication(String token) {

@@ -22,7 +22,7 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
     private boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_uid", nullable = false)
+    @JoinColumn(name = "users_uid")
     private UsersEntity users;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -44,6 +44,7 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
         entity.id = gameResourceComments.getId();
         entity.comment = gameResourceComments.getComment();
         entity.isDeleted = gameResourceComments.isDeleted();
+        entity.users = UsersEntity.from(gameResourceComments.getUsers());
         entity.gameResources = GameResourcesEntity.from(gameResourceComments.getGameResources());
 
         if (gameResourceComments.getParentId() != null) {
@@ -60,6 +61,7 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
                 .id(id)
                 .comment(comment)
                 .isDeleted(isDeleted)
+                .users(users.toModel())
                 .parentId(parent != null ? parent.getId() : null)
                 .gameResources(gameResources.toModel())
                 .createdDate(this.getCreatedDate())

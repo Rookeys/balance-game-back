@@ -34,7 +34,7 @@ public class AuthService {
         String accessToken = kakaoService.getAccessToken(kakaoRequest.getAuthorizeCode(), request);
         KakaoResponse response = kakaoService.getUserInfo(accessToken);
 
-        Optional<Users> users = userRepository.findByEmail(response.getEmail());
+        Optional<Users> users = userRepository.findByUserEmail(response.getEmail());
 
         if (users.isEmpty()) {  // 회원 가입으로 유도
             Users user = Users.builder()
@@ -73,24 +73,20 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest loginRequest) {
         userUtils.validateToken(loginRequest.getAccessToken(), loginRequest.getLoginType());
-        Optional<Users> users = userRepository.findByEmail(loginRequest.getEmail());
+        Users users = userRepository.findByEmail(loginRequest.getEmail());
 
-        if (users.isEmpty()) {
-            throw new UnAuthorizedException("유저를 찾을 수 없습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
-        }
-
-        if (users.get().isDeleted()) {
+        if (users.isDeleted()) {
             throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
         }
 
-        Images images = imageRepository.findByUsers(users.get());
+        Images images = imageRepository.findByUsers(users);
 
-        return userUtils.createToken(users.get(), images != null ? images.getFileUrl() : null);
+        return userUtils.createToken(users, images != null ? images.getFileUrl() : null);
     }
 
     public LoginResponse testLogin() {
-        Optional<Users> users = userRepository.findByEmail("test@test.com");
-        return userUtils.createToken(users.get(), null);
+        Users users = userRepository.findByEmail("test@test.com");
+        return userUtils.createToken(users, null);
     }
 
     public void logout(HttpServletRequest request) {

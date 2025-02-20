@@ -131,18 +131,40 @@ public class GameService {
     }
 
     // 게임 리소스(컷툰 식) 댓글 작성
-    public void addComment(Long resourceId, GameResourceCommentRequest commentRequest, HttpServletRequest request) {
+    public void addResourceComment(Long resourceId, GameResourceCommentRequest commentRequest, HttpServletRequest request) {
         gameResourceCommentService.addComment(resourceId, commentRequest, request);
     }
 
     // 게임 리소스(컷툰 식) 댓글 수정
-    public void updateComment(Long commentId, GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
+    public void updateResourceComment(Long commentId, GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
         gameResourceCommentService.updateComment(commentId, commentRequest, request);
     }
 
     // 게임 리소스(컷툰 식) 댓글 삭제
-    public void deleteComment(Long commentId, HttpServletRequest request) {
+    public void deleteResourceComment(Long commentId, HttpServletRequest request) {
         gameResourceCommentService.deleteComment(commentId, request);
+    }
+
+    // 게임 결과 댓글 리스트 출력
+    public CustomPageImpl<GameResultCommentResponse> getCommentsByGameResult(Long gameId, Long cursorId, Pageable pageable,
+                                                                             GameCommentSearchRequest searchRequest,
+                                                                             HttpServletRequest request) {
+        return gameResultCommentService.getCommentsByGameResult(gameId, cursorId, pageable, searchRequest, request);
+    }
+
+    // 게임 결과 댓글 작성
+    public void addResultComment(Long gameId, GameResultCommentRequest commentRequest, HttpServletRequest request) {
+        gameResultCommentService.addComment(gameId, commentRequest, request);
+    }
+
+    // 게임 결과 댓글 수정
+    public void updateResultComment(Long commentId, GameResultCommentRequest commentRequest, HttpServletRequest request) {
+        gameResultCommentService.updateComment(commentId, commentRequest, request);
+    }
+
+    //
+    public void deleteResultComment(Long commentId, HttpServletRequest request) {
+        gameResultCommentService.deleteComment(commentId, request);
     }
 
     // 좋아요 처리 서비스

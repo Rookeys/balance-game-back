@@ -29,9 +29,6 @@ public class GameResultCommentResponse {
     @Schema(description = "수정 시간")
     private LocalDateTime updatedDateTime;
 
-    @Schema(description = "삭제 여부")
-    private boolean isDeleted;
-
     @Schema(description = "좋아요 총합")
     private int like;
 

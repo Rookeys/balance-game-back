@@ -1,7 +1,6 @@
 package com.games.balancegameback.service.game.impl.comment;
 
 import com.games.balancegameback.domain.game.enums.CommentType;
-import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

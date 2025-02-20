@@ -7,7 +7,6 @@ import lombok.*;
 import java.util.UUID;
 
 @Data
-@Builder
 public class Users {
 
     private String uid;
@@ -17,8 +16,9 @@ public class Users {
     private UserRole userRole;
     private boolean isDeleted;
 
+    @Builder
     public Users(String uid, String nickname, String email, LoginType loginType, UserRole userRole, boolean isDeleted) {
-        this.uid = uid == null ? String.valueOf(UUID.randomUUID()) : uid;
+        this.uid = uid.isEmpty() ? String.valueOf(UUID.randomUUID()) : uid;
         this.nickname = nickname;
         this.email = email;
         this.loginType = loginType;

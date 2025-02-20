@@ -71,6 +71,15 @@ public class SwaggerConfig {
     }
 
     @Bean
+    public GroupedOpenApi gameCommentLikesApi() {
+        return GroupedOpenApi.builder()
+                .group("Comment's Likes")
+                .pathsToMatch("**/likes")
+                .displayName("Game Comment's Likes API")
+                .build();
+    }
+
+    @Bean
     public GroupedOpenApi mediaApi() {
         return GroupedOpenApi.builder()
                 .group("Media")
