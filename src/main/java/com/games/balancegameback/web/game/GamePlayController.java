@@ -39,7 +39,7 @@ public class GamePlayController {
         return ResponseEntity.status(HttpStatus.CREATED).body(gameService.createPlayRoom(gameId, gamePlayRequest));
     }
 
-    @Operation(summary = "플레이룸 업데이트 API", description = "선택한 리소스를 업데이트하고 다음 페어를 반환.")
+    @Operation(summary = "플레이룸 결과 반영 API", description = "선택한 리소스를 업데이트하고 다음 페어를 반환.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "플레이룸 업데이트 완료"),

@@ -5,10 +5,6 @@ import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -18,14 +14,6 @@ public class ImagesEntity extends MediaEntity {
 
     @Column(nullable = false)
     private String fileUrl;
-
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @Column
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
 
     public ImagesEntity(Long id, String fileUrl, MediaType mediaType, GamesEntity games, UsersEntity users) {
         super(id, mediaType);

@@ -3,22 +3,15 @@ package com.games.balancegameback.infra.entity;
 import com.games.balancegameback.domain.game.GameResults;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "game_results")
-public class GameResultsEntity {
+public class GameResultsEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_resources_id")

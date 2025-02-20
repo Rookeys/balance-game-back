@@ -1,6 +1,6 @@
 package com.games.balancegameback.dto.game;
 
-import com.games.balancegameback.domain.game.enums.SortType;
+import com.games.balancegameback.domain.game.enums.GameSortType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +18,6 @@ public class GameResourceSearchRequest {
 
     @Schema(description = "정렬 옵션", allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"},
             example = "winRateAsc")
-    private SortType sortType;
+    private GameSortType sortType;
 }
 
