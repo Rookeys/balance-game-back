@@ -63,12 +63,12 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
         this.setOptions(builder, cursorId, searchRequest, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
-        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : null;
+        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
         List<GameResultCommentResponse> list = jpaQueryFactory
-                .select(Projections.constructor(
+                .selectDistinct(Projections.constructor(
                         GameResultCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
