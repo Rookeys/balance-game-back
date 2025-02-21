@@ -29,7 +29,6 @@ public class GameResourceCommentController {
     private final GameService gameService;
 
     @Operation(summary = "게임 리소스 부모 댓글 리스트 발급 API", description = "게임 리소스 부모 댓글 리스트 목록을 제공한다.")
-    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
@@ -64,7 +63,6 @@ public class GameResourceCommentController {
     }
 
     @Operation(summary = "게임 리소스 대댓글 리스트 발급 API", description = "게임 리소스 대댓글 리스트 목록을 제공한다.")
-    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })

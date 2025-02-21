@@ -29,7 +29,6 @@ public class GameResultCommentController {
     private final GameService gameService;
 
     @Operation(summary = "게임 결과 댓글 리스트 발급 API", description = "게임 결과 댓글 리스트 목록을 제공한다.")
-    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
