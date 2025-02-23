@@ -13,6 +13,7 @@ import com.games.balancegameback.dto.game.GameStatusResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +69,9 @@ public class GameRepositoryImpl implements GameRepository {
                                                          GameResourceSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
+        BooleanBuilder builder = new BooleanBuilder();
+        this.setOptions(builder, cursorId, searchRequest, games);
+
         List<GameStatusResponse> results = jpaQueryFactory
                 .select(Projections.constructor(GameStatusResponse.class,
                         games.id.as("roomId"),
@@ -76,7 +80,7 @@ public class GameRepositoryImpl implements GameRepository {
                 ))
                 .from(games)
                 .join(games.users).on(games.users.email.eq(users.getEmail()))
-                .where(cursorId == null ? games.id.loe(this.findMaxId(users)) : games.id.lt(cursorId))
+                .where(builder)
                 .orderBy(games.id.desc())
                 .limit(pageable.getPageSize() + 1) // 다음 페이지 확인을 위해 +1
                 .fetch();
@@ -117,6 +121,17 @@ public class GameRepositoryImpl implements GameRepository {
                 .from(games)
                 .where(games.users.email.eq(users.getEmail()))
                 .fetchOne();
+    }
+
+    private void setOptions(BooleanBuilder builder, Long cursorId, GameResourceSearchRequest request,
+                            QGamesEntity games) {
+        if (cursorId != null) {
+            builder.and(games.id.gt(cursorId));
+        }
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(games.title.containsIgnoreCase(request.getTitle()));
+        }
     }
 
     private List<GameListResponse> addThumbnailResources(List<GameStatusResponse> results) {
