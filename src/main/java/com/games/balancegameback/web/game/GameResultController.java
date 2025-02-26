@@ -1,6 +1,6 @@
 package com.games.balancegameback.web.game;
 
-import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
 import com.games.balancegameback.service.game.GameService;
@@ -45,7 +45,7 @@ public class GameResultController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "winRateDesc",
                     schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) GameSortType sortType) {
+            @RequestParam(name = "sortType", required = false) GameResourceSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);
         GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()

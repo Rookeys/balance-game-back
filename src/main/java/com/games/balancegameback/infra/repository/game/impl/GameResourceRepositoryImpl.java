@@ -5,7 +5,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
-import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
@@ -153,14 +153,14 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         gameResourceJpaRepository.deleteById(id);
     }
 
-    public OrderSpecifier<?> getOrderSpecifier(GameSortType gameSortType, JPQLQuery<Double> winRateSubQuery) {
+    public OrderSpecifier<?> getOrderSpecifier(GameResourceSortType gameResourceSortType, JPQLQuery<Double> winRateSubQuery) {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
 
-        if (gameSortType == null) {
+        if (gameResourceSortType == null) {
             return resources.id.asc();
         }
 
-        return switch (gameSortType) {
+        return switch (gameResourceSortType) {
             case winRateAsc -> new OrderSpecifier<>(Order.ASC, winRateSubQuery);
             case winRateDesc -> new OrderSpecifier<>(Order.DESC, winRateSubQuery);
             case idDesc -> resources.id.desc();

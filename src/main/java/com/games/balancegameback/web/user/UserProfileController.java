@@ -1,8 +1,9 @@
 package com.games.balancegameback.web.user;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameResourceSearchRequest;
+import com.games.balancegameback.dto.game.GameSearchRequest;
 import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
 import com.games.balancegameback.service.game.GameService;
@@ -17,7 +18,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +62,7 @@ public class UserProfileController {
             @ApiResponse(responseCode = "200", description = "내가 만든 게임 리스트 발급 성공")
     })
     @GetMapping(value = "/games")
-    public Page<GameListResponse> getMyGameList(
+    public CustomPageImpl<GameListResponse> getMyGameList(
             @Parameter(name = "cursorId", description = "커서 ID", example = "4")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
@@ -73,14 +73,14 @@ public class UserProfileController {
             @RequestParam(name = "title", required = false) String title,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "winRateDesc",
-                    schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
+                    example = "idDesc",
+                    schema = @Schema(allowableValues = {"idAsc", "idDesc"}))
             @RequestParam(name = "sortType", required = false) GameSortType sortType,
 
             HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(0, size);
-        GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
+        GameSearchRequest searchRequest = GameSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)
                 .build();

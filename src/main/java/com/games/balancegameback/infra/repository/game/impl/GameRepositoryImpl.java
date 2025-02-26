@@ -5,19 +5,17 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.Games;
+import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameResourceSearchRequest;
-import com.games.balancegameback.dto.game.GameResponse;
-import com.games.balancegameback.dto.game.GameStatusResponse;
+import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -64,15 +62,18 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     @Override
-    public Page<GameListResponse> findGamesWithResources(Long cursorId, Users users,
+    public CustomPageImpl<GameListResponse> findGamesWithResources(Long cursorId, Users users,
                                                          Pageable pageable,
-                                                         GameResourceSearchRequest searchRequest) {
+                                                         GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
         this.setOptions(builder, cursorId, searchRequest, games);
 
-        List<GameStatusResponse> results = jpaQueryFactory
+        OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
+
+        List<GameStatusResponse> resultList = jpaQueryFactory
                 .select(Projections.constructor(GameStatusResponse.class,
                         games.id.as("roomId"),
                         games.title,
@@ -80,13 +81,15 @@ public class GameRepositoryImpl implements GameRepository {
                 ))
                 .from(games)
                 .join(games.users).on(games.users.email.eq(users.getEmail()))
+                .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(builder)
-                .orderBy(games.id.desc())
+                .orderBy(orderSpecifier)
+                .groupBy(games.id)
                 .limit(pageable.getPageSize() + 1) // 다음 페이지 확인을 위해 +1
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(results, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(results, pageable.getPageSize());
+        boolean hasNext = PaginationUtils.hasNextPage(resultList, pageable.getPageSize());
+        PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
 
         Long totalElements = jpaQueryFactory
                 .select(games.count())
@@ -94,7 +97,7 @@ public class GameRepositoryImpl implements GameRepository {
                 .where(games.users.email.eq(users.getEmail()))
                 .fetchOne();
 
-        return new CustomPageImpl<>(this.addThumbnailResources(results), pageable, totalElements, cursorId, hasNext);
+        return new CustomPageImpl<>(this.addThumbnailResources(resultList), pageable, totalElements, cursorId, hasNext);
     }
 
     @Override
@@ -113,17 +116,8 @@ public class GameRepositoryImpl implements GameRepository {
         gameRepository.deleteById(roomId);
     }
 
-    private Long findMaxId(Users users) {
-        QGamesEntity games = QGamesEntity.gamesEntity;
-
-        return jpaQueryFactory
-                .select(games.id.max())
-                .from(games)
-                .where(games.users.email.eq(users.getEmail()))
-                .fetchOne();
-    }
-
-    private void setOptions(BooleanBuilder builder, Long cursorId, GameResourceSearchRequest request,
+    private void setOptions(BooleanBuilder builder, Long cursorId,
+                            GameSearchRequest request,
                             QGamesEntity games) {
         if (cursorId != null) {
             builder.and(games.id.gt(cursorId));
@@ -132,6 +126,20 @@ public class GameRepositoryImpl implements GameRepository {
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
             builder.and(games.title.containsIgnoreCase(request.getTitle()));
         }
+    }
+
+    // 정렬 방식 결정 쿼리
+    private OrderSpecifier<?> getOrderSpecifier(GameSortType sortType) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+
+        if (sortType == null) {
+            return games.id.desc();
+        }
+
+        return switch (sortType) {
+            case idAsc -> games.id.asc();
+            default -> games.id.desc();
+        };
     }
 
     private List<GameListResponse> addThumbnailResources(List<GameStatusResponse> results) {

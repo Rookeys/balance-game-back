@@ -50,8 +50,8 @@ public class GameService {
     }
 
     // 내가 만든 게임들 리스트 반환
-    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
-                                                GameResourceSearchRequest searchRequest,
+    public CustomPageImpl<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
+                                                GameSearchRequest searchRequest,
                                                 HttpServletRequest request) {
         return gameRoomService.getMyGameList(pageable, cursorId, searchRequest, request);
     }
