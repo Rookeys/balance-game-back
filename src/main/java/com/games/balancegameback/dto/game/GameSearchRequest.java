@@ -18,5 +18,5 @@ public class GameSearchRequest {
 
     @Schema(description = "정렬 옵션", allowableValues = {"playRateAsc", "playRateDesc", "idAsc", "idDesc"},
             example = "winRateAsc")
-    private GameSortType sortType;
+    private GameSortType sortType = GameSortType.idDesc;
 }

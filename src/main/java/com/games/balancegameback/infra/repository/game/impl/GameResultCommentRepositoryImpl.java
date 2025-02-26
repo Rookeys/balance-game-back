@@ -123,10 +123,6 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
     private OrderSpecifier<?> getOrderSpecifier(CommentSortType sortType) {
         QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
 
-        if (sortType == null) {
-            return comments.id.asc();
-        }
-
         return switch (sortType) {
             case likeAsc -> comments.likes.size().asc();
             case likeDesc -> comments.likes.size().desc();

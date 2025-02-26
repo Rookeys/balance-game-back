@@ -122,7 +122,7 @@ public class GameRepositoryImpl implements GameRepository {
             builder.and(games.id.gt(cursorId));
         }
 
-        if (cursorId != null &&request.getSortType().equals(GameSortType.idDesc)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.idDesc)) {
             builder.and(games.id.lt(cursorId));
         }
 
@@ -134,10 +134,6 @@ public class GameRepositoryImpl implements GameRepository {
     // 정렬 방식 결정 쿼리
     private OrderSpecifier<?> getOrderSpecifier(GameSortType sortType) {
         QGamesEntity games = QGamesEntity.gamesEntity;
-
-        if (sortType == null) {
-            return games.id.desc();
-        }
 
         // 나중에 조건 추가를 고려해 switch 유지
         return switch (sortType) {

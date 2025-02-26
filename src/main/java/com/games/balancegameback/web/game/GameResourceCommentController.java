@@ -50,7 +50,7 @@ public class GameResourceCommentController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "likeDesc",
                     schema = @Schema(allowableValues = {"likeAsc", "likeDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") CommentSortType sortType,
 
             HttpServletRequest request) {
 
@@ -87,7 +87,7 @@ public class GameResourceCommentController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "likeDesc",
                     schema = @Schema(allowableValues = {"likeAsc", "likeDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "idAsc") CommentSortType sortType,
 
             HttpServletRequest request) {
 

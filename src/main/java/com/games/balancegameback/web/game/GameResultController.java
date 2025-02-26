@@ -45,7 +45,7 @@ public class GameResultController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "winRateDesc",
                     schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) GameResourceSortType sortType) {
+            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameResourceSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);
         GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()

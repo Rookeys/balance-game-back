@@ -196,10 +196,6 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     private OrderSpecifier<?> getOrderSpecifier(CommentSortType sortType) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
 
-        if (sortType == null) {
-            return comments.id.asc();
-        }
-
         return switch (sortType) {
             case likeAsc -> comments.likes.size().asc();
             case likeDesc -> comments.likes.size().desc();

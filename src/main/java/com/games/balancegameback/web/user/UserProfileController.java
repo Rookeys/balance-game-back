@@ -75,7 +75,7 @@ public class UserProfileController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "idDesc",
                     schema = @Schema(allowableValues = {"idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) GameSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameSortType sortType,
 
             HttpServletRequest request) {
 

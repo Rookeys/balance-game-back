@@ -165,10 +165,6 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     public OrderSpecifier<?> getOrderSpecifier(GameResourceSortType gameResourceSortType, JPQLQuery<Double> winRateSubQuery) {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
 
-        if (gameResourceSortType == null) {
-            return resources.id.asc();
-        }
-
         return switch (gameResourceSortType) {
             case winRateAsc -> new OrderSpecifier<>(Order.ASC, winRateSubQuery);
             case winRateDesc -> new OrderSpecifier<>(Order.DESC, winRateSubQuery);
