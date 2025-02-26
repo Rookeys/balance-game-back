@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.game;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
@@ -14,7 +15,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,7 +36,7 @@ public class GameResourceController {
             @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
     })
     @GetMapping(value = "/{gameId}/resources")
-    public Page<GameResourceResponse> getResources(
+    public CustomPageImpl<GameResourceResponse> getResources(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
             @PathVariable(name = "gameId") Long gameId,
 

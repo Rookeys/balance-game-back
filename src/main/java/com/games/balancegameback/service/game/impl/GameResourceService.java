@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.game.impl;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.media.Images;
@@ -14,7 +15,6 @@ import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.games.balancegameback.service.media.repository.ImageRepository;
 import com.games.balancegameback.service.media.repository.LinkRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +27,8 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
-    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
-                                                   GameResourceSearchRequest request) {
+    public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+                                                             GameResourceSearchRequest request) {
         return gameResourceRepository.findByGameId(gameId, cursorId, pageable, request);
     }
 

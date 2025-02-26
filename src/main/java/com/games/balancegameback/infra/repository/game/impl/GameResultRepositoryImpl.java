@@ -14,7 +14,6 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -30,7 +29,7 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Page<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId,
+    public CustomPageImpl<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId,
                                                           GameResourceSearchRequest request,
                                                           Pageable pageable) {
         QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;

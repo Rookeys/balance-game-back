@@ -21,7 +21,6 @@ import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -77,7 +76,7 @@ public class GameService {
     }
 
     // 등록된 리소스 목록을 반환
-    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+    public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                    GameResourceSearchRequest gameResourceSearchRequest,
                                                    HttpServletRequest request) {
         this.validateRequest(gameId, request);
@@ -108,7 +107,7 @@ public class GameService {
     }
 
     // 게임 결과창 출력
-    public Page<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
+    public CustomPageImpl<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
                                                      GameResourceSearchRequest request,
                                                      Pageable pageable) {
         return gameResultService.getResultRanking(gameId, cursorId, request, pageable);

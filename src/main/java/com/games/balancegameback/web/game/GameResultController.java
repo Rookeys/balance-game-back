@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.game;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
@@ -11,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class GameResultController {
             @ApiResponse(responseCode = "200", description = "결과창 출력 성공")
     })
     @GetMapping(value = "/{gameId}/results")
-    public Page<GameResultResponse> getResultRanking(
+    public CustomPageImpl<GameResultResponse> getResultRanking(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
             @PathVariable(name = "gameId") Long gameId,
 
