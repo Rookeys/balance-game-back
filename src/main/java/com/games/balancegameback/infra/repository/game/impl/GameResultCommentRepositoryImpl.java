@@ -106,8 +106,12 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
                             QGameResultCommentsEntity comments) {
-        if (cursorId != null) {
+        if (cursorId != null && request.getSortType().equals(CommentSortType.idAsc)) {
             builder.and(comments.id.gt(cursorId));
+        }
+
+        if (cursorId != null && request.getSortType().equals(CommentSortType.idDesc)) {
+            builder.and(comments.id.lt(cursorId));
         }
 
         if (request.getContent() != null && !request.getContent().isEmpty()) {

@@ -5,9 +5,11 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
+import com.games.balancegameback.domain.game.enums.CommentSortType;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
+import com.games.balancegameback.dto.game.comment.GameCommentSearchRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceLinkResponse;
 import com.games.balancegameback.infra.entity.*;
@@ -101,14 +103,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(resources.games.id.eq(gameId));
 
-        if (cursorId != null) {
-            builder.and(resources.id.gt(cursorId));
-        }
-
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(resources.title.containsIgnoreCase(request.getTitle()));
-        }
-
+        this.setOptions(builder, cursorId, request, resources);
         // 동적 정렬 조건
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType(), this.getWinRateSubQuery(gameId));
 
@@ -150,6 +145,21 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         }
 
         gameResourceJpaRepository.deleteById(id);
+    }
+
+    private void setOptions(BooleanBuilder builder, Long cursorId, GameResourceSearchRequest request,
+                            QGameResourcesEntity resources) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idAsc)) {
+            builder.and(resources.id.gt(cursorId));
+        }
+
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idDesc)) {
+            builder.and(resources.id.lt(cursorId));
+        }
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(resources.title.containsIgnoreCase(request.getTitle()));
+        }
     }
 
     public OrderSpecifier<?> getOrderSpecifier(GameResourceSortType gameResourceSortType, JPQLQuery<Double> winRateSubQuery) {

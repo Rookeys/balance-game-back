@@ -3,9 +3,12 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResults;
+import com.games.balancegameback.domain.game.enums.CommentSortType;
+import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
+import com.games.balancegameback.dto.game.comment.GameCommentSearchRequest;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResultJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
@@ -44,15 +47,8 @@ public class GameResultRepositoryImpl implements GameResultRepository {
         builder.and(gameResources.games.id.eq(gameId));
         totalCountBuilder.and(gameResources.games.id.eq(gameId));
 
-        if (cursorId != null) {
-            builder.and(gameResources.id.gt(cursorId));
-        }
-
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
-            totalCountBuilder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
-        }
-
+        this.setOptions(builder, totalCountBuilder, cursorId, request);
+        // 추후 옵션이 추가되면 switch 문으로 변경 예정.
         OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType(),
                                                 gameResourceRepository.getWinRateSubQuery(gameId));
 
@@ -114,5 +110,23 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     @Override
     public void save(GameResults gameResults) {
         gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
+    }
+
+    private void setOptions(BooleanBuilder builder, BooleanBuilder totalCountBuilder, Long cursorId,
+                            GameResourceSearchRequest request) {
+        QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
+
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idAsc)) {
+            builder.and(gameResources.id.gt(cursorId));
+        }
+
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idDesc)) {
+            builder.and(gameResources.id.lt(cursorId));
+        }
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+            totalCountBuilder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+        }
     }
 }

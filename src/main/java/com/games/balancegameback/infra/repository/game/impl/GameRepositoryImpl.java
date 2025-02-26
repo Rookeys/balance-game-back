@@ -117,10 +117,13 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId,
-                            GameSearchRequest request,
-                            QGamesEntity games) {
-        if (cursorId != null) {
+                            GameSearchRequest request, QGamesEntity games) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.idAsc)) {
             builder.and(games.id.gt(cursorId));
+        }
+
+        if (cursorId != null &&request.getSortType().equals(GameSortType.idDesc)) {
+            builder.and(games.id.lt(cursorId));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
@@ -136,6 +139,7 @@ public class GameRepositoryImpl implements GameRepository {
             return games.id.desc();
         }
 
+        // 나중에 조건 추가를 고려해 switch 유지
         return switch (sortType) {
             case idAsc -> games.id.asc();
             default -> games.id.desc();
