@@ -4,6 +4,9 @@ import com.games.balancegameback.domain.game.GameResources;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Entity
 @Table(name = "game_resources")
@@ -27,6 +30,9 @@ public class GameResourcesEntity extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "links_id")
     private LinksEntity links;
+
+    @OneToMany(mappedBy = "gameResources", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameResultsEntity> winningLists = new ArrayList<>();
 
     public static GameResourcesEntity from(GameResources gameResources) {
         GameResourcesEntity gameResourcesEntity = new GameResourcesEntity();
@@ -52,6 +58,9 @@ public class GameResourcesEntity extends BaseTimeEntity {
                 .games(games.toModel())
                 .images(images != null ? images.toModel() : null)
                 .links(links != null ? links.toModel() : null)
+                .winningLists(winningLists.stream()
+                        .map(GameResultsEntity::toModel)
+                        .toList())
                 .build();
     }
 

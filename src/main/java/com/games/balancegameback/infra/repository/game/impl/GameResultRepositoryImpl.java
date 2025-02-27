@@ -3,12 +3,10 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResults;
-import com.games.balancegameback.domain.game.enums.CommentSortType;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
-import com.games.balancegameback.dto.game.comment.GameCommentSearchRequest;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResultJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
@@ -48,9 +46,8 @@ public class GameResultRepositoryImpl implements GameResultRepository {
         totalCountBuilder.and(gameResources.games.id.eq(gameId));
 
         this.setOptions(builder, totalCountBuilder, cursorId, request);
-        // 추후 옵션이 추가되면 switch 문으로 변경 예정.
-        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType(),
-                                                gameResourceRepository.getWinRateSubQuery(gameId));
+        // resource repository 로직 재사용
+        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType());
 
         List<GameResultResponse> list = jpaQueryFactory
                 .select(Projections.constructor(
@@ -61,7 +58,8 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                         images.fileUrl.coalesce(links.urls).as("content"), // 이미지가 있으면 fileUrl, 없으면 링크 URL
                         links.startSec,
                         links.endSec,
-                        gameResourceRepository.getWinRateSubQuery(gameId)
+                        gameResources.winningLists.size().as("winningLists"),
+                        gameResourceRepository.getTotalPlayNumsSubQuery(gameId)
                 ))
                 .from(gameResources)
                 .leftJoin(gameResults).on(gameResults.gameResources.eq(gameResources))
@@ -122,6 +120,11 @@ public class GameResultRepositoryImpl implements GameResultRepository {
 
         if (cursorId != null && request.getSortType().equals(GameResourceSortType.idDesc)) {
             builder.and(gameResources.id.lt(cursorId));
+        }
+
+        if (request.getSortType().equals(GameResourceSortType.winRateDesc) ||
+                request.getSortType().equals(GameResourceSortType.winRateAsc)) {    // resource repository 로직 재사용
+            gameResourceRepository.applyOtherSortOptions(builder, cursorId, request, gameResources);
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {

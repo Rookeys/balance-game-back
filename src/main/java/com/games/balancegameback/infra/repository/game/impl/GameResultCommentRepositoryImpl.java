@@ -116,7 +116,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         }
 
         if (request.getSortType().equals(CommentSortType.likeDesc) || request.getSortType().equals(CommentSortType.likeAsc)) {
-            this.applyLikeSortOptions(builder, cursorId, request, comments);
+            this.applyOtherSortOptions(builder, cursorId, request, comments);
         }
 
         if (request.getContent() != null && !request.getContent().isEmpty()) {
@@ -124,7 +124,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         }
     }
 
-    private void applyLikeSortOptions(BooleanBuilder builder, Long cursorId,
+    private void applyOtherSortOptions(BooleanBuilder builder, Long cursorId,
                                       GameCommentSearchRequest request, QGameResultCommentsEntity comments) {
         NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
         Integer cursorLikeCount = null;
