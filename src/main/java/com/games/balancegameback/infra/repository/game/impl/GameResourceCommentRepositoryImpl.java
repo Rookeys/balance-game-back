@@ -18,6 +18,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -134,7 +135,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
-                        this.isLikedExpression(users)
+                        this.isLikedExpression(users).as("isLiked")
                 ))
                 .from(comments)
                 .where(builder)
@@ -176,7 +177,6 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         return count != null;
     }
 
-
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
                             QGameResourceCommentsEntity comments) {
         if (cursorId != null && request.getSortType().equals(CommentSortType.idAsc)) {
@@ -187,8 +187,47 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
             builder.and(comments.id.lt(cursorId));
         }
 
+        if (request.getSortType().equals(CommentSortType.likeDesc) || request.getSortType().equals(CommentSortType.likeAsc)) {
+            this.applyLikeSortOptions(builder, cursorId, request, comments);
+        }
+
         if (request.getContent() != null && !request.getContent().isEmpty()) {
             builder.and(comments.comment.containsIgnoreCase(request.getContent()));
+        }
+    }
+
+    private void applyLikeSortOptions(BooleanBuilder builder, Long cursorId,
+                                      GameCommentSearchRequest request, QGameResourceCommentsEntity comments) {
+        NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
+        Integer cursorLikeCount = null;
+
+        if (cursorId != null) {
+            cursorLikeCount = jpaQueryFactory
+                    .select(comments.likes.size().coalesce(0))
+                    .from(comments)
+                    .where(comments.id.eq(cursorId))
+                    .fetchOne();
+        }
+
+        // cursorId 가 없다면 바로 탈출
+        if (cursorId == null || cursorLikeCount == null) {
+            return;
+        }
+
+        if (request.getSortType().equals(CommentSortType.likeDesc)) {
+            builder.and(
+                    new BooleanBuilder()
+                            .or(likeCount.lt(cursorLikeCount))
+                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+            );
+        }
+
+        if (request.getSortType().equals(CommentSortType.likeAsc)) {
+            builder.and(
+                    new BooleanBuilder()
+                            .or(likeCount.gt(cursorLikeCount))
+                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+            );
         }
     }
 
@@ -203,18 +242,6 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
             default -> comments.id.asc();
         };
     }
-
-    // 미사용 -> 추후 메인 페이지 작업 때 사용 예정
-//    private BooleanExpression getRecentFilter(RecentSearchType recentSearchType) {
-//        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
-//        LocalDateTime now = LocalDateTime.now();
-//
-//        return switch (recentSearchType) {
-//            case DAY -> comments.createdDate.after(now.minusDays(1));   // 최근 1일
-//            case WEEK -> comments.createdDate.after(now.minusWeeks(1)); // 최근 1주
-//            case MONTH -> comments.createdDate.after(now.minusMonths(1)); // 최근 1달
-//        };
-//    }
 
     // 좋아요를 눌렀는지 안 눌렀는지 확인하는 서브 쿼리
     private BooleanExpression isLikedExpression(Users users) {

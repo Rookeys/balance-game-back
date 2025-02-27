@@ -17,6 +17,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -114,8 +115,47 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
             builder.and(comments.id.lt(cursorId));
         }
 
+        if (request.getSortType().equals(CommentSortType.likeDesc) || request.getSortType().equals(CommentSortType.likeAsc)) {
+            this.applyLikeSortOptions(builder, cursorId, request, comments);
+        }
+
         if (request.getContent() != null && !request.getContent().isEmpty()) {
             builder.and(comments.comment.containsIgnoreCase(request.getContent()));
+        }
+    }
+
+    private void applyLikeSortOptions(BooleanBuilder builder, Long cursorId,
+                                      GameCommentSearchRequest request, QGameResultCommentsEntity comments) {
+        NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
+        Integer cursorLikeCount = null;
+
+        if (cursorId != null) {
+            cursorLikeCount = jpaQueryFactory
+                    .select(comments.likes.size().coalesce(0))
+                    .from(comments)
+                    .where(comments.id.eq(cursorId))
+                    .fetchOne();
+        }
+
+        // cursorId 가 없다면 바로 탈출
+        if (cursorId == null || cursorLikeCount == null) {
+            return;
+        }
+
+        if (request.getSortType().equals(CommentSortType.likeDesc)) {
+            builder.and(
+                    new BooleanBuilder()
+                            .or(likeCount.lt(cursorLikeCount))
+                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+            );
+        }
+
+        if (request.getSortType().equals(CommentSortType.likeAsc)) {
+            builder.and(
+                    new BooleanBuilder()
+                            .or(likeCount.gt(cursorLikeCount))
+                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+            );
         }
     }
 
