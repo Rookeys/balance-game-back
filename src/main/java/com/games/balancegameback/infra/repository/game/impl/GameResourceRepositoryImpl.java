@@ -6,6 +6,7 @@ import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
@@ -111,8 +112,8 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                         GameResourceResponse.class,
                         resources.id.as("resourceId"),
                         resources.title,
-                        images.fileUrl.as("fileUrl"),
-                        links.urls.as("link"),
+                        images.mediaType.coalesce(MediaType.LINK).as("type"),
+                        images.fileUrl.coalesce(links.urls).as("content"),
                         links.startSec,
                         links.endSec,
                         resources.winningLists.size().as("winningLists"),
