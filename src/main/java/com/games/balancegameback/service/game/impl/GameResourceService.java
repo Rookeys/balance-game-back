@@ -36,9 +36,10 @@ public class GameResourceService {
     public void updateResource(Long resourceId, GameResourceRequest gameResourceRequest) {
         GameResources gameResources = gameResourceRepository.findById(resourceId);
 
-        if (gameResourceRequest.getFileUrl() != null && gameResources.getImages() != null) {
+        if (gameResourceRequest.getType().equals(MediaType.IMAGE) && gameResourceRequest.getContent() != null
+                && gameResources.getImages() != null) {
             Images images = gameResources.getImages();
-            images.update(gameResourceRequest.getFileUrl());
+            images.update(gameResourceRequest.getContent());
             imageRepository.update(images);
 
             gameResources.updateImage(gameResourceRequest.getTitle(), images);
@@ -47,9 +48,10 @@ public class GameResourceService {
             // 연관 관계가 전부 끊긴 사진을 정리하는 트리거 추가 예정
         }
 
-        if (gameResourceRequest.getLink() != null && gameResources.getLinks() != null) {
+        if (gameResourceRequest.getType().equals(MediaType.LINK) && gameResourceRequest.getContent() != null
+                && gameResources.getLinks() != null) {
             Links links = gameResources.getLinks();
-            links.update(gameResourceRequest.getLink(), gameResourceRequest.getStartSec(),
+            links.update(gameResourceRequest.getContent(), gameResourceRequest.getStartSec(),
                     gameResourceRequest.getEndSec());
             linkRepository.update(links);
 
