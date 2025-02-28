@@ -32,6 +32,27 @@ public class GamePlayService {
     private final GameResultRepository gameResultRepository;
 
     /**
+     * 게임 이어 하기
+     */
+    public GamePlayResponse continuePlayRoom(Long gameId, Long playId) {
+        GamePlay gamePlay = gamePlayRepository.findById(playId);
+
+        List<Long> resourceList = gamePlay.getAllResources();
+        List<Long> selectedResourceIds = this.shuffle(resourceList);
+
+        List<GamePlayResourceResponse> selectedResources = gameResourceRepository.findByIds(selectedResourceIds);
+
+        GamePlayResourceResponse leftResource = selectedResources.get(0);
+        GamePlayResourceResponse rightResource = selectedResources.get(1);
+
+        return GamePlayResponse.builder()
+                .id(gamePlay.getId())
+                .leftResource(leftResource)
+                .rightResource(rightResource)
+                .build();
+    }
+
+    /**
      * 게임방 생성 및 게임 시작
      */
     @Transactional

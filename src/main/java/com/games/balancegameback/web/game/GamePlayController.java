@@ -24,8 +24,22 @@ public class GamePlayController {
 
     private final GameService gameService;
 
+    @Operation(summary = "게임 이어 하기", description = "진행했던 게임을 다시 이어 할 수 있다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게임 데이터 출력 성공")
+    })
+    @GetMapping(value = "/{gameId}/play/{playId}")
+    public ResponseEntity<GamePlayResponse> continuePlayRoom(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @PathVariable(name = "gameId") Long gameId,
+
+            @Parameter(name = "playId", description = "플레이룸의 ID", required = true, example = "5")
+            @PathVariable(name = "playId") Long playId) {
+        return ResponseEntity.status(HttpStatus.OK).body(gameService.continuePlayRoom(gameId, playId));
+    }
+
+
     @Operation(summary = "플레이룸 생성 및 게임 시작 API", description = "n강만큼 데이터가 준비되고 첫 2개의 데이터를 반환.")
-    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "플레이룸 생성 완료"),
             @ApiResponse(responseCode = "400", description = "초대 코드가 null 입니다.")
@@ -39,8 +53,8 @@ public class GamePlayController {
         return ResponseEntity.status(HttpStatus.CREATED).body(gameService.createPlayRoom(gameId, gamePlayRequest));
     }
 
+
     @Operation(summary = "플레이룸 결과 반영 API", description = "선택한 리소스를 업데이트하고 다음 페어를 반환.")
-    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "플레이룸 업데이트 완료"),
             @ApiResponse(responseCode = "400", description = "이미 선택한 리소스입니다."),

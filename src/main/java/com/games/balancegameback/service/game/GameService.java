@@ -95,9 +95,14 @@ public class GameService {
         return gamePlayService.createPlayRoom(gameId, request);
     }
 
-    // 게임방 생성 및 게임 시작
+    // 게임 선택 저장 및 다음 선택지 반환
     public GamePlayResponse updatePlayRoom(Long gameId, Long playId, GamePlayRequest request) {
         return gamePlayService.updatePlayRoom(gameId, playId, request);
+    }
+
+    // 게임 이어 하기
+    public GamePlayResponse continuePlayRoom(Long gameId, Long playId) {
+        return gamePlayService.continuePlayRoom(gameId, playId);
     }
 
     // 리소스를 삭제함
