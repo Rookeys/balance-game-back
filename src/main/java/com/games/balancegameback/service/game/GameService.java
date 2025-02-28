@@ -8,6 +8,7 @@ import com.games.balancegameback.domain.game.enums.CommentType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.game.comment.*;
+import com.games.balancegameback.dto.game.gameplay.GameInfoResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
@@ -91,8 +92,8 @@ public class GameService {
     }
 
     // 게임방 생성 및 게임 시작
-    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest request) {
-        return gamePlayService.createPlayRoom(gameId, request);
+    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest roundRequest, HttpServletRequest request) {
+        return gamePlayService.createPlayRoom(gameId, roundRequest, request);
     }
 
     // 게임 선택 저장 및 다음 선택지 반환
@@ -101,8 +102,13 @@ public class GameService {
     }
 
     // 게임 이어 하기
-    public GamePlayResponse continuePlayRoom(Long gameId, Long playId) {
-        return gamePlayService.continuePlayRoom(gameId, playId);
+    public GamePlayResponse continuePlayRoom(Long gameId, Long playId, String inviteCode, HttpServletRequest request) {
+        return gamePlayService.continuePlayRoom(gameId, playId, inviteCode, request);
+    }
+
+    // 게임의 전반적인 명세 데이터 출력하기
+    public GameInfoResponse getGameDetails(Long gameId) {
+        return gamePlayService.getGameDetails(gameId);
     }
 
     // 리소스를 삭제함

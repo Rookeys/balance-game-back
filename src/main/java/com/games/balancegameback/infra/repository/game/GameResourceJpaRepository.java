@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GameResourceJpaRepository extends JpaRepository<GameResourcesEntity, Long> {
 
+    Integer countByGamesId(Long gameId);
 }

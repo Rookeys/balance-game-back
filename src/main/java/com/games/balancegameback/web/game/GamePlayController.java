@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.game;
 
+import com.games.balancegameback.dto.game.gameplay.GameInfoResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
@@ -8,7 +9,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,7 +26,21 @@ public class GamePlayController {
 
     private final GameService gameService;
 
+    @Operation(summary = "게임의 전반적인 명세 데이터 출력", description = "게임의 전반적인 명세 데이터 출력한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게임 명세 출력 성공")
+    })
+    @GetMapping(value = "/{gameId}/play")
+    public ResponseEntity<GameInfoResponse> getGameDetails(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @PathVariable(name = "gameId") Long gameId) {
+
+        return ResponseEntity.status(HttpStatus.OK).body(gameService.getGameDetails(gameId));
+    }
+
+
     @Operation(summary = "게임 이어 하기", description = "진행했던 게임을 다시 이어 할 수 있다.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "게임 데이터 출력 성공")
     })
@@ -33,12 +50,19 @@ public class GamePlayController {
             @PathVariable(name = "gameId") Long gameId,
 
             @Parameter(name = "playId", description = "플레이룸의 ID", required = true, example = "5")
-            @PathVariable(name = "playId") Long playId) {
-        return ResponseEntity.status(HttpStatus.OK).body(gameService.continuePlayRoom(gameId, playId));
+            @PathVariable(name = "playId") Long playId,
+
+            @Parameter(name = "inviteCode", description = "초대 코드", example = "XM2010")
+            @RequestParam(name = "inviteCode", required = false) String inviteCode,
+
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(gameService.continuePlayRoom(gameId, playId, inviteCode, request));
     }
 
 
     @Operation(summary = "플레이룸 생성 및 게임 시작 API", description = "n강만큼 데이터가 준비되고 첫 2개의 데이터를 반환.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "플레이룸 생성 완료"),
             @ApiResponse(responseCode = "400", description = "초대 코드가 null 입니다.")
@@ -48,8 +72,11 @@ public class GamePlayController {
             @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
             @PathVariable(name = "gameId") Long gameId,
 
-            @RequestBody @Valid GamePlayRoundRequest gamePlayRequest) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(gameService.createPlayRoom(gameId, gamePlayRequest));
+            @RequestBody @Valid GamePlayRoundRequest gamePlayRequest,
+
+            HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(gameService.createPlayRoom(gameId, gamePlayRequest, request));
     }
 
 

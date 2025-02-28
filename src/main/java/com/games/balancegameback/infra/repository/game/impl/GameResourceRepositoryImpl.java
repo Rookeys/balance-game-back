@@ -10,7 +10,6 @@ import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
-import com.games.balancegameback.dto.game.gameplay.GamePlayResourceLinkResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResourceJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
@@ -64,20 +63,21 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .toList();
 
         return gameResourcesList.stream()
-                .map(resource -> {
-                    GamePlayResourceLinkResponse gameResourceLink = GamePlayResourceLinkResponse.builder()
-                            .link(resource.getLinks() == null ? null : resource.getLinks().getUrls())
-                            .startSec(resource.getLinks() == null ? 0 : resource.getLinks().getStartSec())
-                            .endSec(resource.getLinks() == null ? 0 : resource.getLinks().getEndSec())
-                            .build();
-
-                    return GamePlayResourceResponse.builder()
-                            .resourceId(resource.getId())
-                            .title(resource.getTitle())
-                            .fileUrl(resource.getImages().getFileUrl())
-                            .gameResourceLink(gameResourceLink)
-                            .build();
-                }).toList();
+                .map(resources -> GamePlayResourceResponse.builder()
+                        .resourceId(resources.getId())
+                        .title(resources.getTitle())
+                        .type(resources.getImages() != null ?
+                                resources.getImages().getMediaType() :
+                                resources.getLinks().getMediaType())
+                        .content(resources.getImages() != null ?
+                                resources.getImages().getFileUrl() :
+                                resources.getLinks().getUrls())
+                        .startSec(resources.getLinks() != null ?
+                                resources.getLinks().getStartSec() : 0)
+                        .endSec(resources.getLinks() != null ?
+                                resources.getLinks().getEndSec() : 0)
+                        .build())
+                .toList();
     }
 
     @Override
@@ -137,6 +137,11 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .fetchOne();
 
         return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
+    }
+
+    @Override
+    public Integer countByGameId(Long gameId) {
+        return gameResourceJpaRepository.countByGamesId(gameId);
     }
 
     @Override

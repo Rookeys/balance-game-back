@@ -2,18 +2,19 @@ package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.game.GamePlay;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.domain.game.Games;
-import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
-import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
-import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
-import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
+import com.games.balancegameback.domain.game.enums.AccessType;
+import com.games.balancegameback.dto.game.gameplay.*;
 import com.games.balancegameback.service.game.repository.GamePlayRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
+import com.games.balancegameback.service.user.impl.UserUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +32,47 @@ public class GamePlayService {
     private final GameResourceRepository gameResourceRepository;
     private final GamePlayRepository gamePlayRepository;
     private final GameResultRepository gameResultRepository;
+    private final UserUtils userUtils;
+
+    /**
+     * 게임의 전반적인 명세 데이터 출력하기
+     */
+    public GameInfoResponse getGameDetails(Long gameId) {
+        Games games = gameRepository.findByRoomId(gameId);
+        int totalNums = gameResourceRepository.countByGameId(gameId);
+
+        return GameInfoResponse.builder()
+                .title(games.getTitle())
+                .description(games.getDescription())
+                .totalResourceNums(totalNums)
+                .accessType(games.getAccessType())
+                .build();
+    }
 
     /**
      * 게임 이어 하기
      */
-    public GamePlayResponse continuePlayRoom(Long gameId, Long playId) {
+    public GamePlayResponse continuePlayRoom(Long gameId, Long playId, String inviteCode, HttpServletRequest request) {
+        Games games = gameRepository.findByRoomId(gameId);
+
+        if (games.getAccessType().equals(AccessType.PROTECTED)) {
+            if (!Objects.equals(games.getGameInviteCode().getInviteCode(), inviteCode)) {
+                throw new UnAuthorizedException("일치하지 않는 초대 코드입니다.", ErrorCode.NOT_ALLOW_NO_ACCESS);
+            }
+        }
+
+        if (games.getAccessType().equals(AccessType.PRIVATE)) {
+            String email = userUtils.getEmail(request);
+            if (!Objects.equals(games.getUsers().getEmail(), email)) {
+                throw new BadRequestException("접근 권한이 없습니다.", ErrorCode.RUNTIME_EXCEPTION);
+            }
+        }
+
         GamePlay gamePlay = gamePlayRepository.findById(playId);
+
+        if (gamePlay.isGameEnded()) {
+            throw new BadRequestException("이미 종료된 게임입니다.", ErrorCode.CLOSED_PLAYROOM_EXCEPTION);
+        }
 
         List<Long> resourceList = gamePlay.getAllResources();
         List<Long> selectedResourceIds = this.shuffle(resourceList);
@@ -46,9 +83,12 @@ public class GamePlayService {
         GamePlayResourceResponse rightResource = selectedResources.get(1);
 
         return GamePlayResponse.builder()
-                .id(gamePlay.getId())
+                .totalRoundNums(gamePlay.getRoundNumber())
+                .currentRoundNums(gamePlay.getSelectedResources().size() + 1)
+                .playId(gamePlay.getId())
                 .leftResource(leftResource)
                 .rightResource(rightResource)
+                .winningResource(null)
                 .build();
     }
 
@@ -56,15 +96,28 @@ public class GamePlayService {
      * 게임방 생성 및 게임 시작
      */
     @Transactional
-    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest request) {
+    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest roundRequest, HttpServletRequest request) {
         Games games = gameRepository.findByRoomId(gameId);
 
-        List<Long> resourceList = gameResourceRepository.findByRandomId(gameId, request.getRoundNumber());
+        if (games.getAccessType().equals(AccessType.PROTECTED)) {
+            if (!Objects.equals(games.getGameInviteCode().getInviteCode(), roundRequest.getInviteCode())) {
+                throw new UnAuthorizedException("일치하지 않는 초대 코드입니다.", ErrorCode.NOT_ALLOW_NO_ACCESS);
+            }
+        }
+
+        if (games.getAccessType().equals(AccessType.PRIVATE)) {
+            String email = userUtils.getEmail(request);
+            if (!Objects.equals(games.getUsers().getEmail(), email)) {
+                throw new BadRequestException("접근 권한이 없습니다.", ErrorCode.RUNTIME_EXCEPTION);
+            }
+        }
+
+        List<Long> resourceList = gameResourceRepository.findByRandomId(gameId, roundRequest.getRoundNumber());
         List<Long> selectedResourceIds = this.shuffle(resourceList);
 
         GamePlay gamePlay = GamePlay.builder()
                 .games(games)
-                .roundNumber(request.getRoundNumber())
+                .roundNumber(roundRequest.getRoundNumber())
                 .allResources(resourceList)
                 .selectedResources(new ArrayList<>())
                 .gameEnded(false)
@@ -78,9 +131,12 @@ public class GamePlayService {
         GamePlayResourceResponse rightResource = selectedResources.get(1);
 
         return GamePlayResponse.builder()
-                .id(gamePlay.getId())
+                .totalRoundNums(roundRequest.getRoundNumber())
+                .currentRoundNums(1)
+                .playId(gamePlay.getId())
                 .leftResource(leftResource)
                 .rightResource(rightResource)
+                .winningResource(null)
                 .build();
     }
 
@@ -92,7 +148,7 @@ public class GamePlayService {
         GamePlay gamePlay = gamePlayRepository.findById(playRoomId);
 
         if (gamePlay.isGameEnded()) {
-            throw new BadRequestException("이미 끝난 게임입니다.", ErrorCode.CLOSED_PLAYROOM_EXCEPTION);
+            throw new BadRequestException("이미 종료된 게임입니다.", ErrorCode.CLOSED_PLAYROOM_EXCEPTION);
         }
 
         gamePlay.updateSelectedResource(gamePlayRequest);
@@ -103,10 +159,29 @@ public class GamePlayService {
             // 모든 라운드가 끝난 경우 게임 종료
             if (gamePlay.getRoundNumber() <= 1) {
                 this.endGame(gamePlay, gamePlayRequest.getWinResourceId());
+                GameResources resources = gameResourceRepository.findById(gamePlayRequest.getWinResourceId());
+
                 return GamePlayResponse.builder()
-                        .id(gamePlay.getId())
+                        .playId(gamePlay.getId())
+                        .totalRoundNums(gamePlay.getRoundNumber())
+                        .currentRoundNums(1)
                         .leftResource(null)
                         .rightResource(null)
+                        // 우승한 리소스 정보 출력
+                        .winningResource(GamePlayWinningResourceResponse.builder()
+                                .resourceId(resources.getId())
+                                .title(resources.getTitle())
+                                .type(resources.getImages() != null ?
+                                        resources.getImages().getMediaType() :
+                                        resources.getLinks().getMediaType())
+                                .content(resources.getImages() != null ?
+                                        resources.getImages().getFileUrl() :
+                                        resources.getLinks().getUrls())
+                                .startSec(resources.getLinks() != null ?
+                                        resources.getLinks().getStartSec() : 0)
+                                .endSec(resources.getLinks() != null ?
+                                        resources.getLinks().getEndSec() : 0)
+                                .build())
                         .build();
             }
         }
@@ -122,9 +197,12 @@ public class GamePlayService {
         GamePlayResourceResponse rightResource = selectedResources.get(1);
 
         return GamePlayResponse.builder()
-                .id(playRoomId)
+                .playId(playRoomId)
+                .totalRoundNums(gamePlay.getRoundNumber())
+                .currentRoundNums(gamePlay.getSelectedResources().size() + 1)
                 .leftResource(leftResource)
                 .rightResource(rightResource)
+                .winningResource(null)
                 .build();
     }
 

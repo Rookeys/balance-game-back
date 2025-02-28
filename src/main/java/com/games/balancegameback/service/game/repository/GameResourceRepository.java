@@ -22,5 +22,7 @@ public interface GameResourceRepository {
     CustomPageImpl<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable,
                                                       GameResourceSearchRequest request);
 
+    Integer countByGameId(Long gameId);
+
     void deleteById(Long id);
 }

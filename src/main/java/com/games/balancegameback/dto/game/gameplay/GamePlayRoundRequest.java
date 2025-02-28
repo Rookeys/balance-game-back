@@ -12,4 +12,7 @@ public class GamePlayRoundRequest {
     @Schema(description = "n강")
     @NotBlank(message = "n강 선택은 필수입니다.")
     private int roundNumber;
+
+    @Schema(description = "초대 코드")
+    private String inviteCode;
 }
