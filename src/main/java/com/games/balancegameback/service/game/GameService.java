@@ -76,6 +76,11 @@ public class GameService {
         gameResourceService.saveImageResource(games, imageRequest);
     }
 
+    // 특정 리소스의 데이터를 반환
+    public GameResourceResponse getResource(Long gameId, Long resourceId) {
+        return gameResourceService.getResource(gameId, resourceId);
+    }
+
     // 등록된 리소스 목록을 반환
     public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                    GameResourceSearchRequest gameResourceSearchRequest,

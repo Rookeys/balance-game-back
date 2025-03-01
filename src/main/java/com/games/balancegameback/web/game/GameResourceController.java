@@ -29,6 +29,22 @@ public class GameResourceController {
 
     private final GameService gameService;
 
+    @Operation(summary = "특정 게임 리소스 데이터 발급 API", description = "해당 리소스의 데이터를 제공한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "발급 완료")
+    })
+    @GetMapping(value = "/{gameId}/resources/{resourceId}")
+    public GameResourceResponse getResource(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @PathVariable(name = "gameId") Long gameId,
+
+            @Parameter(name = "resourceId", description = "리소스 ID", required = true, example = "15")
+            @PathVariable(name = "resourceId") Long resourceId) {
+
+        return gameService.getResource(gameId, resourceId);
+    }
+
+
     @Operation(summary = "게임 리소스 리스트 발급 API", description = "해당 게임방의 리소스 목록을 제공한다.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {

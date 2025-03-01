@@ -26,7 +26,4 @@ public class GamePlayResponse {
 
     @Schema(description = "오른쪽 리소스 정보")
     private GamePlayResourceResponse rightResource;
-
-    @Schema(description = "오른쪽 리소스 정보")
-    private GamePlayWinningResourceResponse winningResource;
 }

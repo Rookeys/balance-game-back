@@ -12,6 +12,7 @@ import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
+import com.games.balancegameback.service.game.repository.GameResultRepository;
 import com.games.balancegameback.service.media.repository.ImageRepository;
 import com.games.balancegameback.service.media.repository.LinkRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,31 @@ import org.springframework.transaction.annotation.Transactional;
 public class GameResourceService {
 
     private final GameResourceRepository gameResourceRepository;
+    private final GameResultRepository gameResultRepository;
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
+
+    public GameResourceResponse getResource(Long gameId, Long resourceId) {
+        GameResources resources = gameResourceRepository.findById(resourceId);
+        int totalNums = gameResultRepository.countByGameId(gameId);
+
+        return GameResourceResponse.builder()
+                .resourceId(resourceId)
+                .title(resources.getTitle())
+                .type(resources.getImages() != null ?
+                        resources.getImages().getMediaType() :
+                        resources.getLinks().getMediaType())
+                .content(resources.getImages() != null ?
+                        resources.getImages().getFileUrl() :
+                        resources.getLinks().getUrls())
+                .startSec(resources.getLinks() != null ?
+                        resources.getLinks().getStartSec() : 0)
+                .endSec(resources.getLinks() != null ?
+                        resources.getLinks().getEndSec() : 0)
+                .totalPlayNums(totalNums)
+                .winningNums(resources.getWinningLists().size())
+                .build();
+    }
 
     public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                              GameResourceSearchRequest request) {

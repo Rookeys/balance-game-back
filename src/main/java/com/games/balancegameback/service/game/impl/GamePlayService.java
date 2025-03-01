@@ -88,7 +88,6 @@ public class GamePlayService {
                 .playId(gamePlay.getId())
                 .leftResource(leftResource)
                 .rightResource(rightResource)
-                .winningResource(null)
                 .build();
     }
 
@@ -136,7 +135,6 @@ public class GamePlayService {
                 .playId(gamePlay.getId())
                 .leftResource(leftResource)
                 .rightResource(rightResource)
-                .winningResource(null)
                 .build();
     }
 
@@ -159,7 +157,6 @@ public class GamePlayService {
             // 모든 라운드가 끝난 경우 게임 종료
             if (gamePlay.getRoundNumber() <= 1) {
                 this.endGame(gamePlay, gamePlayRequest.getWinResourceId());
-                GameResources resources = gameResourceRepository.findById(gamePlayRequest.getWinResourceId());
 
                 return GamePlayResponse.builder()
                         .playId(gamePlay.getId())
@@ -167,21 +164,6 @@ public class GamePlayService {
                         .currentRoundNums(1)
                         .leftResource(null)
                         .rightResource(null)
-                        // 우승한 리소스 정보 출력
-                        .winningResource(GamePlayWinningResourceResponse.builder()
-                                .resourceId(resources.getId())
-                                .title(resources.getTitle())
-                                .type(resources.getImages() != null ?
-                                        resources.getImages().getMediaType() :
-                                        resources.getLinks().getMediaType())
-                                .content(resources.getImages() != null ?
-                                        resources.getImages().getFileUrl() :
-                                        resources.getLinks().getUrls())
-                                .startSec(resources.getLinks() != null ?
-                                        resources.getLinks().getStartSec() : 0)
-                                .endSec(resources.getLinks() != null ?
-                                        resources.getLinks().getEndSec() : 0)
-                                .build())
                         .build();
             }
         }
@@ -202,7 +184,6 @@ public class GamePlayService {
                 .currentRoundNums(gamePlay.getSelectedResources().size() + 1)
                 .leftResource(leftResource)
                 .rightResource(rightResource)
-                .winningResource(null)
                 .build();
     }
 

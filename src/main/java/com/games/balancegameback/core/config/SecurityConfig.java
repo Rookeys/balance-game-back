@@ -44,6 +44,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.PUT, "/api/v1/games/{gameId}/play/{playId}").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/play/{playId}").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/play").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/resources/{resourceId}").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/resources/{resourceId}/comments").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/resources/{resourceId}/comments/{parentId}").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/results").permitAll()
