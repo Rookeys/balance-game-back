@@ -81,8 +81,8 @@ cloud:
 
 jwt:
   secret: ENC(RnxzhwA89XJzO4TUyxgV/PnW76a1js2bl3fUmHhFqlZjo0EpTx9EQeKyoNZ0LyirrFWRz2jXx/886s2MOnvDx4TFsQs5pYHTfPYJYV3wLjE34NwIzrE6DWnRnQ26b0ueI3jw6tYO8vW1al9KcyhavMkjAQ1PhcTH0gNQD0imFXruxxT2qYxtbR/CT7ErOZ+2lrevEDutMZG/2zez66W9mDrUNYdQ6Zwdij8J4CvrcgtVhteUZFIz6eVJb72SnPap1/yxD6rmEzMB/pjNqNN/m14xODPTbrHnqOFAS+c/TZ0=)
-  accessTokenExpiration: ENC(q2BMQ2xD6lIeY3k6v0a5pQ==)
-  refreshTokenExpiration: ENC(Ctd7LwyetvJ/2VYebvIIaQ==)
+  accessTokenExpiration: ENC(3SILZhqKsTa28bgYIYu8Lg==)
+  refreshTokenExpiration: ENC(2Ily8VmFFYVxg19u2omwH7m6kx/InJ+7)
 
 #management:
 #  endpoints:

@@ -8,6 +8,7 @@ import com.games.balancegameback.domain.game.enums.CommentType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.game.comment.*;
+import com.games.balancegameback.dto.game.gameplay.GameInfoResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
@@ -21,7 +22,6 @@ import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +50,8 @@ public class GameService {
     }
 
     // 내가 만든 게임들 리스트 반환
-    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
-                                                GameResourceSearchRequest searchRequest,
+    public CustomPageImpl<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
+                                                GameSearchRequest searchRequest,
                                                 HttpServletRequest request) {
         return gameRoomService.getMyGameList(pageable, cursorId, searchRequest, request);
     }
@@ -76,8 +76,13 @@ public class GameService {
         gameResourceService.saveImageResource(games, imageRequest);
     }
 
+    // 특정 리소스의 데이터를 반환
+    public GameResourceResponse getResource(Long gameId, Long resourceId) {
+        return gameResourceService.getResource(gameId, resourceId);
+    }
+
     // 등록된 리소스 목록을 반환
-    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+    public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                    GameResourceSearchRequest gameResourceSearchRequest,
                                                    HttpServletRequest request) {
         this.validateRequest(gameId, request);
@@ -92,13 +97,23 @@ public class GameService {
     }
 
     // 게임방 생성 및 게임 시작
-    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest request) {
-        return gamePlayService.createPlayRoom(gameId, request);
+    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest roundRequest, HttpServletRequest request) {
+        return gamePlayService.createPlayRoom(gameId, roundRequest, request);
     }
 
-    // 게임방 생성 및 게임 시작
+    // 게임 선택 저장 및 다음 선택지 반환
     public GamePlayResponse updatePlayRoom(Long gameId, Long playId, GamePlayRequest request) {
         return gamePlayService.updatePlayRoom(gameId, playId, request);
+    }
+
+    // 게임 이어 하기
+    public GamePlayResponse continuePlayRoom(Long gameId, Long playId, String inviteCode, HttpServletRequest request) {
+        return gamePlayService.continuePlayRoom(gameId, playId, inviteCode, request);
+    }
+
+    // 게임의 전반적인 명세 데이터 출력하기
+    public GameInfoResponse getGameDetails(Long gameId) {
+        return gamePlayService.getGameDetails(gameId);
     }
 
     // 리소스를 삭제함
@@ -108,7 +123,7 @@ public class GameService {
     }
 
     // 게임 결과창 출력
-    public Page<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
+    public CustomPageImpl<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
                                                      GameResourceSearchRequest request,
                                                      Pageable pageable) {
         return gameResultService.getResultRanking(gameId, cursorId, request, pageable);

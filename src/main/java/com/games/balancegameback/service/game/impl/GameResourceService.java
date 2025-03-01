@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.game.impl;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.media.Images;
@@ -11,10 +12,10 @@ import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
+import com.games.balancegameback.service.game.repository.GameResultRepository;
 import com.games.balancegameback.service.media.repository.ImageRepository;
 import com.games.balancegameback.service.media.repository.LinkRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,11 +25,34 @@ import org.springframework.transaction.annotation.Transactional;
 public class GameResourceService {
 
     private final GameResourceRepository gameResourceRepository;
+    private final GameResultRepository gameResultRepository;
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
-    public Page<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
-                                                   GameResourceSearchRequest request) {
+    public GameResourceResponse getResource(Long gameId, Long resourceId) {
+        GameResources resources = gameResourceRepository.findById(resourceId);
+        int totalNums = gameResultRepository.countByGameId(gameId);
+
+        return GameResourceResponse.builder()
+                .resourceId(resourceId)
+                .title(resources.getTitle())
+                .type(resources.getImages() != null ?
+                        resources.getImages().getMediaType() :
+                        resources.getLinks().getMediaType())
+                .content(resources.getImages() != null ?
+                        resources.getImages().getFileUrl() :
+                        resources.getLinks().getUrls())
+                .startSec(resources.getLinks() != null ?
+                        resources.getLinks().getStartSec() : 0)
+                .endSec(resources.getLinks() != null ?
+                        resources.getLinks().getEndSec() : 0)
+                .totalPlayNums(totalNums)
+                .winningNums(resources.getWinningLists().size())
+                .build();
+    }
+
+    public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
+                                                             GameResourceSearchRequest request) {
         return gameResourceRepository.findByGameId(gameId, cursorId, pageable, request);
     }
 
@@ -36,9 +60,10 @@ public class GameResourceService {
     public void updateResource(Long resourceId, GameResourceRequest gameResourceRequest) {
         GameResources gameResources = gameResourceRepository.findById(resourceId);
 
-        if (gameResourceRequest.getFileUrl() != null && gameResources.getImages() != null) {
+        if (gameResourceRequest.getType().equals(MediaType.IMAGE) && gameResourceRequest.getContent() != null
+                && gameResources.getImages() != null) {
             Images images = gameResources.getImages();
-            images.update(gameResourceRequest.getFileUrl());
+            images.update(gameResourceRequest.getContent());
             imageRepository.update(images);
 
             gameResources.updateImage(gameResourceRequest.getTitle(), images);
@@ -47,9 +72,10 @@ public class GameResourceService {
             // 연관 관계가 전부 끊긴 사진을 정리하는 트리거 추가 예정
         }
 
-        if (gameResourceRequest.getLink() != null && gameResources.getLinks() != null) {
+        if (gameResourceRequest.getType().equals(MediaType.LINK) && gameResourceRequest.getContent() != null
+                && gameResources.getLinks() != null) {
             Links links = gameResources.getLinks();
-            links.update(gameResourceRequest.getLink(), gameResourceRequest.getStartSec(),
+            links.update(gameResourceRequest.getContent(), gameResourceRequest.getStartSec(),
                     gameResourceRequest.getEndSec());
             linkRepository.update(links);
 

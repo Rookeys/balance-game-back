@@ -27,7 +27,7 @@ public class GameResultsEntity extends BaseTimeEntity {
     public GameResults toModel() {
         return GameResults.builder()
                 .id(id)
-                .gameResources(gameResources.toModel())
+                .gameResources(null)
                 .build();
     }
 }

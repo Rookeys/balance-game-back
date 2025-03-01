@@ -4,12 +4,10 @@ import com.games.balancegameback.dto.media.PresignedUrlRequest;
 import com.games.balancegameback.dto.media.PresignedUrlsRequest;
 import com.games.balancegameback.service.media.MediaService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +22,7 @@ public class PresignedUrlController {
     private final MediaService mediaService;
 
     @Operation(summary = "단일 업로드 API (User Profile)", description = "AWS S3 저장소에 업로드할 수 있는 단일 URL 발급")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 발급 성공"),
             @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음.")
@@ -34,6 +33,7 @@ public class PresignedUrlController {
     }
 
     @Operation(summary = "다중 업로드 API", description = "AWS S3 저장소에 업로드할 수 있는 다중 URL 발급")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 발급 성공"),
             @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음."),

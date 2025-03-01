@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.game;
 
-import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
@@ -14,7 +15,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -29,6 +29,22 @@ public class GameResourceController {
 
     private final GameService gameService;
 
+    @Operation(summary = "특정 게임 리소스 데이터 발급 API", description = "해당 리소스의 데이터를 제공한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "발급 완료")
+    })
+    @GetMapping(value = "/{gameId}/resources/{resourceId}")
+    public GameResourceResponse getResource(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @PathVariable(name = "gameId") Long gameId,
+
+            @Parameter(name = "resourceId", description = "리소스 ID", required = true, example = "15")
+            @PathVariable(name = "resourceId") Long resourceId) {
+
+        return gameService.getResource(gameId, resourceId);
+    }
+
+
     @Operation(summary = "게임 리소스 리스트 발급 API", description = "해당 게임방의 리소스 목록을 제공한다.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
@@ -36,7 +52,7 @@ public class GameResourceController {
             @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
     })
     @GetMapping(value = "/{gameId}/resources")
-    public Page<GameResourceResponse> getResources(
+    public CustomPageImpl<GameResourceResponse> getResources(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
             @PathVariable(name = "gameId") Long gameId,
 
@@ -52,7 +68,7 @@ public class GameResourceController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "winRateDesc",
                     schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) GameSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameResourceSortType sortType,
 
             HttpServletRequest request) {
 

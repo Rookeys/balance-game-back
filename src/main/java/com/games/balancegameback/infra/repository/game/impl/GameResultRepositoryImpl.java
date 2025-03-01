@@ -3,6 +3,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResults;
+import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
@@ -14,7 +15,6 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -30,7 +30,7 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Page<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId,
+    public CustomPageImpl<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId,
                                                           GameResourceSearchRequest request,
                                                           Pageable pageable) {
         QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
@@ -45,17 +45,9 @@ public class GameResultRepositoryImpl implements GameResultRepository {
         builder.and(gameResources.games.id.eq(gameId));
         totalCountBuilder.and(gameResources.games.id.eq(gameId));
 
-        if (cursorId != null) {
-            builder.and(gameResources.id.gt(cursorId));
-        }
-
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
-            totalCountBuilder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
-        }
-
-        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType(),
-                                                gameResourceRepository.getWinRateSubQuery(gameId));
+        this.setOptions(builder, totalCountBuilder, cursorId, request);
+        // resource repository 로직 재사용
+        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType());
 
         List<GameResultResponse> list = jpaQueryFactory
                 .select(Projections.constructor(
@@ -66,7 +58,8 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                         images.fileUrl.coalesce(links.urls).as("content"), // 이미지가 있으면 fileUrl, 없으면 링크 URL
                         links.startSec,
                         links.endSec,
-                        gameResourceRepository.getWinRateSubQuery(gameId)
+                        gameResources.winningLists.size().as("winningLists"),
+                        gameResourceRepository.getTotalPlayNumsSubQuery(gameId)
                 ))
                 .from(gameResources)
                 .leftJoin(gameResults).on(gameResults.gameResources.eq(gameResources))
@@ -115,5 +108,28 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     @Override
     public void save(GameResults gameResults) {
         gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
+    }
+
+    private void setOptions(BooleanBuilder builder, BooleanBuilder totalCountBuilder, Long cursorId,
+                            GameResourceSearchRequest request) {
+        QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
+
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idAsc)) {
+            builder.and(gameResources.id.gt(cursorId));
+        }
+
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idDesc)) {
+            builder.and(gameResources.id.lt(cursorId));
+        }
+
+        if (request.getSortType().equals(GameResourceSortType.winRateDesc) ||
+                request.getSortType().equals(GameResourceSortType.winRateAsc)) {    // resource repository 로직 재사용
+            gameResourceRepository.applyOtherSortOptions(builder, cursorId, request, gameResources);
+        }
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+            totalCountBuilder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+        }
     }
 }

@@ -3,19 +3,16 @@ package com.games.balancegameback.service.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameRequest;
-import com.games.balancegameback.dto.game.GameResourceSearchRequest;
-import com.games.balancegameback.dto.game.GameResponse;
+import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,9 +63,9 @@ public class GameRoomService {
         return gameRepository.findById(gameId);
     }
 
-    public Page<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
-                                                GameResourceSearchRequest searchRequest,
-                                                HttpServletRequest request) {
+    public CustomPageImpl<GameListResponse> getMyGameList(Pageable pageable, Long cursorId,
+                                                          GameSearchRequest searchRequest,
+                                                          HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         return gameRepository.findGamesWithResources(cursorId, users, pageable, searchRequest);
     }

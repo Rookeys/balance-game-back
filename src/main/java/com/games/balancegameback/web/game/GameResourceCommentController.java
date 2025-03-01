@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.game;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.CommentSortType;
 import com.games.balancegameback.dto.game.comment.*;
 import com.games.balancegameback.service.game.GameService;
@@ -33,7 +34,7 @@ public class GameResourceCommentController {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
     @GetMapping(value = "/resources/{resourceId}/comments")
-    public Page<GameResourceParentCommentResponse> getParentCommentsByGameResource(
+    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(
             @Parameter(name = "resourceId", description = "게임 리소스의 ID", required = true, example = "3")
             @PathVariable(name = "resourceId") Long resourceId,
 
@@ -49,7 +50,7 @@ public class GameResourceCommentController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "likeDesc",
                     schema = @Schema(allowableValues = {"likeAsc", "likeDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") CommentSortType sortType,
 
             HttpServletRequest request) {
 
@@ -67,7 +68,7 @@ public class GameResourceCommentController {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
     @GetMapping(value = "/resources/{resourceId}/comments/{parentId}")
-    public Page<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(
+    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(
             @Parameter(name = "resourceId", description = "게임 리소스의 ID", required = true, example = "5")
             @PathVariable(name = "resourceId") Long resourceId,
 
@@ -86,7 +87,7 @@ public class GameResourceCommentController {
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "likeDesc",
                     schema = @Schema(allowableValues = {"likeAsc", "likeDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "idAsc") CommentSortType sortType,
 
             HttpServletRequest request) {
 

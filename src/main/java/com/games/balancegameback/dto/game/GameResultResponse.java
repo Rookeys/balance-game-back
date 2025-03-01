@@ -31,6 +31,9 @@ public class GameResultResponse {
     @Schema(description = "Youtube Link 끝 시간")
     private Integer endSec;
 
-    @Schema(description = "우승 비율")
-    private Double winRate;
+    @Schema(description = "우승 횟수")
+    private int winningNums;
+
+    @Schema(description = "게임 진행 횟수")
+    private int totalPlayNums;
 }

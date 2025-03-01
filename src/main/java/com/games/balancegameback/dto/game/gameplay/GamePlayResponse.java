@@ -13,7 +13,13 @@ import lombok.NoArgsConstructor;
 public class GamePlayResponse {
 
     @Schema(description = "게임방 id")
-    private Long id;
+    private Long playId;
+
+    @Schema(description = "선택한 n강")
+    private int totalRoundNums;
+
+    @Schema(description = "현재 진행 중인 라운드")
+    private int currentRoundNums;
 
     @Schema(description = "왼쪽 리소스 정보")
     private GamePlayResourceResponse leftResource;

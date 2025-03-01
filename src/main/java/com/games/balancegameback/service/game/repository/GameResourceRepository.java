@@ -1,10 +1,10 @@
 package com.games.balancegameback.service.game.repository;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResourceResponse;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -19,7 +19,10 @@ public interface GameResourceRepository {
 
     List<Long> findByRandomId(Long gameId, int roundNumber);
 
-    Page<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable, GameResourceSearchRequest request);
+    CustomPageImpl<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable,
+                                                      GameResourceSearchRequest request);
+
+    Integer countByGameId(Long gameId);
 
     void deleteById(Long id);
 }
