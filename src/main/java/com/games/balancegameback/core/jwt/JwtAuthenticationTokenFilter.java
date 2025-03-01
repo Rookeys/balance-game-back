@@ -20,23 +20,35 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
-    private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "/swagger-ui/**", "/v3/api-docs/**", "/api/v1/users/login/kakao", "/api/v1/users/test/login",
-            "/api/v1/users/login", "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
-            "/api/v1/users/exists", "/api/v1/games/{gameId}/play", "/api/v1/games/{gameId}/play/{playId}",
-            "/api/v1/games/resources/{resourceId}/comments", "/api/v1/games/resources/{resourceId}/comments/{parentId}",
-            "/api/v1/games/{gameId}/results", "/api/v1/games/{gameId}/results/comments",
-            "/api/v1/games/{gameId}/resources/{resourceId}"
+    private static final Map<String, Set<String>> EXCLUDED_PATHS = Map.of(
+            "GET", Set.of(
+                    "/swagger-ui/**", "/v3/api-docs/**",
+                    "/api/v1/games/{gameId}/play", "/api/v1/games/{gameId}/play/{playId}",
+                    "/api/v1/games/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
+                    "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
+                    "/api/v1/users/exists"
+            ),
+            "POST", Set.of(
+                    "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
+                    "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
+                    "/api/v1/games/{gameId}/play"
+            ),
+            "PUT", Set.of(
+                    "/api/v1/games/{gameId}/play/{playId}"
+            )
     );
 
-    private static final Set<String> REQUIRED_PATHS = Set.of(
-            "/api/v1/users/refresh", "/api/v1/users/logout"
+    private static final Map<String, Set<String>> REQUIRED_PATHS = Map.of(
+            "POST", Set.of(
+                    "/api/v1/users/refresh", "/api/v1/users/logout"
+            )
     );
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -48,9 +60,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) {
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
         // 인증이 필요 없는 요청은 스킵.
-        if (skipPath(path)) {
+        if (skipPath(method, path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -74,7 +87,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             }
 
             if (accessToken == null) {
-                handleRefreshToken(refreshToken, path, filterChain, request, response);
+                handleRefreshToken(refreshToken, method, path, filterChain, request, response);
                 return;
             }
         } catch (CustomJwtException e) {
@@ -85,23 +98,25 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean skipPath(String path) {
-        return EXCLUDED_PATHS.stream().anyMatch(excludedPath -> pathMatcher.match(excludedPath, path));
+    private boolean skipPath(String method, String path) {
+        return EXCLUDED_PATHS.getOrDefault(method, Set.of()).stream()
+                .anyMatch(excludedPath -> pathMatcher.match(excludedPath, path));
     }
 
-    private boolean requiredPath(String path) {
-        return REQUIRED_PATHS.stream().anyMatch(requiredPath -> pathMatcher.match(requiredPath, path));
+    private boolean requiredPath(String method, String path) {
+        return REQUIRED_PATHS.getOrDefault(method, Set.of()).stream()
+                .anyMatch(requiredPath -> pathMatcher.match(requiredPath, path));
     }
 
     private boolean isValidAccessToken(String accessToken) {
         return jwtTokenProvider.validateToken(accessToken);
     }
 
-    private void handleRefreshToken(String refreshToken, String path, FilterChain filterChain,
+    private void handleRefreshToken(String refreshToken, String method, String path, FilterChain filterChain,
                                     HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException, JSONException {
         if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
-                && requiredPath(path)) {
+                && requiredPath(method, path)) {
             filterChain.doFilter(request, response);
         } else {
             throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
