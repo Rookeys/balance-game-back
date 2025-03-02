@@ -101,9 +101,12 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
 
         // 동적 필터 적용
         BooleanBuilder builder = new BooleanBuilder();
-        builder.and(resources.games.id.eq(gameId));
+        BooleanBuilder totalBuilder = new BooleanBuilder(); // totalElements 를 위해 사용 (cursorId 배제)
 
-        this.setOptions(builder, cursorId, request, resources);
+        builder.and(resources.games.id.eq(gameId));
+        totalBuilder.and(resources.games.id.eq(gameId));
+
+        this.setOptions(builder, totalBuilder, cursorId, request, resources);
         // 동적 정렬 조건
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
@@ -133,10 +136,18 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         Long totalElements = jpaQueryFactory
                 .select(resources.count())
                 .from(resources)
-                .where(builder)
+                .where(totalBuilder)
                 .fetchOne();
 
         return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
+    }
+
+    @Override
+    public void update(GameResources gameResources) {
+        GameResourcesEntity entity = gameResourceJpaRepository.findById(gameResources.getId())
+                .orElseThrow(() -> new NotFoundException("해당하는 정보가 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        entity.update(gameResources);
     }
 
     @Override
@@ -153,7 +164,8 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         gameResourceJpaRepository.deleteById(id);
     }
 
-    private void setOptions(BooleanBuilder builder, Long cursorId, GameResourceSearchRequest request,
+    private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
+                            GameResourceSearchRequest request,
                             QGameResourcesEntity resources) {
         if (cursorId != null && request.getSortType().equals(GameResourceSortType.idAsc)) {
             builder.and(resources.id.gt(cursorId));
@@ -170,6 +182,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
             builder.and(resources.title.containsIgnoreCase(request.getTitle()));
+            totalBuilder.and(resources.title.containsIgnoreCase(request.getTitle()));
         }
     }
 

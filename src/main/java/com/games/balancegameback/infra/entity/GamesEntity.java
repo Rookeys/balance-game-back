@@ -7,6 +7,9 @@ import com.games.balancegameback.domain.game.enums.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Entity
 @Table(name = "games")
@@ -39,6 +42,9 @@ public class GamesEntity extends BaseTimeEntity {
 
     @OneToOne(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
     private GameInviteCodeEntity gameInviteCode;
+
+    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameResourcesEntity> gameResources = new ArrayList<>();
 
     public static GamesEntity from(Games games) {
         if (games == null) return null;

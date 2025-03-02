@@ -16,7 +16,7 @@ public class GameSearchRequest {
     @Schema(description = "검색하려는 타이틀", example = "포메")
     private String title;
 
-    @Schema(description = "정렬 옵션", allowableValues = {"playRateAsc", "playRateDesc", "idAsc", "idDesc"},
-            example = "winRateAsc")
+    @Schema(description = "정렬 옵션", allowableValues = {"idAsc", "idDesc", "playDesc", "week"},
+            example = "playDesc")
     private GameSortType sortType = GameSortType.idDesc;
 }

@@ -14,8 +14,8 @@ public class GameResources {
     private final Long id;
     private String title;
     private final Games games;
-    private Images images;
-    private Links links;
+    private final Images images;
+    private final Links links;
     private final List<GameResults> winningLists;
 
     @Builder
@@ -28,13 +28,7 @@ public class GameResources {
         this.winningLists = winningLists;
     }
 
-    public void updateImage(String title, Images images) {
+    public void update(String title) {
         this.title = title;
-        this.images = images;
-    }
-
-    public void updateLinks(String title, Links links) {
-        this.title = title;
-        this.links = links;
     }
 }
