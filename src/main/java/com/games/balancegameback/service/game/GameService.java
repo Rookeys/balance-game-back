@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GameService {
 
+    private final GameListService gameListService;
     private final GameRoomService gameRoomService;
     private final GameResourceService gameResourceService;
     private final GamePlayService gamePlayService;
@@ -38,6 +39,12 @@ public class GameService {
     private final GameCommentLikesService gameCommentLikesService;
     private final GameRepository gameRepository;
     private final UserUtils userUtils;
+
+    // 메인 페이지 출력
+    public CustomPageImpl<GameListResponse> getMainGameList(Long cursorId, Pageable pageable,
+                                                            GameSearchRequest searchRequest) {
+        return gameListService.getMainGameList(cursorId, pageable, searchRequest);
+    }
 
     // 게임방 생성
     public Long saveGame(GameRequest gameRequest, HttpServletRequest request) {

@@ -13,12 +13,16 @@ import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,6 +71,7 @@ public class GameRepositoryImpl implements GameRepository {
                                                                    GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
 
@@ -105,15 +110,15 @@ public class GameRepositoryImpl implements GameRepository {
 
             GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
-                            .title(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
-                            .content(tuples.getFirst().get(resources.title))
+                            .title(tuples.getFirst().get(resources.title))
+                            .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
 
             GameListSelectionResponse rightSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
-                            .title(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
-                            .content(tuples.getLast().get(resources.title))
+                            .title(tuples.getLast().get(resources.title))
+                            .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
 
@@ -126,8 +131,6 @@ public class GameRepositoryImpl implements GameRepository {
                     .build();
         }).collect(Collectors.toList());    // toList() 는 불변 리스트로 반환되기 Collectors 로 한번 감싸줘야 함.
 
-        System.out.println(resultList.size());
-
         boolean hasNext = PaginationUtils.hasNextPage(resultList, pageable.getPageSize());
         PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
 
@@ -139,7 +142,6 @@ public class GameRepositoryImpl implements GameRepository {
 
         return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
     }
-
 
     @Override
     public boolean existsByIdAndUsers(Long gameId, Users users) {

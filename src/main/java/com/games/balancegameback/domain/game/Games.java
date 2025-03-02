@@ -4,8 +4,11 @@ import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameRequest;
+import com.games.balancegameback.infra.entity.GameResourcesEntity;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class Games {
@@ -18,10 +21,12 @@ public class Games {
     private Category category;
     private final Users users;
     private GameInviteCode gameInviteCode;
+    private List<GameResourcesEntity> gameResources;
 
     @Builder
     public Games(Long id, String title, String description, Boolean isNamePublic, AccessType accessType,
-                 Category category, Users users, GameInviteCode gameInviteCode) {
+                 Category category, Users users, GameInviteCode gameInviteCode,
+                 List<GameResourcesEntity> gameResources) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -30,6 +35,7 @@ public class Games {
         this.category = category;
         this.users = users;
         this.gameInviteCode = gameInviteCode;
+        this.gameResources = gameResources;
     }
 
     public void update(GameRequest gameRequest) {
