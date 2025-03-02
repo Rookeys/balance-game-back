@@ -66,7 +66,7 @@ public class GameResourceService {
             images.update(gameResourceRequest.getContent());
             imageRepository.update(images);
 
-            gameResources.updateImage(gameResourceRequest.getTitle(), images);
+            gameResources.update(gameResourceRequest.getTitle());
             gameResourceRepository.update(gameResources);
 
             // 연관 관계가 전부 끊긴 사진을 정리하는 트리거 추가 예정
@@ -79,7 +79,7 @@ public class GameResourceService {
                     gameResourceRequest.getEndSec());
             linkRepository.update(links);
 
-            gameResources.updateLinks(gameResourceRequest.getTitle(), links);
+            gameResources.update(gameResourceRequest.getTitle());
             gameResourceRepository.update(gameResources);
         }
     }
