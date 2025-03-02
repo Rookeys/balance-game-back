@@ -98,7 +98,9 @@ public class GameResourceController {
             @PathVariable(name = "resourceId") Long resourceId,
 
             @RequestBody GameResourceRequest gameResourceRequest,
+
             HttpServletRequest request) {
+
         gameService.updateResource(gameId, resourceId, gameResourceRequest, request);
         return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
     }

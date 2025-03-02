@@ -12,15 +12,15 @@ import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -63,30 +63,70 @@ public class GameRepositoryImpl implements GameRepository {
 
     @Override
     public CustomPageImpl<GameListResponse> findGamesWithResources(Long cursorId, Users users,
-                                                         Pageable pageable,
-                                                         GameSearchRequest searchRequest) {
+                                                                   Pageable pageable,
+                                                                   GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
-        QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
+        QLinksEntity links = QLinksEntity.linksEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
         this.setOptions(builder, cursorId, searchRequest, games);
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
-        List<GameStatusResponse> resultList = jpaQueryFactory
-                .select(Projections.constructor(GameStatusResponse.class,
-                        games.id.as("roomId"),
+        List<Tuple> resultTuples = jpaQueryFactory.select(
+                        games.id,
                         games.title,
                         games.description
-                ))
-                .from(games)
+                ).from(games)
                 .join(games.users).on(games.users.email.eq(users.getEmail()))
-                .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(builder)
                 .orderBy(orderSpecifier)
-                .groupBy(games.id)
-                .limit(pageable.getPageSize() + 1) // 다음 페이지 확인을 위해 +1
+                .limit(pageable.getPageSize() + 1)
                 .fetch();
+
+        List<GameListResponse> resultList = resultTuples.stream().map(tuple -> {
+            Long roomId = tuple.get(games.id);
+            String title = tuple.get(games.title);
+            String description = tuple.get(games.description);
+
+            List<Tuple> tuples = jpaQueryFactory.select(
+                            resources.images.fileUrl.coalesce(resources.links.urls),
+                            resources.title
+                    ).from(resources)
+                    .leftJoin(resources.images, images)
+                    .leftJoin(resources.links, links)
+                    .where(resources.games.id.eq(roomId))
+                    .orderBy(resources.winningLists.size().desc(), resources.id.desc())
+                    .offset(0)
+                    .limit(2)
+                    .fetch();
+
+            GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
+                    GameListSelectionResponse.builder()
+                            .title(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .content(tuples.getFirst().get(resources.title))
+                            .build()
+                    : null;
+
+            GameListSelectionResponse rightSelection = (!tuples.isEmpty()) ?
+                    GameListSelectionResponse.builder()
+                            .title(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .content(tuples.getLast().get(resources.title))
+                            .build()
+                    : null;
+
+            return GameListResponse.builder()
+                    .roomId(roomId)
+                    .title(title)
+                    .description(description)
+                    .leftSelection(leftSelection)
+                    .rightSelection(rightSelection)
+                    .build();
+        }).collect(Collectors.toList());    // toList() 는 불변 리스트로 반환되기 Collectors 로 한번 감싸줘야 함.
+
+        System.out.println(resultList.size());
 
         boolean hasNext = PaginationUtils.hasNextPage(resultList, pageable.getPageSize());
         PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
@@ -97,8 +137,9 @@ public class GameRepositoryImpl implements GameRepository {
                 .where(games.users.email.eq(users.getEmail()))
                 .fetchOne();
 
-        return new CustomPageImpl<>(this.addThumbnailResources(resultList), pageable, totalElements, cursorId, hasNext);
+        return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
     }
+
 
     @Override
     public boolean existsByIdAndUsers(Long gameId, Users users) {
@@ -140,26 +181,5 @@ public class GameRepositoryImpl implements GameRepository {
             case idAsc -> games.id.asc();
             default -> games.id.desc();
         };
-    }
-
-    private List<GameListResponse> addThumbnailResources(List<GameStatusResponse> results) {
-        List<GameListResponse> list = new ArrayList<>();
-
-        // 추후 게임 통계 기능이 개발되면 수정 예정.
-        for (GameStatusResponse gameStatusResponse : results) {
-            GameListResponse response = GameListResponse.builder()
-                    .roomId(gameStatusResponse.getRoomId())
-                    .description(gameStatusResponse.getDescription())
-                    .title(gameStatusResponse.getTitle())
-                    .leftContent(null)
-                    .rightContent(null)
-                    .leftTitle(null)
-                    .rightTitle(null)
-                    .build();
-
-            list.add(response);
-        }
-
-        return list;
     }
 }
