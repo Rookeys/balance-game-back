@@ -143,6 +143,14 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     }
 
     @Override
+    public void update(GameResources gameResources) {
+        GameResourcesEntity entity = gameResourceJpaRepository.findById(gameResources.getId())
+                .orElseThrow(() -> new NotFoundException("해당하는 정보가 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        entity.update(gameResources);
+    }
+
+    @Override
     public Integer countByGameId(Long gameId) {
         return gameResourceJpaRepository.countByGamesId(gameId);
     }
