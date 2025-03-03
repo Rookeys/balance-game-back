@@ -33,7 +33,7 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
     @JoinColumn(name = "parent_id")
     private GameResourceCommentsEntity parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GameResourceCommentsEntity> children = new ArrayList<>();
 
     @OneToMany(mappedBy = "resourceComments", cascade = CascadeType.ALL, orphanRemoval = true)

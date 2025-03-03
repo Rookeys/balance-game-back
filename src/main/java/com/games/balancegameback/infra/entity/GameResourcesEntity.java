@@ -34,6 +34,9 @@ public class GameResourcesEntity extends BaseTimeEntity {
     @OneToMany(mappedBy = "gameResources", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GameResultsEntity> winningLists = new ArrayList<>();
 
+    @OneToMany(mappedBy = "gameResources", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameResourceCommentsEntity> comments = new ArrayList<>();
+
     public static GameResourcesEntity from(GameResources gameResources) {
         GameResourcesEntity gameResourcesEntity = new GameResourcesEntity();
         gameResourcesEntity.id = gameResources.getId();

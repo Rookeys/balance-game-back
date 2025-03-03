@@ -46,6 +46,9 @@ public class GamesEntity extends BaseTimeEntity {
     @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GameResourcesEntity> gameResources = new ArrayList<>();
 
+    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GamePlayEntity> gamePlayList = new ArrayList<>();
+
     public static GamesEntity from(Games games) {
         if (games == null) return null;
 
