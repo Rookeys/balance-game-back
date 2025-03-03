@@ -1,5 +1,6 @@
 package com.games.balancegameback.dto.game;
 
+import com.games.balancegameback.domain.media.enums.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,9 @@ public class GameListSelectionResponse {
 
     @Schema(description = "선택지 타이틀")
     private String title;
+
+    @Schema(description = "미디어 타입")
+    private MediaType type;
 
     @Schema(description = "이미지 / 유튜브 링크 URL")
     private String content;

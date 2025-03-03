@@ -53,7 +53,9 @@ public class GameListRepositoryImpl implements GameListRepository {
         List<Tuple> resultTuples = jpaQueryFactory.select(
                         games.id,
                         games.title,
-                        games.description
+                        games.description,
+                        games.users.nickname,
+                        games.isNamePublic
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(builder)
@@ -66,9 +68,16 @@ public class GameListRepositoryImpl implements GameListRepository {
             Long roomId = tuple.get(games.id);
             String title = tuple.get(games.title);
             String description = tuple.get(games.description);
+            String nickname = tuple.get(games.users.nickname);
+            boolean isPublic = Boolean.TRUE.equals(tuple.get(games.isNamePublic));
+
+            if (isPublic) {
+                nickname = "익명";
+            }
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.images.fileUrl.coalesce(resources.links.urls),
+                            resources.images.mediaType.coalesce(resources.links.mediaType),
                             resources.title
                     ).from(resources)
                     .leftJoin(resources.images, images)
@@ -82,6 +91,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
                             .title(tuples.getFirst().get(resources.title))
+                            .type(tuples.get(1).get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
@@ -89,12 +99,14 @@ public class GameListRepositoryImpl implements GameListRepository {
             GameListSelectionResponse rightSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
                             .title(tuples.getLast().get(resources.title))
+                            .type(tuples.get(1).get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
 
             return GameListResponse.builder()
                     .roomId(roomId)
+                    .nickname(nickname)
                     .title(title)
                     .description(description)
                     .leftSelection(leftSelection)

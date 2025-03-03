@@ -15,6 +15,9 @@ public class GameListResponse {
     @Schema(description = "게임방 ID")
     private Long roomId;
 
+    @Schema(description = "제작자 닉네임")
+    private String nickname;
+
     @Schema(description = "게임 타이틀")
     private String title;
 
