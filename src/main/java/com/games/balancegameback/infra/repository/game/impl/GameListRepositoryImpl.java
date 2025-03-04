@@ -70,6 +70,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             }
 
             List<Tuple> tuples = jpaQueryFactory.select(
+                            resources.id,
                             resources.images.fileUrl.coalesce(resources.links.urls),
                             resources.images.mediaType.coalesce(resources.links.mediaType),
                             resources.title
@@ -84,16 +85,18 @@ public class GameListRepositoryImpl implements GameListRepository {
 
             GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
+                            .id(tuples.getFirst().get(resources.id))
                             .title(tuples.getFirst().get(resources.title))
-                            .type(tuples.get(1).get(resources.images.mediaType.coalesce(resources.links.mediaType)))
+                            .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
 
             GameListSelectionResponse rightSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
+                            .id(tuples.getLast().get(resources.id))
                             .title(tuples.getLast().get(resources.title))
-                            .type(tuples.get(1).get(resources.images.mediaType.coalesce(resources.links.mediaType)))
+                            .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;

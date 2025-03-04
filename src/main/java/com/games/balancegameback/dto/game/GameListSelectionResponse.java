@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GameListSelectionResponse {
 
+    @Schema(description = "리소스 ID")
+    private Long id;
+
     @Schema(description = "선택지 타이틀")
     private String title;
 
