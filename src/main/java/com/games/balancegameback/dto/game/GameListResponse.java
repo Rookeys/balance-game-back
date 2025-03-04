@@ -24,6 +24,9 @@ public class GameListResponse {
     @Schema(description = "설명")
     private String description;
 
+    @Schema(description = "총 플레이 횟수")
+    private int totalPlayNums;
+
     @Schema(description = "왼쪽 선택지")
     private GameListSelectionResponse leftSelection;
 

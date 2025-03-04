@@ -2,24 +2,15 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
-import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.domain.game.enums.GameSortType;
-import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameListSelectionResponse;
-import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameSearchRequest;
 import com.games.balancegameback.infra.entity.*;
-import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameListRepository;
-import com.games.balancegameback.service.game.repository.GameRepository;
-import com.games.balancegameback.service.game.repository.GameResourceRepository;
-import com.games.balancegameback.service.game.repository.GameResultRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -50,16 +41,18 @@ public class GameListRepositoryImpl implements GameListRepository {
         this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, results);
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
-        List<Tuple> resultTuples = jpaQueryFactory.select(
+        List<Tuple> resultTuples = jpaQueryFactory.selectDistinct(
                         games.id,
                         games.title,
                         games.description,
                         games.users.nickname,
-                        games.isNamePublic
+                        games.isNamePublic,
+                        results.id.count()
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(builder)
                 .groupBy(games.id, games.title, games.description)
+                .having(games.gameResources.size().goe(2))
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -70,6 +63,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             String description = tuple.get(games.description);
             String nickname = tuple.get(games.users.nickname);
             boolean isPublic = Boolean.TRUE.equals(tuple.get(games.isNamePublic));
+            Long totalPlayNums = tuple.get(results.id.count());
 
             if (isPublic) {
                 nickname = "익명";
@@ -109,6 +103,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .nickname(nickname)
                     .title(title)
                     .description(description)
+                    .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .leftSelection(leftSelection)
                     .rightSelection(rightSelection)
                     .build();
@@ -154,8 +149,7 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         return switch (sortType) {
             case idAsc -> games.id.asc();
-            case week -> games.gameResources.any().winningLists.size().desc();
-            case playDesc -> games.gameResources.any().winningLists.size().desc();
+            case week, playDesc -> games.gamePlayList.size().desc();
             default -> games.id.desc();
         };
     }

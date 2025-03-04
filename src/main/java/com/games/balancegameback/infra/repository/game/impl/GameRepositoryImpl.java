@@ -79,10 +79,14 @@ public class GameRepositoryImpl implements GameRepository {
         List<Tuple> resultTuples = jpaQueryFactory.select(
                         games.id,
                         games.title,
-                        games.description
+                        games.description,
+                        games.users.nickname,
+                        results.id.count()
                 ).from(games)
-                .join(games.users).on(games.users.email.eq(users.getEmail()))
+                .join(games.users).on(games.users.uid.eq(users.getUid()))
+                .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(builder)
+                .groupBy(games.id, games.title, games.description)
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -91,9 +95,12 @@ public class GameRepositoryImpl implements GameRepository {
             Long roomId = tuple.get(games.id);
             String title = tuple.get(games.title);
             String description = tuple.get(games.description);
+            String nickname = tuple.get(games.users.nickname);
+            Long totalPlayNums = tuple.get(results.id.count());
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.images.fileUrl.coalesce(resources.links.urls),
+                            resources.images.mediaType.coalesce(resources.links.mediaType),
                             resources.title
                     ).from(resources)
                     .leftJoin(resources.images, images)
@@ -107,6 +114,7 @@ public class GameRepositoryImpl implements GameRepository {
             GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
                             .title(tuples.getFirst().get(resources.title))
+                            .type(tuples.get(1).get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
@@ -114,6 +122,7 @@ public class GameRepositoryImpl implements GameRepository {
             GameListSelectionResponse rightSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
                             .title(tuples.getLast().get(resources.title))
+                            .type(tuples.get(1).get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
@@ -122,6 +131,8 @@ public class GameRepositoryImpl implements GameRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
+                    .nickname(nickname)
+                    .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .leftSelection(leftSelection)
                     .rightSelection(rightSelection)
                     .build();
@@ -142,6 +153,14 @@ public class GameRepositoryImpl implements GameRepository {
     @Override
     public boolean existsByIdAndUsers(Long gameId, Users users) {
         return gameRepository.existsByIdAndUsers(gameId, UsersEntity.from(users));
+    }
+
+    @Override
+    public boolean existsGameRounds(Long gameId, int roundNumber) {
+        GamesEntity games = gameRepository.findById(gameId).orElseThrow(() ->
+                new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        return games.getGameResources().size() >= roundNumber;
     }
 
     @Override

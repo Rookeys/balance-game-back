@@ -20,6 +20,8 @@ public interface GameRepository {
 
     boolean existsByIdAndUsers(Long gameId, Users users);
 
+    boolean existsGameRounds(Long gameId, int roundNumber);
+
     void update(Games games);
 
     void deleteById(Long roomId);
