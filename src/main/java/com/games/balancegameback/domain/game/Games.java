@@ -21,12 +21,12 @@ public class Games {
     private Category category;
     private final Users users;
     private GameInviteCode gameInviteCode;
-    private List<GameResourcesEntity> gameResources;
+    private List<GameResources> gameResources;
 
     @Builder
     public Games(Long id, String title, String description, Boolean isNamePublic, AccessType accessType,
                  Category category, Users users, GameInviteCode gameInviteCode,
-                 List<GameResourcesEntity> gameResources) {
+                 List<GameResources> gameResources) {
         this.id = id;
         this.title = title;
         this.description = description;

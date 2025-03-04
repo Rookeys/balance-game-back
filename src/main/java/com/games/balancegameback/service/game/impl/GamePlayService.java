@@ -96,6 +96,11 @@ public class GamePlayService {
      */
     @Transactional
     public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest roundRequest, HttpServletRequest request) {
+
+        if (!gameRepository.existsGameRounds(gameId, roundRequest.getRoundNumber())) {
+            throw new BadRequestException("리소스 수보다 많은 라운드는 실행할 수 없습니다.", ErrorCode.INVALID_ROUND_EXCEPTION);
+        }
+
         Games games = gameRepository.findByRoomId(gameId);
 
         if (games.getAccessType().equals(AccessType.PROTECTED)) {
