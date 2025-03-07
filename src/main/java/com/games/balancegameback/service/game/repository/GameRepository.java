@@ -25,4 +25,6 @@ public interface GameRepository {
     void update(Games games);
 
     void deleteById(Long roomId);
+
+    void deleteImagesInS3(Long roomId);
 }

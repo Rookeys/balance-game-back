@@ -11,6 +11,7 @@ import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
+import com.games.balancegameback.service.media.impl.S3Service;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
@@ -28,6 +29,7 @@ public class GameRepositoryImpl implements GameRepository {
 
     private final GameJpaRepository gameRepository;
     private final JPAQueryFactory jpaQueryFactory;
+    private final S3Service s3Service;
 
     @Override
     public Games save(Games games) {
@@ -174,8 +176,20 @@ public class GameRepositoryImpl implements GameRepository {
 
     @Override
     public void deleteById(Long roomId) {
-
         gameRepository.deleteById(roomId);
+    }
+
+    @Override
+    public void deleteImagesInS3(Long roomId) {
+        GamesEntity entity = gameRepository.findById(roomId).orElseThrow(()
+                -> new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+
+        List<String> imageUrls = entity.getGameResources().stream()
+                .filter(resources -> resources.getImages() != null)
+                .map(resources -> resources.getImages().getFileUrl())
+                .toList();
+
+        s3Service.deleteImagesAsync(imageUrls);
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId,
