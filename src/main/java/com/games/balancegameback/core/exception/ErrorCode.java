@@ -23,6 +23,7 @@ public enum ErrorCode {
     KAKAO_ACCESS_TOKEN_FAILED(4001, "K4001", "Failed to get access token!"),
     KAKAO_USER_INFO_FAILED(4001, "K4002", "Failed to get user info!"),
     INVALID_TOKEN_EXCEPTION(4001, "4001", "Invalid JWT token"),
+    INVALID_IMAGE_EXCEPTION(4001, "4001_1", "Invalid S3 Image URL"),
     JWT_TOKEN_EXPIRED(4002, "4002", "JWT token has expired"),
     UNSUPPORTED_JWT_TOKEN(4003, "4003", "JWT token is unsupported"),
     EMPTY_JWT_CLAIMS( 4004, "4004", "JWT claims string is empty"),

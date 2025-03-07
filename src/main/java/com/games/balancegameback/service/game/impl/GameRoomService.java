@@ -5,17 +5,21 @@ import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameInviteCode;
+import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.service.game.repository.GameRepository;
+import com.games.balancegameback.service.media.impl.S3Service;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -87,8 +91,8 @@ public class GameRoomService {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(gameId, users);
 
+        gameRepository.deleteImagesInS3(gameId);    // 연관 관계가 끊어진 S3 내 사진 데이터를 삭제함.
         gameRepository.deleteById(gameId);
-        // 트리거에 해당 로직이 실행되었을 때 리소스들 중 연결되어 있는 방이 없으면 삭제하는 로직 추가 예정.
     }
 
     private void existsHost(Long gameId, Users users) {

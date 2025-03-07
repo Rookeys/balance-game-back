@@ -13,6 +13,7 @@ import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
+import com.games.balancegameback.service.media.impl.S3Service;
 import com.games.balancegameback.service.media.repository.ImageRepository;
 import com.games.balancegameback.service.media.repository.LinkRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class GameResourceService {
 
+    private final S3Service s3Service;
     private final GameResourceRepository gameResourceRepository;
     private final GameResultRepository gameResultRepository;
     private final ImageRepository imageRepository;
@@ -69,7 +71,9 @@ public class GameResourceService {
             gameResources.update(gameResourceRequest.getTitle());
             gameResourceRepository.update(gameResources);
 
-            // 연관 관계가 전부 끊긴 사진을 정리하는 트리거 추가 예정
+            if (!gameResources.getImages().getFileUrl().equals(images.getFileUrl())) {
+                s3Service.deleteImageByUrl(gameResources.getImages().getFileUrl());
+            }
         }
 
         if (gameResourceRequest.getType().equals(MediaType.LINK) && gameResourceRequest.getContent() != null
@@ -125,6 +129,11 @@ public class GameResourceService {
 
     @Transactional
     public void deleteResource(Long resourceId) {
+        GameResources resources = gameResourceRepository.findById(resourceId);
         gameResourceRepository.deleteById(resourceId);
+
+        if (resources.getImages() != null) {
+            s3Service.deleteImageByUrl(resources.getImages().getFileUrl());
+        }
     }
 }
