@@ -5,7 +5,7 @@ import com.games.balancegameback.infra.entity.GameCommentLikesEntity;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -15,14 +15,14 @@ public class GameResultComments {
     private String comment;
     private Users users;
     private Games games;
-    private LocalDateTime createdDate;
-    private LocalDateTime updatedDate;
+    private OffsetDateTime createdDate;
+    private OffsetDateTime updatedDate;
     private List<GameCommentLikesEntity> likes;
 
     @Builder
     public GameResultComments(Long id, String comment, Users users,Games games,
-                                LocalDateTime createdDate, LocalDateTime updatedDate,
-                                List<GameCommentLikesEntity> likes) {
+                              OffsetDateTime createdDate, OffsetDateTime updatedDate,
+                              List<GameCommentLikesEntity> likes) {
         this.id = id;
         this.comment = comment;
         this.users = users;

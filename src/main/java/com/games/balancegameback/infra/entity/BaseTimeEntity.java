@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
@@ -8,7 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @MappedSuperclass
@@ -17,9 +18,11 @@ public abstract class BaseTimeEntity {
 
     @Column(updatable = false)
     @CreatedDate
-    private LocalDateTime createdDate;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    private OffsetDateTime createdDate;
 
     @Column
     @LastModifiedDate
-    private LocalDateTime updatedDate;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    private OffsetDateTime updatedDate;
 }
