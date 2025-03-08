@@ -42,7 +42,7 @@ public class GameListController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "idDesc",
-                    schema = @Schema(allowableValues = {"week", "playDesc", "idAsc", "idDesc"}))
+                    schema = @Schema(allowableValues = {"week", "month", "playDesc", "idAsc", "idDesc"}))
             @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);

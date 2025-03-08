@@ -8,6 +8,7 @@ import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
+import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
@@ -20,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,10 +86,12 @@ public class GameRepositoryImpl implements GameRepository {
                         games.title,
                         games.description,
                         games.users.nickname,
-                        results.id.count()
+                        images.fileUrl,
+                        games.createdDate
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id, games.title, games.description)
                 .orderBy(orderSpecifier)
@@ -98,7 +103,8 @@ public class GameRepositoryImpl implements GameRepository {
             String title = tuple.get(games.title);
             String description = tuple.get(games.description);
             String nickname = tuple.get(games.users.nickname);
-            Long totalPlayNums = tuple.get(results.id.count());
+            String profileImageUrl = tuple.get(images.fileUrl);
+            OffsetDateTime createdAt = tuple.get(games.createdDate);
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
@@ -113,6 +119,21 @@ public class GameRepositoryImpl implements GameRepository {
                     .offset(0)
                     .limit(2)
                     .fetch();
+
+            // 전체 플레이 횟수
+            Long totalPlayNums = jpaQueryFactory
+                    .select(results.id.count())
+                    .from(results)
+                    .where(results.gameResources.games.id.eq(roomId))
+                    .fetchOne();
+
+            // 1주일 플레이 횟수
+            Long weekPlayNums = jpaQueryFactory
+                    .select(results.id.count())
+                    .from(results)
+                    .where(results.gameResources.games.id.eq(roomId)
+                            .and(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))))
+                    .fetchOne();
 
             GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
@@ -136,8 +157,13 @@ public class GameRepositoryImpl implements GameRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
-                    .nickname(nickname)
+                    .createdAt(createdAt)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
+                    .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
+                    .userResponse(UserMainResponse.builder()
+                            .nickname(nickname)
+                            .profileImageUrl(profileImageUrl)
+                            .build())
                     .leftSelection(leftSelection)
                     .rightSelection(rightSelection)
                     .build();

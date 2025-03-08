@@ -6,6 +6,7 @@ import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameListSelectionResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
+import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.service.game.repository.GameListRepository;
 import com.querydsl.core.BooleanBuilder;
@@ -16,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,12 +47,14 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.title,
                         games.description,
                         games.users.nickname,
+                        images.fileUrl,
                         games.isNamePublic,
-                        results.id.count()
+                        games.createdDate
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
-                .groupBy(games.id, games.title, games.description)
+                .groupBy(games.id)
                 .having(games.gameResources.size().goe(2))
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
@@ -62,8 +65,9 @@ public class GameListRepositoryImpl implements GameListRepository {
             String title = tuple.get(games.title);
             String description = tuple.get(games.description);
             String nickname = tuple.get(games.users.nickname);
+            String profileImageUrl = tuple.get(images.fileUrl);
             boolean isPublic = Boolean.TRUE.equals(tuple.get(games.isNamePublic));
-            Long totalPlayNums = tuple.get(results.id.count());
+            OffsetDateTime createdAt = tuple.get(games.createdDate);
 
             if (isPublic) {
                 nickname = "익명";
@@ -82,6 +86,21 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .offset(0)
                     .limit(2)
                     .fetch();
+
+            // 전체 플레이 횟수
+            Long totalPlayNums = jpaQueryFactory
+                    .select(results.id.count())
+                    .from(results)
+                    .where(results.gameResources.games.id.eq(roomId))
+                    .fetchOne();
+
+            // 1주일 플레이 횟수
+            Long weekPlayNums = jpaQueryFactory
+                    .select(results.id.count())
+                    .from(results)
+                    .where(results.gameResources.games.id.eq(roomId)
+                            .and(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))))
+                    .fetchOne();
 
             GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
                     GameListSelectionResponse.builder()
@@ -103,10 +122,15 @@ public class GameListRepositoryImpl implements GameListRepository {
 
             return GameListResponse.builder()
                     .roomId(roomId)
-                    .nickname(nickname)
                     .title(title)
                     .description(description)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
+                    .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
+                    .createdAt(createdAt)
+                    .userResponse(UserMainResponse.builder()
+                            .nickname(nickname)
+                            .profileImageUrl(profileImageUrl)
+                            .build())
                     .leftSelection(leftSelection)
                     .rightSelection(rightSelection)
                     .build();
@@ -120,6 +144,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(totalBuilder)
+                .groupBy(games.id)
+                .having(games.gameResources.size().goe(2))
                 .fetchOne();
 
         return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
@@ -136,8 +162,13 @@ public class GameListRepositoryImpl implements GameListRepository {
         }
 
         if (request.getSortType().equals(GameSortType.week)) {
-            builder.and(results.createdDate.after(LocalDateTime.now().minusWeeks(1)));
-            totalBuilder.and(results.createdDate.after(LocalDateTime.now().minusWeeks(1)));
+            builder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
+            totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
+        }
+
+        if (request.getSortType().equals(GameSortType.month)) {
+            builder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
+            totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
@@ -152,7 +183,7 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         return switch (sortType) {
             case idAsc -> games.id.asc();
-            case week, playDesc -> games.gamePlayList.size().desc();
+            case week, month, playDesc -> games.gamePlayList.size().desc();
             default -> games.id.desc();
         };
     }
