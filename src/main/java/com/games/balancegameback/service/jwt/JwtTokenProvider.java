@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.jwt;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.CustomJwtException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
@@ -19,7 +20,8 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import com.games.balancegameback.core.exception.impl.InvalidTokenException;
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 
 @Component
@@ -80,6 +82,7 @@ public class JwtTokenProvider {
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7);
         }
+
         return null;
     }
 
@@ -102,10 +105,11 @@ public class JwtTokenProvider {
     }
 
     private String validateRefreshTokenAndGetEmail(String refreshToken) {
-        String email = redisRepository.getValues(refreshToken).get("email");
-        if (email == null) {
-            throw new InvalidTokenException("Invalid refresh token", ErrorCode.ACCESS_DENIED_EXCEPTION);
+        String email = redisRepository.getValues(refreshToken);
+        if (email.equals("blacklist")) {
+            throw new CustomJwtException(ErrorCode.JWT_BLACKLIST, "블랙리스트에 등록된 토큰입니다.");
         }
+
         return email;
     }
 
@@ -116,8 +120,14 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException e) {
-            return false;
+        } catch (MalformedJwtException e) {
+            throw new CustomJwtException(ErrorCode.INVALID_TOKEN_EXCEPTION, "4001");
+        } catch (ExpiredJwtException e) {
+            throw new CustomJwtException(ErrorCode.JWT_TOKEN_EXPIRED, "4002");
+        } catch (UnsupportedJwtException e) {
+            throw new CustomJwtException(ErrorCode.UNSUPPORTED_JWT_TOKEN, "4003");
+        } catch (SignatureException e) {
+            throw new CustomJwtException(ErrorCode.JWT_SIGNATURE_MISMATCH, "4005");
         }
     }
 
@@ -130,29 +140,14 @@ public class JwtTokenProvider {
     }
 
     public UserRole getRoles(String email) {
-        return userRepository.findByEmail(email)
-                .map(Users::getUserRole)
-                .orElseThrow(() -> new InvalidTokenException("User not found", ErrorCode.NOT_FOUND_EXCEPTION));
+        Users users = userRepository.findByEmail(email);
+        return users.getUserRole();
     }
 
     public Authentication getAuthentication(String token) {
         String email = extractEmail(token);
         UserDetails userDetails = customUserDetailService.loadUserByUsername(email);
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
-
-    public void expireToken(String token) {
-        Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        Date expiration = claims.getExpiration();
-        Date now = new Date();
-        if (now.after(expiration)) {
-            redisRepository.addTokenToBlacklist(token, expiration.getTime() - now.getTime());
-        }
     }
 
     public String extractEmail(String token) {

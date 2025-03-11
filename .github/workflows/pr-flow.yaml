@@ -1,0 +1,11 @@
+name: "PR Flow"
+
+on:
+  pull_request:
+    types: [opened, reopened] # [opened, reopened, synchronize]
+
+jobs:
+  slack-pr-review:
+    if: ${{ always() }}
+    uses: ./.github/workflows/slack-pr-review.yaml
+    secrets: inherit

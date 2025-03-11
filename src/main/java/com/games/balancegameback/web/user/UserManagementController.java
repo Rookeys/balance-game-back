@@ -1,21 +1,19 @@
 package com.games.balancegameback.web.user;
 
+import com.games.balancegameback.dto.user.LoginResponse;
 import com.games.balancegameback.dto.user.SignUpRequest;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,30 +31,40 @@ public class UserManagementController {
             @ApiResponse(responseCode = "401", description = "401_2 : 중복된 닉네임 또는 이메일")
     })
     @PostMapping(value = "/signup")
-    public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest signUpRequest, HttpServletResponse response) {
-        userService.signUp(signUpRequest, response);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public LoginResponse signUp(@RequestBody @Valid SignUpRequest signUpRequest) {
+        return userService.signUp(signUpRequest);
     }
 
-
     @Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴 요청을 처리합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원 탈퇴 대기 전환"),
     })
     @PostMapping(value = "/resign")
-    public ResponseEntity<String> resign(HttpServletRequest request) {
+    public ResponseEntity<Boolean> resign(HttpServletRequest request) {
         userService.resign(request);
-        return ResponseEntity.ok("회원 탈퇴 대기 전환");
+        return ResponseEntity.ok(Boolean.TRUE);
     }
-
 
     @Operation(summary = "회원 탈퇴 취소 API", description = "회원 탈퇴 요청을 취소합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원 탈퇴 취소 성공"),
     })
-    @PostMapping(value = "/cancel")
-    public ResponseEntity<String> cancelResign(@RequestBody String email) {
+    @PostMapping(value = "/cancel/resign")
+    public ResponseEntity<Boolean> cancelResign(@RequestBody String email) {
         userService.cancelResign(email);
-        return ResponseEntity.ok("회원 탈퇴 취소 성공");
+        return ResponseEntity.ok(Boolean.TRUE);
+    }
+
+    @Operation(summary = "중복 이름 확인 API", description = "이름이 중복되었다면 True, 아니면 False 를 반환합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "확인 성공"),
+    })
+    @GetMapping(value = "/exists")
+    public Boolean existsByNickname(
+            @Parameter(name = "nickname", description = "유저 닉네임", required = true, example = "testUser")
+            @RequestParam(name = "nickname") String nickname) {
+        return userService.existsByNickname(nickname);
     }
 }
+

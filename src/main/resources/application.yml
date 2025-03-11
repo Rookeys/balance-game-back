@@ -1,0 +1,95 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: balance-game-back
+
+  cache:
+    type: redis
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+  datasource:
+    url: ENC(1cyyQ/RpeXUSqqHniFsPZ73sKafsovk8laIVFUIVeBH5oR0MYZ+99v3pEXIN3Mk7OEjYmTztxXZhbwQnI+Ccp9XBu5cAt3x3Fj0smgntNsf3MJpMeI5E6MeQN+mKcc2r)
+    username: ENC(/CyspIvvF6dNHOEFtUrFTg==)
+    password: ENC(iyfDvnpBLAn2JgPYybtabOmRY72ej6IB)
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: true
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  data:
+    redis:
+      host: redis-master
+      port: 6379
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao-domain:
+            client-id: ENC(kuVzqyUThECJ4pLkT0txxFeYA7/puYjQBWa7GBF2nAxeUfzzi/C6cAlwx8URnRi9)
+            redirect-uri: ENC(hsDjHZKyHjEt06GyEJ5m02dqAxlqpmOXSRXiUVvX+8wXXBahn50sNUnt4/NBU76l)
+            authorization-grant-type: authorization_code
+            client-authentication-method: POST
+            client-name: Kakao
+            client-secret: ENC(eYsVkQLScHFFP64VjXOgBABRIVx6VX31ZoqwyZai4dS2OkOPft7iZzW4Mjr1pcV4)
+            scope:
+              - account_email
+              - profile_image
+          kakao-local:
+            client-id: ENC(kuVzqyUThECJ4pLkT0txxFeYA7/puYjQBWa7GBF2nAxeUfzzi/C6cAlwx8URnRi9)
+            redirect-uri: ENC(hsDjHZKyHjEt06GyEJ5m02dqAxlqpmOXSRXiUVvX+8wXXBahn50sNUnt4/NBU76l)
+            authorization-grant-type: authorization_code
+            client-authentication-method: POST
+            client-name: Kakao
+            client-secret: ENC(eYsVkQLScHFFP64VjXOgBABRIVx6VX31ZoqwyZai4dS2OkOPft7iZzW4Mjr1pcV4)
+            scope:
+              - account_email
+              - profile_image
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+cloud:
+  aws:
+    s3:
+      bucket: balance-game
+    credentials:
+      accessKey: ENC(cmMaXTdPrdrP1nmg38xCxlXrrL+parj7xDzoi4+MHzc=)
+      secretKey: ENC(s2lBQF5LlVub1rwF997ULV4EgKplIYN9+2lx/91x8qKbefrNOQnqKzn0MrcsezAXky1tYSJmDTg=)
+    stack:
+      auto: false
+
+jwt:
+  secret: ENC(RnxzhwA89XJzO4TUyxgV/PnW76a1js2bl3fUmHhFqlZjo0EpTx9EQeKyoNZ0LyirrFWRz2jXx/886s2MOnvDx4TFsQs5pYHTfPYJYV3wLjE34NwIzrE6DWnRnQ26b0ueI3jw6tYO8vW1al9KcyhavMkjAQ1PhcTH0gNQD0imFXruxxT2qYxtbR/CT7ErOZ+2lrevEDutMZG/2zez66W9mDrUNYdQ6Zwdij8J4CvrcgtVhteUZFIz6eVJb72SnPap1/yxD6rmEzMB/pjNqNN/m14xODPTbrHnqOFAS+c/TZ0=)
+  accessTokenExpiration: ENC(3SILZhqKsTa28bgYIYu8Lg==)
+  refreshTokenExpiration: ENC(2Ily8VmFFYVxg19u2omwH7m6kx/InJ+7)
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health, beans, refresh, info, metrics, prometheus
+
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor

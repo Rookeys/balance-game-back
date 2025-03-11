@@ -1,52 +1,50 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.media.Images;
-import com.games.balancegameback.domain.media.Links;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "images")
-public class ImagesEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String fileName;
+@NoArgsConstructor
+public class ImagesEntity extends MediaEntity {
 
     @Column(nullable = false)
     private String fileUrl;
 
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "media_id")
-    private MediaEntity media;
-
-    public static ImagesEntity from(Images images) {
-        ImagesEntity imagesEntity = new ImagesEntity();
-        imagesEntity.fileName = images.fileName();
-        imagesEntity.fileUrl = images.fileUrl();
-        imagesEntity.media = MediaEntity.from(images.media());
-
-        return imagesEntity;
+    public ImagesEntity(Long id, String fileUrl, MediaType mediaType, GamesEntity games, UsersEntity users) {
+        super(id, mediaType);
+        this.fileUrl = fileUrl;
+        this.games = games;
+        this.users = users;
     }
 
+    public static ImagesEntity from(Images images) {
+        return new ImagesEntity(
+                images.getId(),
+                images.getFileUrl(),
+                images.getMediaType(),
+                images.getGames() != null ? GamesEntity.from(images.getGames()) : null,
+                images.getUsers() != null ? UsersEntity.from(images.getUsers()) : null
+        );
+    }
+
+    @Override
     public Images toModel() {
-        return Images.builder()
-                .id(id)
-                .fileName(fileName)
-                .fileUrl(fileUrl)
-                .media(media.toModel())
-                .build();
+        return new Images(
+                super.getId(),
+                super.games != null ? super.games.toModel() : null,
+                super.users != null ? super.users.toModel() : null,
+                super.getMediaType(),
+                this.fileUrl
+        );
+    }
+
+    public void update(Images images) {
+        this.fileUrl = images.getFileUrl();
     }
 }
 

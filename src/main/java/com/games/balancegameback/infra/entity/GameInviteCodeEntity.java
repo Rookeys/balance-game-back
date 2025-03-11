@@ -1,17 +1,14 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.game.GameInviteCode;
-import com.games.balancegameback.domain.game.GameResources;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.LocalDateTime;
+import lombok.Setter;
 
 @Getter
 @Entity
 @Table(name = "game_invite_code")
-public class GameInviteCodeEntity {
+public class GameInviteCodeEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,19 +20,18 @@ public class GameInviteCodeEntity {
     @Column
     private Boolean isActive = true;
 
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id")
+    @Setter
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "games_id", nullable = false)
     private GamesEntity games;
 
     public static GameInviteCodeEntity from(GameInviteCode gameInviteCode) {
+        if (gameInviteCode == null) return null;
+
         GameInviteCodeEntity gameInviteCodeEntity = new GameInviteCodeEntity();
-        gameInviteCodeEntity.inviteCode = gameInviteCode.inviteCode();
-        gameInviteCodeEntity.isActive = gameInviteCode.isActive();
-        gameInviteCodeEntity.games = GamesEntity.from(gameInviteCode.games());
+        gameInviteCodeEntity.inviteCode = gameInviteCode.getInviteCode();
+        gameInviteCodeEntity.isActive = gameInviteCode.getIsActive();
+        gameInviteCodeEntity.games = null;
 
         return gameInviteCodeEntity;
     }
@@ -45,8 +41,13 @@ public class GameInviteCodeEntity {
                 .id(id)
                 .inviteCode(inviteCode)
                 .isActive(isActive)
-                .games(games.toModel())
+                .games(null)
                 .build();
+    }
+
+    public void update(GameInviteCode gameInviteCode) {
+        this.inviteCode = gameInviteCode.getInviteCode();
+        this.isActive = gameInviteCode.getIsActive();
     }
 }
 

@@ -1,44 +1,69 @@
 package com.games.balancegameback.core.jwt;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.CustomJwtException;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
 import com.games.balancegameback.service.jwt.JwtTokenProvider;
-import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
-    private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "/swagger", "/v3/api-docs", "/users/login", "/users/signup"
+    private static final Map<String, Set<String>> EXCLUDED_PATHS = Map.of(
+            "GET", Set.of(
+                    "/swagger-ui/**", "/v3/api-docs/**",
+                    "/api/v1/games/{gameId}/play", "/api/v1/games/{gameId}/play/{playId}",
+                    "/api/v1/games/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
+                    "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
+                    "/api/v1/users/exists", "/api/v1/games/list"
+            ),
+            "POST", Set.of(
+                    "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
+                    "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
+                    "/api/v1/games/{gameId}/play"
+            ),
+            "PUT", Set.of(
+                    "/api/v1/games/{gameId}/play/{playId}"
+            )
+    );
+
+    private static final Map<String, Set<String>> REQUIRED_PATHS = Map.of(
+            "POST", Set.of(
+                    "/api/v1/users/refresh", "/api/v1/users/logout"
+            )
     );
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisRepository redisRepository;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @SneakyThrows
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) {
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
         // 인증이 필요 없는 요청은 스킵.
-        if (skipPath(path)) {
+        if (skipPath(method, path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -47,51 +72,54 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
 
         try {
-            if (accessToken == null && refreshToken != null) {
-                handleRefreshToken(refreshToken, path, filterChain, request, response);
-                return;
+            if (accessToken == null && refreshToken == null) {
+                throw new CustomJwtException(ErrorCode.EMPTY_JWT_CLAIMS, "4004");
             }
 
-            if (accessToken != null && isValidAccessToken(accessToken)) {
-                setAuthentication(accessToken);
+            if (accessToken != null && refreshToken != null) {
+                throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "잘못된 요청입니다.");
             }
-        } catch (JwtException e) {
-            handleJwtException(e, response);
-            return;
-        } catch (RuntimeException e) {
-            setResponse(response, ErrorCode.JWT_COMPLEX_ERROR);
+
+            if (refreshToken == null) {
+                if (isValidAccessToken(accessToken)) {
+                    setAuthentication(accessToken);
+                }
+            }
+
+            if (accessToken == null) {
+                handleRefreshToken(refreshToken, method, path, filterChain, request, response);
+                return;
+            }
+        } catch (CustomJwtException e) {
+            setResponse(response, e.getErrorCode());
             return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private boolean skipPath(String path) {
-        return EXCLUDED_PATHS.stream().anyMatch(path::contains);
+    private boolean skipPath(String method, String path) {
+        return EXCLUDED_PATHS.getOrDefault(method, Set.of()).stream()
+                .anyMatch(excludedPath -> pathMatcher.match(excludedPath, path));
     }
 
-    private void handleRefreshToken(String refreshToken, String path, FilterChain filterChain,
-                                    HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException, JSONException {
-        if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
-                && path.contains("/reissue")) {
-            filterChain.doFilter(request, response);
-        } else {
-            setResponse(response, ErrorCode.INVALID_TOKEN_EXCEPTION);
-        }
+    private boolean requiredPath(String method, String path) {
+        return REQUIRED_PATHS.getOrDefault(method, Set.of()).stream()
+                .anyMatch(requiredPath -> pathMatcher.match(requiredPath, path));
     }
 
     private boolean isValidAccessToken(String accessToken) {
-        return jwtTokenProvider.validateToken(accessToken) && !redisRepository.isTokenInBlacklist(accessToken);
+        return jwtTokenProvider.validateToken(accessToken);
     }
 
-    private void handleJwtException(JwtException e, HttpServletResponse response) throws IOException, JSONException {
-        switch (e) {
-            case MalformedJwtException ignored -> setResponse(response, ErrorCode.INVALID_TOKEN_EXCEPTION);
-            case ExpiredJwtException ignored -> setResponse(response, ErrorCode.JWT_TOKEN_EXPIRED);
-            case UnsupportedJwtException ignored ->
-                    setResponse(response, ErrorCode.UNSUPPORTED_JWT_TOKEN);
-            case null, default -> setResponse(response, ErrorCode.JWT_COMPLEX_ERROR);
+    private void handleRefreshToken(String refreshToken, String method, String path, FilterChain filterChain,
+                                    HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException, JSONException {
+        if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
+                && requiredPath(method, path)) {
+            filterChain.doFilter(request, response);
+        } else {
+            throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
         }
     }
 

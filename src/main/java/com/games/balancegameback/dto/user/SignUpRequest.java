@@ -9,8 +9,6 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 public class SignUpRequest {
@@ -28,16 +26,15 @@ public class SignUpRequest {
     @NotBlank(message = "로그인 타입은 비어 있을 수 없습니다.")
     private LoginType loginType;
 
-    @Schema(description = "인증 코드")
-    @NotBlank(message = "인증 코드는 비어 있을 수 없습니다.")
-    private String code;
+    @Schema(description = "소셜 로그인 측 서버에서 발급받은 토큰")
+    @NotBlank(message = "토큰은 비어 있을 수 없습니다.")
+    private String accessToken;
 
     @Schema(description = "사진 URL")
-    private String url;
+    private String image;
 
     public Users toDomain() {
         return Users.builder()
-                .uid(String.valueOf(UUID.randomUUID()))
                 .nickname(nickname)
                 .email(email)
                 .loginType(loginType)

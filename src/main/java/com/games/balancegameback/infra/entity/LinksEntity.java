@@ -1,21 +1,16 @@
 package com.games.balancegameback.infra.entity;
 
 import com.games.balancegameback.domain.media.Links;
-import com.games.balancegameback.domain.media.Media;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "links")
-public class LinksEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@NoArgsConstructor
+public class LinksEntity extends MediaEntity {
 
     @Column(nullable = false)
     private String urls;
@@ -26,31 +21,38 @@ public class LinksEntity {
     @Column
     private int endSec;
 
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "media_id", nullable = false)
-    private MediaEntity media;
+    public LinksEntity(Long id, String urls, int startSec, int endSec, MediaType mediaType) {
+        super(id, mediaType == null ? MediaType.LINK : mediaType);
+        this.urls = urls;
+        this.startSec = startSec;
+        this.endSec = endSec;
+    }
 
     public static LinksEntity from(Links links) {
-        LinksEntity linksEntity = new LinksEntity();
-        linksEntity.urls = links.urls();
-        linksEntity.startSec = links.startSec();
-        linksEntity.endSec = links.endSec();
-        linksEntity.media = MediaEntity.from(links.media());
-
-        return linksEntity;
+        return new LinksEntity(
+                links.getId(),
+                links.getUrls(),
+                links.getStartSec(),
+                links.getEndSec(),
+                links.getMediaType()
+        );
     }
 
+    @Override
     public Links toModel() {
         return Links.builder()
-                .id(id)
-                .urls(urls)
-                .startSec(startSec)
-                .endSec(endSec)
-                .media(media.toModel())
+                .id(super.getId())
+                .urls(this.urls)
+                .startSec(this.startSec)
+                .endSec(this.endSec)
+                .mediaType(super.mediaType)
                 .build();
     }
+
+    public void update(Links links) {
+        this.urls = links.getUrls();
+        this.startSec = links.getStartSec();
+        this.endSec = links.getEndSec();
+    }
 }
+

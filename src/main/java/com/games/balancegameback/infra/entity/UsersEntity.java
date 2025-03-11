@@ -5,15 +5,13 @@ import com.games.balancegameback.domain.user.enums.LoginType;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Entity
 @Table(name = "users")
-public class UsersEntity {
+public class UsersEntity extends BaseTimeEntity {
 
     @Id
     private String uid;
@@ -34,14 +32,6 @@ public class UsersEntity {
 
     @Column
     private Boolean isDeleted = false;
-
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @Column
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
 
     public static UsersEntity from(Users user) {
         UsersEntity userEntity = new UsersEntity();
@@ -64,6 +54,11 @@ public class UsersEntity {
                 .userRole(userRole)
                 .isDeleted(isDeleted)
                 .build();
+    }
+
+    public void update(Users user) {
+        this.nickname = user.getNickname();
+        this.isDeleted = user.isDeleted();
     }
 }
 

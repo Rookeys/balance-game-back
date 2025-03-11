@@ -6,9 +6,13 @@ import java.util.Optional;
 
 public interface UserRepository {
 
-    Optional<Users> findByEmail(String email);
+    Users findByEmail(String email);
 
-    void save(Users users);
+    Optional<Users> findByUserEmail(String email);
+
+    Users save(Users users);
+
+    void update(Users users);
 
     boolean existsByEmailAndDeleted(String email, boolean isDeleted);
 

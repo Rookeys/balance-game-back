@@ -1,19 +1,19 @@
 package com.games.balancegameback.infra.entity;
 
+import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Entity
 @Table(name = "games")
-public class GamesEntity {
+public class GamesEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,26 +36,39 @@ public class GamesEntity {
     @Enumerated(EnumType.STRING)
     private Category category;
 
-    @Column(updatable = false)
-    @CreatedDate
-    private LocalDateTime createdDate;
-
-    @Column
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id")
+    @JoinColumn(name = "users_uid")
     private UsersEntity users;
 
+    @OneToOne(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
+    private GameInviteCodeEntity gameInviteCode;
+
+    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameResourcesEntity> gameResources = new ArrayList<>();
+
+    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GamePlayEntity> gamePlayList = new ArrayList<>();
+
     public static GamesEntity from(Games games) {
+        if (games == null) return null;
+
         GamesEntity gamesEntity = new GamesEntity();
-        gamesEntity.title = games.title();
-        gamesEntity.description = games.description();
-        gamesEntity.isNamePublic = games.isNamePublic();
-        gamesEntity.accessType = games.accessType();
-        gamesEntity.category = games.category();
-        gamesEntity.users = UsersEntity.from(games.users());
+        gamesEntity.id = games.getId() == null ? null : games.getId();
+        gamesEntity.title = games.getTitle();
+        gamesEntity.description = games.getDescription();
+        gamesEntity.isNamePublic = games.getIsNamePublic();
+        gamesEntity.accessType = games.getAccessType();
+        gamesEntity.category = games.getCategory();
+        gamesEntity.users = UsersEntity.from(games.getUsers());
+
+        // GameInviteCodeEntity 설정
+        if (games.getGameInviteCode() != null) {
+            GameInviteCodeEntity inviteCodeEntity = GameInviteCodeEntity.from(games.getGameInviteCode());
+            gamesEntity.gameInviteCode = inviteCodeEntity;
+
+            // 순환 참조 방지: gamesEntity만 설정
+            inviteCodeEntity.setGames(gamesEntity);
+        }
 
         return gamesEntity;
     }
@@ -69,7 +82,22 @@ public class GamesEntity {
                 .accessType(accessType)
                 .category(category)
                 .users(users.toModel())
+                .gameInviteCode(this.gameInviteCode != null
+                        ? GameInviteCode.builder()
+                            .id(this.gameInviteCode.getId())
+                            .inviteCode(this.gameInviteCode.getInviteCode())
+                            .isActive(this.gameInviteCode.getIsActive())
+                            .build()
+                        : null)
                 .build();
+    }
+
+    public void update(Games games) {
+        this.title = games.getTitle();
+        this.description = games.getDescription();
+        this.isNamePublic = games.getIsNamePublic();
+        this.accessType = games.getAccessType();
+        this.category = games.getCategory();
     }
 }
 
