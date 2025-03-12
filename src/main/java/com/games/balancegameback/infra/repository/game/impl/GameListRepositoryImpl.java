@@ -140,7 +140,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
 
         Long totalElements = jpaQueryFactory
-                .select(games.count())
+                .select(games.id.countDistinct())
                 .from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(totalBuilder)
@@ -148,16 +148,16 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .having(games.gameResources.size().goe(2))
                 .fetchOne();
 
-        return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
+        return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
     }
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
                             GameSearchRequest request, QGamesEntity games, QGameResultsEntity results) {
-        if (cursorId != null && request.getSortType().equals(GameSortType.idAsc)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.old)) {
             builder.and(games.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameSortType.idDesc)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.recent)) {
             builder.and(games.id.lt(cursorId));
         }
 
@@ -171,6 +171,11 @@ public class GameListRepositoryImpl implements GameListRepository {
             totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
         }
 
+        if (request.getCategory() != null) {
+            builder.and(games.category.eq(request.getCategory()));
+            totalBuilder.and(games.category.eq(request.getCategory()));
+        }
+
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
             builder.and(games.title.containsIgnoreCase(request.getTitle()));
             totalBuilder.and(games.title.containsIgnoreCase(request.getTitle()));
@@ -182,7 +187,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
         return switch (sortType) {
-            case idAsc -> games.id.asc();
+            case old -> games.id.asc();
             case week, month, playDesc -> games.gamePlayList.size().desc();
             default -> games.id.desc();
         };

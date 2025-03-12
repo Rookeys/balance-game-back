@@ -16,6 +16,6 @@ public class GameCommentSearchRequest {
     @Schema(description = "검색하려는 내용", example = "포메")
     private String content;
 
-    @Schema(description = "정렬 옵션", allowableValues = {"likeAsc", "likeDesc", "idAsc", "idDesc"}, example = "likeDesc")
+    @Schema(description = "정렬 옵션", implementation = CommentSortType.class, example = "resent")
     private CommentSortType sortType;
 }
