@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.user;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
@@ -72,10 +73,15 @@ public class UserProfileController {
             @Parameter(name = "title", description = "검색할 리소스 제목", example = "포메")
             @RequestParam(name = "title", required = false) String title,
 
+            @Parameter(name = "category", description = "카테고리",
+                    example = "FUN",
+                    schema = @Schema(allowableValues = {"FUN", "HORROR", "ACTION"}))
+            @RequestParam(name = "category", required = false) Category category,
+
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "idDesc",
-                    schema = @Schema(allowableValues = {"idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameSortType sortType,
+                    example = "recent",
+                    schema = @Schema(allowableValues = {"old", "recent"}))
+            @RequestParam(name = "sortType", required = false, defaultValue = "recent") GameSortType sortType,
 
             HttpServletRequest request) {
 
@@ -83,6 +89,7 @@ public class UserProfileController {
         GameSearchRequest searchRequest = GameSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)
+                .category(category)
                 .build();
 
         return gameService.getMyGameList(pageable, cursorId, searchRequest, request);
