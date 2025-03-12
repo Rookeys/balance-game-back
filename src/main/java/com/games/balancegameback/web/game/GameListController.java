@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.game;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
@@ -29,7 +30,7 @@ public class GameListController {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
     @GetMapping(value = "/list")
-    public CustomPageImpl<GameListResponse> getResources(
+    public CustomPageImpl<GameListResponse> getMainGameList(
 
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
@@ -40,15 +41,21 @@ public class GameListController {
             @Parameter(name = "title", description = "검색할 리소스 제목", example = "스페셜 아이템")
             @RequestParam(name = "title", required = false) String title,
 
+            @Parameter(name = "category", description = "카테고리",
+                    example = "FUN",
+                    schema = @Schema(allowableValues = {"FUN", "HORROR", "ACTION"}))
+            @RequestParam(name = "category", required = false) Category category,
+
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "idDesc",
-                    schema = @Schema(allowableValues = {"week", "month", "playDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameSortType sortType) {
+                    example = "recent",
+                    schema = @Schema(allowableValues = {"week", "month", "playDesc", "old", "recent"}))
+            @RequestParam(name = "sortType", required = false, defaultValue = "recent") GameSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);
         GameSearchRequest searchRequest = GameSearchRequest.builder()
                 .title(title)
                 .sortType(sortType)
+                .category(category)
                 .build();
 
         return gameService.getMainGameList(cursorId, pageable, searchRequest);

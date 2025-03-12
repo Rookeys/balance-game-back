@@ -81,7 +81,7 @@ public class GameRepositoryImpl implements GameRepository {
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
-        List<Tuple> resultTuples = jpaQueryFactory.select(
+        List<Tuple> resultTuples = jpaQueryFactory.selectDistinct(
                         games.id,
                         games.title,
                         games.description,
@@ -173,12 +173,12 @@ public class GameRepositoryImpl implements GameRepository {
         PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
 
         Long totalElements = jpaQueryFactory
-                .select(games.count())
+                .select(games.id.countDistinct())
                 .from(games)
                 .where(games.users.email.eq(users.getEmail()))
                 .fetchOne();
 
-        return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
+        return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
     }
 
     @Override
@@ -220,12 +220,16 @@ public class GameRepositoryImpl implements GameRepository {
 
     private void setOptions(BooleanBuilder builder, Long cursorId,
                             GameSearchRequest request, QGamesEntity games) {
-        if (cursorId != null && request.getSortType().equals(GameSortType.idAsc)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.old)) {
             builder.and(games.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameSortType.idDesc)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.recent)) {
             builder.and(games.id.lt(cursorId));
+        }
+
+        if (request.getCategory() != null) {
+            builder.and(games.category.eq(request.getCategory()));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
@@ -239,7 +243,7 @@ public class GameRepositoryImpl implements GameRepository {
 
         // 나중에 조건 추가를 고려해 switch 유지
         return switch (sortType) {
-            case idAsc -> games.id.asc();
+            case old -> games.id.asc();
             default -> games.id.desc();
         };
     }
