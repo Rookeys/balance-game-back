@@ -140,7 +140,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
 
         Long totalElements = jpaQueryFactory
-                .select(games.count())
+                .select(games.id.countDistinct())
                 .from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .where(totalBuilder)

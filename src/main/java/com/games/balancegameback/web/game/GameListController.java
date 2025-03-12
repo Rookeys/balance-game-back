@@ -29,7 +29,7 @@ public class GameListController {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
     @GetMapping(value = "/list")
-    public CustomPageImpl<GameListResponse> getResources(
+    public CustomPageImpl<GameListResponse> getMainGameList(
 
             @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
