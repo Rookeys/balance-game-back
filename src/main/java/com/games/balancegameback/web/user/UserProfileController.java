@@ -75,7 +75,7 @@ public class UserProfileController {
 
             @Parameter(name = "category", description = "카테고리",
                     example = "FUN",
-                    schema = @Schema(allowableValues = {"FUN", "HORROR", "ACTION"}))
+                    schema = @Schema(implementation = Category.class))
             @RequestParam(name = "category", required = false) Category category,
 
             @Parameter(name = "sortType", description = "정렬 방식",
