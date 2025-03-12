@@ -167,11 +167,11 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
                             GameResourceSearchRequest request,
                             QGameResourcesEntity resources) {
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idAsc)) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.old)) {
             builder.and(resources.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.idDesc)) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.resent)) {
             builder.and(resources.id.lt(cursorId));
         }
 
@@ -192,7 +192,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         return switch (gameResourceSortType) {
             case winRateAsc -> resources.winningLists.size().asc();
             case winRateDesc -> resources.winningLists.size().desc();
-            case idDesc -> resources.id.desc();
+            case resent -> resources.id.desc();
             default -> resources.id.asc();
         };
     }

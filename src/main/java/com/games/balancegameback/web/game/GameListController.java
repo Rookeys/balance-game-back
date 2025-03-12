@@ -43,12 +43,12 @@ public class GameListController {
 
             @Parameter(name = "category", description = "카테고리",
                     example = "FUN",
-                    schema = @Schema(allowableValues = {"FUN", "HORROR", "ACTION"}))
+                    schema = @Schema(implementation = Category.class))
             @RequestParam(name = "category", required = false) Category category,
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "recent",
-                    schema = @Schema(allowableValues = {"week", "month", "playDesc", "old", "recent"}))
+                    schema = @Schema(implementation = GameSortType.class))
             @RequestParam(name = "sortType", required = false, defaultValue = "recent") GameSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);

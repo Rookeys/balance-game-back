@@ -16,8 +16,7 @@ public class GameResourceSearchRequest {
     @Schema(description = "검색하려는 타이틀", example = "포메")
     private String title;
 
-    @Schema(description = "정렬 옵션", allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"},
-            example = "winRateAsc")
+    @Schema(description = "정렬 옵션", implementation = GameResourceSortType.class, example = "resent")
     private GameResourceSortType sortType;
 }
 

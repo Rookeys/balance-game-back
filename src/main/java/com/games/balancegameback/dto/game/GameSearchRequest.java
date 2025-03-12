@@ -17,11 +17,9 @@ public class GameSearchRequest {
     @Schema(description = "검색하려는 타이틀", example = "포메")
     private String title;
 
-    @Schema(description = "정렬 옵션", allowableValues = {"old", "recent", "playDesc", "week"},
-            example = "playDesc")
+    @Schema(description = "정렬 옵션", implementation = GameSortType.class, example = "playDesc")
     private GameSortType sortType = GameSortType.recent;
 
-    @Schema(description = "카테고리", allowableValues = {"FUN", "HORROR", "ACTION"},
-            example = "FUN")
+    @Schema(description = "카테고리", implementation = Category.class, example = "FUN")
     private Category category;
 }

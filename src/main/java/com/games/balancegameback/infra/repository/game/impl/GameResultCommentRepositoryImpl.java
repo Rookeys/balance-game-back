@@ -107,11 +107,11 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
                             QGameResultCommentsEntity comments) {
-        if (cursorId != null && request.getSortType().equals(CommentSortType.idAsc)) {
+        if (cursorId != null && request.getSortType().equals(CommentSortType.old)) {
             builder.and(comments.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(CommentSortType.idDesc)) {
+        if (cursorId != null && request.getSortType().equals(CommentSortType.resent)) {
             builder.and(comments.id.lt(cursorId));
         }
 
@@ -166,7 +166,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         return switch (sortType) {
             case likeAsc -> comments.likes.size().asc();
             case likeDesc -> comments.likes.size().desc();
-            case idDesc -> comments.id.desc();
+            case resent -> comments.id.desc();
             default -> comments.id.asc();
         };
     }

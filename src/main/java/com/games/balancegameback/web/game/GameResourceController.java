@@ -67,8 +67,8 @@ public class GameResourceController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     example = "winRateDesc",
-                    schema = @Schema(allowableValues = {"winRateAsc", "winRateDesc", "idAsc", "idDesc"}))
-            @RequestParam(name = "sortType", required = false, defaultValue = "idDesc") GameResourceSortType sortType,
+                    schema = @Schema(implementation = GameResourceSortType.class))
+            @RequestParam(name = "sortType", required = false, defaultValue = "resent") GameResourceSortType sortType,
 
             HttpServletRequest request) {
 
