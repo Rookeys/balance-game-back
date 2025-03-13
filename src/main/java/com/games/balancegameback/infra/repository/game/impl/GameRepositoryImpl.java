@@ -51,7 +51,7 @@ public class GameRepositoryImpl implements GameRepository {
                 .roomId(roomId)
                 .title(games.getTitle())
                 .description(games.getDescription())
-                .isNamePublic(games.getIsNamePublic())
+                .isNamePrivate(games.getIsNamePrivate())
                 .accessType(games.getAccessType())
                 .inviteCode(games.getGameInviteCode().getInviteCode())
                 .category(games.getCategory())

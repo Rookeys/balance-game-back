@@ -16,7 +16,7 @@ public class Games {
     private final Long id;
     private String title;
     private String description;
-    private Boolean isNamePublic;
+    private Boolean isNamePrivate;
     private AccessType accessType;
     private Category category;
     private final Users users;
@@ -24,13 +24,13 @@ public class Games {
     private List<GameResources> gameResources;
 
     @Builder
-    public Games(Long id, String title, String description, Boolean isNamePublic, AccessType accessType,
+    public Games(Long id, String title, String description, Boolean isNamePrivate, AccessType accessType,
                  Category category, Users users, GameInviteCode gameInviteCode,
                  List<GameResources> gameResources) {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.isNamePublic = isNamePublic;
+        this.isNamePrivate = isNamePrivate;
         this.accessType = accessType;
         this.category = category;
         this.users = users;
@@ -41,7 +41,7 @@ public class Games {
     public void update(GameRequest gameRequest) {
         this.title = gameRequest.getTitle();
         this.description = gameRequest.getDescription();
-        this.isNamePublic = gameRequest.isNamePublic();
+        this.isNamePrivate = gameRequest.isNamePrivate();
         this.accessType = gameRequest.getAccessType();
         this.category = gameRequest.getCategory();
     }

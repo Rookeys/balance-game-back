@@ -49,7 +49,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.description,
                         games.users.nickname,
                         images.fileUrl,
-                        games.isNamePublic,
+                        games.isNamePrivate,
                         games.createdDate,
                         games.category
                 ).from(games)
@@ -68,11 +68,11 @@ public class GameListRepositoryImpl implements GameListRepository {
             String description = tuple.get(games.description);
             String nickname = tuple.get(games.users.nickname);
             String profileImageUrl = tuple.get(images.fileUrl);
-            boolean isPublic = Boolean.TRUE.equals(tuple.get(games.isNamePublic));
+            boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
             Category category = tuple.get(games.category);
 
-            if (isPublic) {
+            if (isPrivate) {
                 nickname = "익명";
             }
 
