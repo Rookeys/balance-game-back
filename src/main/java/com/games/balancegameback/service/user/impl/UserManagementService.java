@@ -4,6 +4,7 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.media.Images;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.user.LoginResponse;
 import com.games.balancegameback.dto.user.SignUpRequest;
@@ -40,6 +41,7 @@ public class UserManagementService {
 
         if (signUpRequest.getImage() != null) {
             Images images = Images.builder()
+                    .mediaType(MediaType.IMAGE)
                     .fileUrl(signUpRequest.getImage())
                     .users(users)
                     .build();

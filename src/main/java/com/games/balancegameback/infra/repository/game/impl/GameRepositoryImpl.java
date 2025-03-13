@@ -5,6 +5,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.Games;
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
@@ -21,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,7 +87,8 @@ public class GameRepositoryImpl implements GameRepository {
                         games.description,
                         games.users.nickname,
                         images.fileUrl,
-                        games.createdDate
+                        games.createdDate,
+                        games.category
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
@@ -105,6 +106,7 @@ public class GameRepositoryImpl implements GameRepository {
             String nickname = tuple.get(games.users.nickname);
             String profileImageUrl = tuple.get(images.fileUrl);
             OffsetDateTime createdAt = tuple.get(games.createdDate);
+            Category category = tuple.get(games.category);
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
@@ -157,6 +159,7 @@ public class GameRepositoryImpl implements GameRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
+                    .category(category)
                     .createdAt(createdAt)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)

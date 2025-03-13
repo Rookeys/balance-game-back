@@ -2,6 +2,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameListSelectionResponse;
@@ -49,7 +50,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.users.nickname,
                         images.fileUrl,
                         games.isNamePublic,
-                        games.createdDate
+                        games.createdDate,
+                        games.category
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
@@ -68,6 +70,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             String profileImageUrl = tuple.get(images.fileUrl);
             boolean isPublic = Boolean.TRUE.equals(tuple.get(games.isNamePublic));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
+            Category category = tuple.get(games.category);
 
             if (isPublic) {
                 nickname = "익명";
@@ -124,6 +127,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
+                    .category(category)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
                     .createdAt(createdAt)
