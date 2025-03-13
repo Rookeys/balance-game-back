@@ -1,7 +1,6 @@
 package com.games.balancegameback.service.user.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
-import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.media.enums.MediaType;
