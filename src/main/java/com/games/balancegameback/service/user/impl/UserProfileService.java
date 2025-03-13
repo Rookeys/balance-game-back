@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.user.impl;
 
 import com.games.balancegameback.domain.media.Images;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
@@ -50,8 +51,9 @@ public class UserProfileService {
                 imageRepository.update(images);
             } else {                // 프로필 사진을 처음 등록할 시
                 images = Images.builder()
-                        .fileUrl(userRequest.getUrl())
+                        .mediaType(MediaType.IMAGE)
                         .users(users)
+                        .fileUrl(userRequest.getUrl())
                         .build();
 
                 imageRepository.save(images);
