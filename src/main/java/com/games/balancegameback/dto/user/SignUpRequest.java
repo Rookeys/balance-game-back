@@ -41,4 +41,8 @@ public class SignUpRequest {
                 .userRole(UserRole.USER)
                 .build();
     }
+
+    public void update(String nickname) {
+        this.nickname = nickname;
+    }
 }

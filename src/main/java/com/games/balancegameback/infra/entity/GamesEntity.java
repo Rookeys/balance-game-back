@@ -26,7 +26,7 @@ public class GamesEntity extends BaseTimeEntity {
     private String description;
 
     @Column(nullable = false)
-    private Boolean isNamePublic;
+    private Boolean isNamePrivate;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -56,7 +56,7 @@ public class GamesEntity extends BaseTimeEntity {
         gamesEntity.id = games.getId() == null ? null : games.getId();
         gamesEntity.title = games.getTitle();
         gamesEntity.description = games.getDescription();
-        gamesEntity.isNamePublic = games.getIsNamePublic();
+        gamesEntity.isNamePrivate = games.getIsNamePrivate();
         gamesEntity.accessType = games.getAccessType();
         gamesEntity.category = games.getCategory();
         gamesEntity.users = UsersEntity.from(games.getUsers());
@@ -78,7 +78,7 @@ public class GamesEntity extends BaseTimeEntity {
                 .id(id)
                 .title(title)
                 .description(description)
-                .isNamePublic(isNamePublic)
+                .isNamePrivate(isNamePrivate)
                 .accessType(accessType)
                 .category(category)
                 .users(users.toModel())
@@ -95,7 +95,7 @@ public class GamesEntity extends BaseTimeEntity {
     public void update(Games games) {
         this.title = games.getTitle();
         this.description = games.getDescription();
-        this.isNamePublic = games.getIsNamePublic();
+        this.isNamePrivate = games.getIsNamePrivate();
         this.accessType = games.getAccessType();
         this.category = games.getCategory();
     }

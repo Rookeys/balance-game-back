@@ -18,7 +18,7 @@ public class Users {
 
     @Builder
     public Users(String uid, String nickname, String email, LoginType loginType, UserRole userRole, boolean isDeleted) {
-        this.uid = uid.isEmpty() ? String.valueOf(UUID.randomUUID()) : uid;
+        this.uid = uid == null ? String.valueOf(UUID.randomUUID()) : uid;
         this.nickname = nickname;
         this.email = email;
         this.loginType = loginType;

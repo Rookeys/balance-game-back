@@ -39,7 +39,7 @@ public class GameRoomService {
                 .description(gameRequest.getDescription())
                 .accessType(gameRequest.getAccessType())
                 .category(gameRequest.getCategory())
-                .isNamePublic(gameRequest.isNamePublic())
+                .isNamePrivate(gameRequest.isNamePrivate())
                 .users(users)
                 .build();
 
