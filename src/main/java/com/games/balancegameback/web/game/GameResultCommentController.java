@@ -34,20 +34,19 @@ public class GameResultCommentController {
     })
     @GetMapping(value = "/{gameId}/results/comments")
     public CustomPageImpl<GameResultCommentResponse> getParentCommentsByGameResource(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
+            @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "15") int size,
 
-            @Parameter(name = "content", description = "검색할 댓글 내용", example = "LGTM!")
+            @Parameter(name = "content", description = "검색할 댓글 내용")
             @RequestParam(name = "content", required = false) String content,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "likeDesc",
                     schema = @Schema(implementation = CommentSortType.class))
             @RequestParam(name = "sortType", required = false, defaultValue = "resent") CommentSortType sortType,
 
@@ -73,7 +72,7 @@ public class GameResultCommentController {
     @PostMapping(value = "/{gameId}/results/comments")
     public ResponseEntity<Boolean> addResultComment(
 
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "5")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid GameResultCommentRequest commentRequest,
@@ -94,10 +93,10 @@ public class GameResultCommentController {
     })
     @PutMapping(value = "/{gameId}/results/comments/{commentId}")
     public ResponseEntity<Boolean> updateResultComment(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "commentId", description = "댓글의 ID", required = true, example = "5")
+            @Parameter(name = "commentId", description = "댓글의 ID", required = true)
             @PathVariable(name = "commentId") Long commentId,
 
             @RequestBody @Valid GameResultCommentRequest commentRequest,
@@ -117,10 +116,10 @@ public class GameResultCommentController {
     })
     @DeleteMapping(value = "/{gameId}/results/comments/{commentId}")
     public ResponseEntity<Boolean> deleteResourceComment(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "commentId", description = "댓글의 ID", required = true, example = "5")
+            @Parameter(name = "commentId", description = "댓글의 ID", required = true)
             @PathVariable(name = "commentId") Long commentId,
 
             HttpServletRequest request) {

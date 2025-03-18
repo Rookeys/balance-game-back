@@ -25,7 +25,7 @@ public class GameListResponse {
     @Schema(description = "설명")
     private String description;
 
-    @Schema(description = "카테고리")
+    @Schema(description = "카테고리", name = "Category")
     private Category category;
 
     @Schema(description = "총 플레이 횟수")

@@ -64,23 +64,21 @@ public class UserProfileController {
     })
     @GetMapping(value = "/games")
     public CustomPageImpl<GameListResponse> getMyGameList(
-            @Parameter(name = "cursorId", description = "커서 ID", example = "4")
+            @Parameter(name = "cursorId", description = "커서 ID")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "15") int size,
 
-            @Parameter(name = "title", description = "검색할 리소스 제목", example = "포메")
+            @Parameter(name = "title", description = "검색할 리소스 제목")
             @RequestParam(name = "title", required = false) String title,
 
             @Parameter(name = "category", description = "카테고리",
-                    example = "FUN",
                     schema = @Schema(implementation = Category.class))
             @RequestParam(name = "category", required = false) Category category,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "recent",
-                    schema = @Schema(allowableValues = {"old", "recent"}))
+                    schema = @Schema(implementation = GameSortType.class))
             @RequestParam(name = "sortType", required = false, defaultValue = "recent") GameSortType sortType,
 
             HttpServletRequest request) {

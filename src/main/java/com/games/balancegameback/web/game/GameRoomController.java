@@ -46,7 +46,7 @@ public class GameRoomController {
     })
     @GetMapping(value = "/{gameId}")
     public GameResponse getGameStatus(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             HttpServletRequest request) {
@@ -62,7 +62,7 @@ public class GameRoomController {
     })
     @PutMapping(value = "/{gameId}")
     public ResponseEntity<Boolean> updateGameStatus(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid GameRequest gameRequest,
@@ -79,7 +79,7 @@ public class GameRoomController {
     })
     @DeleteMapping(value = "/{gameId}")
     public ResponseEntity<Boolean> deleteGame(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             HttpServletRequest request) {

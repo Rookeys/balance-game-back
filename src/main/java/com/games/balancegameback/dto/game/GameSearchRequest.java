@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GameSearchRequest {
 
-    @Schema(description = "검색하려는 타이틀", example = "포메")
+    @Schema(description = "검색하려는 타이틀")
     private String title;
 
-    @Schema(description = "정렬 옵션", implementation = GameSortType.class, example = "playDesc")
+    @Schema(description = "정렬 옵션", implementation = GameSortType.class, name = "GameSortType")
     private GameSortType sortType = GameSortType.recent;
 
-    @Schema(description = "카테고리", implementation = Category.class, example = "FUN")
+    @Schema(description = "카테고리", implementation = Category.class, name = "Category")
     private Category category;
 }

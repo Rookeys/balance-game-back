@@ -32,7 +32,7 @@ public class GamePlayController {
     })
     @GetMapping(value = "/{gameId}/play")
     public ResponseEntity<GameInfoResponse> getGameDetails(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId) {
 
         return ResponseEntity.status(HttpStatus.OK).body(gameService.getGameDetails(gameId));
@@ -46,13 +46,13 @@ public class GamePlayController {
     })
     @GetMapping(value = "/{gameId}/play/{playId}")
     public ResponseEntity<GamePlayResponse> continuePlayRoom(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "playId", description = "플레이룸의 ID", required = true, example = "5")
+            @Parameter(name = "playId", description = "플레이룸의 ID", required = true)
             @PathVariable(name = "playId") Long playId,
 
-            @Parameter(name = "inviteCode", description = "초대 코드", example = "XM2010")
+            @Parameter(name = "inviteCode", description = "초대 코드")
             @RequestParam(name = "inviteCode", required = false) String inviteCode,
 
             HttpServletRequest request) {
@@ -69,7 +69,7 @@ public class GamePlayController {
     })
     @PostMapping(value = "/{gameId}/play")
     public ResponseEntity<GamePlayResponse> createPlayRoom(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid GamePlayRoundRequest gamePlayRequest,
@@ -88,10 +88,10 @@ public class GamePlayController {
     })
     @PutMapping(value = "/{gameId}/play/{playId}")
     public ResponseEntity<GamePlayResponse> updatePlayRoom(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "playId", description = "플레이룸의 ID", required = true, example = "6")
+            @Parameter(name = "playId", description = "플레이룸의 ID", required = true)
             @PathVariable(name = "playId") Long playId,
 
             @RequestBody @Valid GamePlayRequest gamePlayRequest) {

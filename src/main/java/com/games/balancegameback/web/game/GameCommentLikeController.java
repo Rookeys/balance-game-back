@@ -30,7 +30,7 @@ public class GameCommentLikeController {
     })
     @PostMapping(value = "/comments/{commentId}/likes")
     public ResponseEntity<Boolean> toggleLike(
-            @Parameter(name = "commentId", description = "댓글 ID", required = true, example = "3")
+            @Parameter(name = "commentId", description = "댓글 ID", required = true)
             @PathVariable(name = "commentId") Long commentId,
 
             @RequestBody @Valid GameCommentLikeRequest likeRequest,
