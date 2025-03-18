@@ -1,5 +1,5 @@
 package com.games.balancegameback.domain.game.enums;
 
 public enum GameSortType {
-    old, recent, playDesc, week, month
+    OLD, RECENT, PLAY_DESC, WEEK, MONTH
 }

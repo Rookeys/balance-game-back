@@ -12,13 +12,13 @@ public class GameSortTypeConverter implements Converter<String, GameSortType> {
     @Nullable
     public GameSortType convert(@Nullable String source) {
         if (source == null || source.isBlank()) {
-            return GameSortType.recent;
+            return GameSortType.RECENT;
         }
 
         try {
-            return GameSortType.valueOf(source.toUpperCase());
+            return GameSortType.valueOf(source);
         } catch (IllegalArgumentException e) {
-            return GameSortType.recent;
+            return GameSortType.RECENT;
         }
     }
 }

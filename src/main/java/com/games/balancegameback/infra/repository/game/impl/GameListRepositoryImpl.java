@@ -157,20 +157,20 @@ public class GameListRepositoryImpl implements GameListRepository {
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
                             GameSearchRequest request, QGamesEntity games, QGameResultsEntity results) {
-        if (cursorId != null && request.getSortType().equals(GameSortType.old)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameSortType.recent)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.RECENT)) {
             builder.and(games.id.lt(cursorId));
         }
 
-        if (request.getSortType().equals(GameSortType.week)) {
+        if (request.getSortType().equals(GameSortType.WEEK)) {
             builder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
             totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
         }
 
-        if (request.getSortType().equals(GameSortType.month)) {
+        if (request.getSortType().equals(GameSortType.MONTH)) {
             builder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
             totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
         }
@@ -191,8 +191,8 @@ public class GameListRepositoryImpl implements GameListRepository {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
         return switch (sortType) {
-            case old -> games.id.asc();
-            case week, month, playDesc -> games.gamePlayList.size().desc();
+            case OLD -> games.id.asc();
+            case WEEK, MONTH, PLAY_DESC -> games.gamePlayList.size().desc();
             default -> games.id.desc();
         };
     }
