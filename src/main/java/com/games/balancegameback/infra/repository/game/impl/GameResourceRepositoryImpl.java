@@ -167,16 +167,16 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
                             GameResourceSearchRequest request,
                             QGameResourcesEntity resources) {
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.old)) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.OLD)) {
             builder.and(resources.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.resent)) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.RESENT)) {
             builder.and(resources.id.lt(cursorId));
         }
 
-        if (request.getSortType().equals(GameResourceSortType.winRateDesc) ||
-                request.getSortType().equals(GameResourceSortType.winRateAsc)) {
+        if (request.getSortType().equals(GameResourceSortType.WIN_RATE_DESC) ||
+                request.getSortType().equals(GameResourceSortType.WIN_RATE_ASC)) {
             this.applyOtherSortOptions(builder, cursorId, request, resources);
         }
 
@@ -190,9 +190,9 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
 
         return switch (gameResourceSortType) {
-            case winRateAsc -> resources.winningLists.size().asc();
-            case winRateDesc -> resources.winningLists.size().desc();
-            case resent -> resources.id.desc();
+            case WIN_RATE_ASC -> resources.winningLists.size().asc();
+            case WIN_RATE_DESC -> resources.winningLists.size().desc();
+            case RESENT -> resources.id.desc();
             default -> resources.id.asc();
         };
     }
@@ -224,7 +224,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
             return;
         }
 
-        if (request.getSortType().equals(GameResourceSortType.winRateDesc)) {
+        if (request.getSortType().equals(GameResourceSortType.WIN_RATE_DESC)) {
             builder.and(
                     new BooleanBuilder()
                             .or(winningNums.lt(cursorWinningNums))
@@ -232,7 +232,7 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
             );
         }
 
-        if (request.getSortType().equals(GameResourceSortType.winRateAsc)) {
+        if (request.getSortType().equals(GameResourceSortType.WIN_RATE_ASC)) {
             builder.and(
                     new BooleanBuilder()
                             .or(winningNums.gt(cursorWinningNums))

@@ -12,13 +12,13 @@ public class CommentSortTypeConverter implements Converter<String, CommentSortTy
     @Nullable
     public CommentSortType convert(@Nullable String source) {
         if (source == null || source.isBlank()) {
-            return CommentSortType.resent;
+            return CommentSortType.RECENT;
         }
 
         try {
             return CommentSortType.valueOf(source.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return CommentSortType.resent;
+            return CommentSortType.RECENT;
         }
     }
 }

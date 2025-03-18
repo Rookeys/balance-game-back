@@ -18,7 +18,7 @@ public class GameSearchRequest {
     private String title;
 
     @Schema(description = "정렬 옵션", implementation = GameSortType.class, name = "GameSortType")
-    private GameSortType sortType = GameSortType.recent;
+    private GameSortType sortType;
 
     @Schema(description = "카테고리", implementation = Category.class, name = "Category")
     private Category category;
