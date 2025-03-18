@@ -32,23 +32,21 @@ public class GameListController {
     @GetMapping(value = "/list")
     public CustomPageImpl<GameListResponse> getMainGameList(
 
-            @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)", example = "15")
+            @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "15") int size,
 
-            @Parameter(name = "title", description = "검색할 리소스 제목", example = "스페셜 아이템")
+            @Parameter(name = "title", description = "검색할 리소스 제목")
             @RequestParam(name = "title", required = false) String title,
 
             @Parameter(name = "category", description = "카테고리",
-                    example = "FUN",
-                    schema = @Schema(implementation = Category.class))
+                    schema = @Schema(implementation = Category.class, name = "Category"))
             @RequestParam(name = "category", required = false) Category category,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "recent",
-                    schema = @Schema(implementation = GameSortType.class))
+                    schema = @Schema(implementation = GameSortType.class, name = "GameSortType"))
             @RequestParam(name = "sortType", required = false, defaultValue = "recent") GameSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);

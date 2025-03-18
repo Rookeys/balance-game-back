@@ -62,7 +62,7 @@ public class UserManagementController {
     })
     @GetMapping(value = "/exists")
     public Boolean existsByNickname(
-            @Parameter(name = "nickname", description = "유저 닉네임", required = true, example = "testUser")
+            @Parameter(name = "nickname", description = "유저 닉네임", required = true)
             @RequestParam(name = "nickname") String nickname) {
         return userService.existsByNickname(nickname);
     }

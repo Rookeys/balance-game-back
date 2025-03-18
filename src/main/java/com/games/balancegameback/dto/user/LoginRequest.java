@@ -14,7 +14,7 @@ public class LoginRequest {
     @NotBlank(message = "이메일은 비어 있을 수 없습니다.")
     private String email;
 
-    @Schema(description = "로그인 종류", example = "KAKAO / GOOGLE")
+    @Schema(description = "로그인 종류", implementation = LoginType.class)
     @NotBlank(message = "로그인 타입은 비어 있을 수 없습니다.")
     private LoginType loginType;
 

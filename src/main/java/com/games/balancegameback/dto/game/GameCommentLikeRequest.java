@@ -14,11 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GameCommentLikeRequest {
 
-    @Schema(description = "좋아요 신청/취소", example = "true")
+    @Schema(description = "좋아요 신청/취소")
     @NotBlank
     private boolean isLiked;
 
-    @Schema(description = "댓글 종류", allowableValues = {"RESOURCE", "RESULT"}, example = "RESOURCE")
+    @Schema(description = "댓글 종류", implementation = CommentType.class)
     @NotBlank
     private CommentType sortType;
 }

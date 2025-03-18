@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GameCommentSearchRequest {
 
-    @Schema(description = "검색하려는 내용", example = "포메")
+    @Schema(description = "검색하려는 내용")
     private String content;
 
-    @Schema(description = "정렬 옵션", implementation = CommentSortType.class, example = "resent")
+    @Schema(description = "정렬 옵션", implementation = CommentSortType.class)
     private CommentSortType sortType;
 }

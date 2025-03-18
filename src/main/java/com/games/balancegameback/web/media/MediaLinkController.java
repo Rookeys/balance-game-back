@@ -29,7 +29,7 @@ public class MediaLinkController {
     })
     @PostMapping(value = "/games/{gameId}/media/links")
     public ResponseEntity<Boolean> saveLink(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "12345")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid LinkRequest linkRequest,
