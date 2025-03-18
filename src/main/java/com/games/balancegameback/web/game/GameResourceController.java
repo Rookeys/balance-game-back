@@ -67,7 +67,7 @@ public class GameResourceController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     schema = @Schema(implementation = GameResourceSortType.class))
-            @RequestParam(name = "sortType", required = false, defaultValue = "resent") GameResourceSortType sortType,
+            @RequestParam(name = "sortType", required = false) GameResourceSortType sortType,
 
             HttpServletRequest request) {
 
