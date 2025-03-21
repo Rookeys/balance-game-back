@@ -48,7 +48,7 @@ public class GameResultCommentController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     schema = @Schema(implementation = CommentSortType.class))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") CommentSortType sortType,
 
             HttpServletRequest request) {
 

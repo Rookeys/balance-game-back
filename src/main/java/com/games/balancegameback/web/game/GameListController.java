@@ -47,7 +47,7 @@ public class GameListController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     schema = @Schema(implementation = GameSortType.class, name = "GameSortType"))
-            @RequestParam(name = "sortType", required = false) GameSortType sortType) {
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);
         GameSearchRequest searchRequest = GameSearchRequest.builder()

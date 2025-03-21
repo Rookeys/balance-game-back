@@ -22,6 +22,9 @@ public class GameResponse {
     @Schema(description = "익명 여부")
     private boolean isNamePrivate;
 
+    @Schema(description = "썸네일 블라인드 여부")
+    private boolean isBlind;
+
     @Schema(description = "접근 권한")
     private AccessType accessType;
 
