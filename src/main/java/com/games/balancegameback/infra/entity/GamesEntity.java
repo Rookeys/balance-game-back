@@ -29,6 +29,9 @@ public class GamesEntity extends BaseTimeEntity {
     private Boolean isNamePrivate;
 
     @Column(nullable = false)
+    private Boolean isBlind;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private AccessType accessType;
 
@@ -79,6 +82,7 @@ public class GamesEntity extends BaseTimeEntity {
                 .title(title)
                 .description(description)
                 .isNamePrivate(isNamePrivate)
+                .isBlind(isBlind)
                 .accessType(accessType)
                 .category(category)
                 .users(users.toModel())
@@ -96,6 +100,7 @@ public class GamesEntity extends BaseTimeEntity {
         this.title = games.getTitle();
         this.description = games.getDescription();
         this.isNamePrivate = games.getIsNamePrivate();
+        this.isBlind = games.getIsBlind();
         this.accessType = games.getAccessType();
         this.category = games.getCategory();
     }

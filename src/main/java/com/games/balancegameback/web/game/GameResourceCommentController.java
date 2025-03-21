@@ -48,9 +48,8 @@ public class GameResourceCommentController {
             @RequestParam(name = "content", required = false) String content,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "likeDesc",
                     schema = @Schema(implementation = CommentSortType.class))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") CommentSortType sortType,
 
             HttpServletRequest request) {
 
@@ -85,9 +84,8 @@ public class GameResourceCommentController {
             @RequestParam(name = "content", required = false) String content,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "resent",
                     schema = @Schema(implementation = CommentSortType.class))
-            @RequestParam(name = "sortType", required = false) CommentSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") CommentSortType sortType,
 
             HttpServletRequest request) {
 

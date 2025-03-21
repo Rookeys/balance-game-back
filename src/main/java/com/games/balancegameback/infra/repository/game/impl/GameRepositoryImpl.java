@@ -52,6 +52,7 @@ public class GameRepositoryImpl implements GameRepository {
                 .title(games.getTitle())
                 .description(games.getDescription())
                 .isNamePrivate(games.getIsNamePrivate())
+                .isBlind(games.getIsBlind())
                 .accessType(games.getAccessType())
                 .inviteCode(games.getGameInviteCode().getInviteCode())
                 .category(games.getCategory())
@@ -88,7 +89,8 @@ public class GameRepositoryImpl implements GameRepository {
                         games.users.nickname,
                         images.fileUrl,
                         games.createdDate,
-                        games.category
+                        games.category,
+                        games.isBlind
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
@@ -107,6 +109,7 @@ public class GameRepositoryImpl implements GameRepository {
             String profileImageUrl = tuple.get(images.fileUrl);
             OffsetDateTime createdAt = tuple.get(games.createdDate);
             Category category = tuple.get(games.category);
+            Boolean isBlind = tuple.get(games.isBlind);
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
@@ -160,6 +163,7 @@ public class GameRepositoryImpl implements GameRepository {
                     .title(title)
                     .description(description)
                     .category(category)
+                    .isBlind(isBlind)
                     .createdAt(createdAt)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)

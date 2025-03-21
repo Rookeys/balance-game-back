@@ -79,7 +79,7 @@ public class UserProfileController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     schema = @Schema(implementation = GameSortType.class))
-            @RequestParam(name = "sortType", required = false) GameSortType sortType,
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameSortType sortType,
 
             HttpServletRequest request) {
 

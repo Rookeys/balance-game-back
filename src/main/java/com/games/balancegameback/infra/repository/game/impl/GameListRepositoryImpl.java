@@ -51,7 +51,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         images.fileUrl,
                         games.isNamePrivate,
                         games.createdDate,
-                        games.category
+                        games.category,
+                        games.isBlind
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
@@ -71,6 +72,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
             Category category = tuple.get(games.category);
+            Boolean isBlind = tuple.get(games.isBlind);
 
             if (isPrivate) {
                 nickname = "익명";
@@ -128,6 +130,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .title(title)
                     .description(description)
                     .category(category)
+                    .isBlind(isBlind)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
                     .createdAt(createdAt)
