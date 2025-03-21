@@ -30,22 +30,21 @@ public class GameResultController {
     })
     @GetMapping(value = "/{gameId}/results")
     public CustomPageImpl<GameResultResponse> getResultRanking(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "3")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "cursorId", description = "커서 ID", example = "4")
+            @Parameter(name = "cursorId", description = "커서 ID")
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
-            @Parameter(name = "size", description = "한 페이지 당 출력 개수", example = "10")
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "15") int size,
 
-            @Parameter(name = "title", description = "검색할 리소스 제목", example = "포메")
+            @Parameter(name = "title", description = "검색할 리소스 제목")
             @RequestParam(name = "title", required = false) String title,
 
             @Parameter(name = "sortType", description = "정렬 방식",
-                    example = "winRateDesc",
                     schema = @Schema(implementation = GameResourceSortType.class))
-            @RequestParam(name = "sortType", required = false, defaultValue = "resent") GameResourceSortType sortType) {
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameResourceSortType sortType) {
 
         Pageable pageable = PageRequest.of(0, size);
         GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()

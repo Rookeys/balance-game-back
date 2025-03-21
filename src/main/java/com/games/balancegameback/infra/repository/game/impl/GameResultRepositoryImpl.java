@@ -114,16 +114,16 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                             GameResourceSearchRequest request) {
         QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
 
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.old)) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.OLD)) {
             builder.and(gameResources.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.resent)) {
+        if (cursorId != null && request.getSortType().equals(GameResourceSortType.RESENT)) {
             builder.and(gameResources.id.lt(cursorId));
         }
 
-        if (request.getSortType().equals(GameResourceSortType.winRateDesc) ||
-                request.getSortType().equals(GameResourceSortType.winRateAsc)) {    // resource repository 로직 재사용
+        if (request.getSortType().equals(GameResourceSortType.WIN_RATE_DESC) ||
+                request.getSortType().equals(GameResourceSortType.WIN_RATE_ASC)) {    // resource repository 로직 재사용
             gameResourceRepository.applyOtherSortOptions(builder, cursorId, request, gameResources);
         }
 

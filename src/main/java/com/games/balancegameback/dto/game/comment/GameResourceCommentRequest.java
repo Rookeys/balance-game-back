@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GameResourceCommentRequest {
 
-    @Schema(description = "부모 댓글 Id", example = "3")
+    @Schema(description = "부모 댓글 Id")
     private Long parentId;
 
     @Schema(description = "댓글")

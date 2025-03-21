@@ -107,15 +107,15 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
                             QGameResultCommentsEntity comments) {
-        if (cursorId != null && request.getSortType().equals(CommentSortType.old)) {
+        if (cursorId != null && request.getSortType().equals(CommentSortType.OLD)) {
             builder.and(comments.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(CommentSortType.resent)) {
+        if (cursorId != null && request.getSortType().equals(CommentSortType.RECENT)) {
             builder.and(comments.id.lt(cursorId));
         }
 
-        if (request.getSortType().equals(CommentSortType.likeDesc) || request.getSortType().equals(CommentSortType.likeAsc)) {
+        if (request.getSortType().equals(CommentSortType.LIKE_DESC) || request.getSortType().equals(CommentSortType.LIKE_ASC)) {
             this.applyOtherSortOptions(builder, cursorId, request, comments);
         }
 
@@ -142,7 +142,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
             return;
         }
 
-        if (request.getSortType().equals(CommentSortType.likeDesc)) {
+        if (request.getSortType().equals(CommentSortType.LIKE_DESC)) {
             builder.and(
                     new BooleanBuilder()
                             .or(likeCount.lt(cursorLikeCount))
@@ -150,7 +150,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
             );
         }
 
-        if (request.getSortType().equals(CommentSortType.likeAsc)) {
+        if (request.getSortType().equals(CommentSortType.LIKE_ASC)) {
             builder.and(
                     new BooleanBuilder()
                             .or(likeCount.gt(cursorLikeCount))
@@ -164,9 +164,9 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
 
         return switch (sortType) {
-            case likeAsc -> comments.likes.size().asc();
-            case likeDesc -> comments.likes.size().desc();
-            case resent -> comments.id.desc();
+            case LIKE_ASC -> comments.likes.size().asc();
+            case LIKE_DESC -> comments.likes.size().desc();
+            case RECENT -> comments.id.desc();
             default -> comments.id.asc();
         };
     }

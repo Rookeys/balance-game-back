@@ -2,6 +2,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameListSelectionResponse;
@@ -48,8 +49,10 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.description,
                         games.users.nickname,
                         images.fileUrl,
-                        games.isNamePublic,
-                        games.createdDate
+                        games.isNamePrivate,
+                        games.createdDate,
+                        games.category,
+                        games.isBlind
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
@@ -66,10 +69,12 @@ public class GameListRepositoryImpl implements GameListRepository {
             String description = tuple.get(games.description);
             String nickname = tuple.get(games.users.nickname);
             String profileImageUrl = tuple.get(images.fileUrl);
-            boolean isPublic = Boolean.TRUE.equals(tuple.get(games.isNamePublic));
+            boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
+            Category category = tuple.get(games.category);
+            Boolean isBlind = tuple.get(games.isBlind);
 
-            if (isPublic) {
+            if (isPrivate) {
                 nickname = "익명";
             }
 
@@ -124,6 +129,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
+                    .category(category)
+                    .isBlind(isBlind)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
                     .createdAt(createdAt)
@@ -153,20 +160,20 @@ public class GameListRepositoryImpl implements GameListRepository {
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
                             GameSearchRequest request, QGamesEntity games, QGameResultsEntity results) {
-        if (cursorId != null && request.getSortType().equals(GameSortType.old)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameSortType.recent)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.RECENT)) {
             builder.and(games.id.lt(cursorId));
         }
 
-        if (request.getSortType().equals(GameSortType.week)) {
+        if (request.getSortType().equals(GameSortType.WEEK)) {
             builder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
             totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
         }
 
-        if (request.getSortType().equals(GameSortType.month)) {
+        if (request.getSortType().equals(GameSortType.MONTH)) {
             builder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
             totalBuilder.and(results.createdDate.isNull().or(results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
         }
@@ -187,8 +194,8 @@ public class GameListRepositoryImpl implements GameListRepository {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
         return switch (sortType) {
-            case old -> games.id.asc();
-            case week, month, playDesc -> games.gamePlayList.size().desc();
+            case OLD -> games.id.asc();
+            case WEEK, MONTH, PLAY_DESC -> games.gamePlayList.size().desc();
             default -> games.id.desc();
         };
     }

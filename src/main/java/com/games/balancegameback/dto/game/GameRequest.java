@@ -20,7 +20,11 @@ public class GameRequest {
 
     @Schema(description = "익명 여부")
     @NotBlank(message = "익명 여부 결정은 필수입니다.")
-    private boolean isNamePublic;
+    private boolean isNamePrivate;
+
+    @Schema(description = "썸네일 블라인드 여부")
+    @NotBlank(message = "썸네일 블라인드 여부 결정은 필수입니다.")
+    private boolean isBlind;
 
     @Schema(description = "접근 레벨 설정")
     @NotBlank(message = "접근 레벨 설정은 필수입니다.")

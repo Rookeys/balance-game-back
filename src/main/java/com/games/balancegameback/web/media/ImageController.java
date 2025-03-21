@@ -29,7 +29,7 @@ public class ImageController {
     })
     @PostMapping(value = "/games/{gameId}/media/images")
     public ResponseEntity<Boolean> saveImageForGame(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true, example = "13")
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid ImageRequest imageRequest,

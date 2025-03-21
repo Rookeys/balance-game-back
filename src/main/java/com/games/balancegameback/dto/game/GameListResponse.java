@@ -1,5 +1,6 @@
 package com.games.balancegameback.dto.game;
 
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.dto.user.UserMainResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,12 @@ public class GameListResponse {
 
     @Schema(description = "설명")
     private String description;
+
+    @Schema(description = "썸네일 블라인드 여부")
+    private Boolean isBlind;
+
+    @Schema(description = "카테고리", name = "Category")
+    private Category category;
 
     @Schema(description = "총 플레이 횟수")
     private int totalPlayNums;

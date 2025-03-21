@@ -1,5 +1,5 @@
 package com.games.balancegameback.domain.game.enums;
 
 public enum GameResourceSortType {
-    winRateAsc, winRateDesc, old, resent
+    WIN_RATE_ASC, WIN_RATE_DESC, OLD, RESENT
 }

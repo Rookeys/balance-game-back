@@ -3,6 +3,7 @@ package com.games.balancegameback.service.user.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.media.Images;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.LoginType;
 import com.games.balancegameback.domain.user.enums.UserRole;
@@ -48,6 +49,7 @@ public class AuthService {
 
             if (response.getProfileImage() != null) {
                 Images images = Images.builder()
+                        .mediaType(MediaType.IMAGE)
                         .fileUrl(response.getProfileImage())
                         .users(user)
                         .build();
@@ -103,7 +105,7 @@ public class AuthService {
         return userUtils.getTokenValidTime(accessToken, refreshToken);
     }
 
-    private String createUniqueNickname() {
+    public String createUniqueNickname() {
         // 형용사 목록
         String[] adjectives = {"노래하는", "춤추는", "달리는", "웃는", "뛰어노는", "생각하는", "그림 그리는", "게임하는"};
 

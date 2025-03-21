@@ -5,6 +5,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.Games;
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
@@ -21,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,7 +51,8 @@ public class GameRepositoryImpl implements GameRepository {
                 .roomId(roomId)
                 .title(games.getTitle())
                 .description(games.getDescription())
-                .isNamePublic(games.getIsNamePublic())
+                .isNamePrivate(games.getIsNamePrivate())
+                .isBlind(games.getIsBlind())
                 .accessType(games.getAccessType())
                 .inviteCode(games.getGameInviteCode().getInviteCode())
                 .category(games.getCategory())
@@ -87,7 +88,9 @@ public class GameRepositoryImpl implements GameRepository {
                         games.description,
                         games.users.nickname,
                         images.fileUrl,
-                        games.createdDate
+                        games.createdDate,
+                        games.category,
+                        games.isBlind
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
@@ -105,6 +108,8 @@ public class GameRepositoryImpl implements GameRepository {
             String nickname = tuple.get(games.users.nickname);
             String profileImageUrl = tuple.get(images.fileUrl);
             OffsetDateTime createdAt = tuple.get(games.createdDate);
+            Category category = tuple.get(games.category);
+            Boolean isBlind = tuple.get(games.isBlind);
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
@@ -157,6 +162,8 @@ public class GameRepositoryImpl implements GameRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
+                    .category(category)
+                    .isBlind(isBlind)
                     .createdAt(createdAt)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
@@ -220,11 +227,11 @@ public class GameRepositoryImpl implements GameRepository {
 
     private void setOptions(BooleanBuilder builder, Long cursorId,
                             GameSearchRequest request, QGamesEntity games) {
-        if (cursorId != null && request.getSortType().equals(GameSortType.old)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
 
-        if (cursorId != null && request.getSortType().equals(GameSortType.recent)) {
+        if (cursorId != null && request.getSortType().equals(GameSortType.RECENT)) {
             builder.and(games.id.lt(cursorId));
         }
 
@@ -243,7 +250,7 @@ public class GameRepositoryImpl implements GameRepository {
 
         // 나중에 조건 추가를 고려해 switch 유지
         return switch (sortType) {
-            case old -> games.id.asc();
+            case OLD -> games.id.asc();
             default -> games.id.desc();
         };
     }
