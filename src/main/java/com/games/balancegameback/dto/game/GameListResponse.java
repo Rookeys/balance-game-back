@@ -28,7 +28,7 @@ public class GameListResponse {
     @Schema(description = "썸네일 블라인드 여부")
     private Boolean isBlind;
 
-    @Schema(description = "카테고리", name = "Category")
+    @Schema(description = "카테고리")
     private Category category;
 
     @Schema(description = "총 플레이 횟수")
