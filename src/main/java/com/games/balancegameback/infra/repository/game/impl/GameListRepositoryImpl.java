@@ -32,6 +32,7 @@ public class GameListRepositoryImpl implements GameListRepository {
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
                                                         GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QUsersEntity users = QUsersEntity.usersEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
@@ -40,7 +41,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         BooleanBuilder builder = new BooleanBuilder();
         BooleanBuilder totalBuilder = new BooleanBuilder();
 
-        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, results);
+        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, users, resources, results);
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
         List<Tuple> resultTuples = jpaQueryFactory.selectDistinct(
@@ -55,6 +56,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.isBlind
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.users, users)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id)
@@ -150,6 +153,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .select(games.id.countDistinct())
                 .from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.users, users)
                 .where(totalBuilder)
                 .groupBy(games.id)
                 .having(games.gameResources.size().goe(2))
@@ -159,7 +164,8 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
-                            GameSearchRequest request, QGamesEntity games, QGameResultsEntity results) {
+                            GameSearchRequest request, QGamesEntity games, QUsersEntity users,
+                            QGameResourcesEntity resources, QGameResultsEntity results) {
         if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
@@ -184,8 +190,13 @@ public class GameListRepositoryImpl implements GameListRepository {
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(games.title.containsIgnoreCase(request.getTitle()));
-            totalBuilder.and(games.title.containsIgnoreCase(request.getTitle()));
+            builder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle()))
+                    .or(users.nickname.containsIgnoreCase(request.getTitle())).and(games.isNamePrivate.eq(false)));
+
+            totalBuilder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle()))
+                    .or(users.nickname.containsIgnoreCase(request.getTitle())).and(games.isNamePrivate.eq(false)));
         }
     }
 

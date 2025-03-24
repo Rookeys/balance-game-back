@@ -78,7 +78,7 @@ public class GameRepositoryImpl implements GameRepository {
         QLinksEntity links = QLinksEntity.linksEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
-        this.setOptions(builder, cursorId, searchRequest, games);
+        this.setOptions(builder, cursorId, searchRequest, games, resources);
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
@@ -94,6 +94,7 @@ public class GameRepositoryImpl implements GameRepository {
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id, games.title, games.description)
@@ -182,6 +183,7 @@ public class GameRepositoryImpl implements GameRepository {
         Long totalElements = jpaQueryFactory
                 .select(games.id.countDistinct())
                 .from(games)
+                .leftJoin(games.gameResources, resources)
                 .where(games.users.email.eq(users.getEmail()))
                 .fetchOne();
 
@@ -226,7 +228,7 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId,
-                            GameSearchRequest request, QGamesEntity games) {
+                            GameSearchRequest request, QGamesEntity games, QGameResourcesEntity resources) {
         if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
@@ -240,7 +242,8 @@ public class GameRepositoryImpl implements GameRepository {
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(games.title.containsIgnoreCase(request.getTitle()));
+            builder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle())));
         }
     }
 
