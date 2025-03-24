@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GameService {
@@ -124,9 +126,9 @@ public class GameService {
     }
 
     // 리소스를 삭제함
-    public void deleteResource(Long roomId, Long resourceId, HttpServletRequest request) {
+    public void deleteResource(Long roomId, List<Long> list, HttpServletRequest request) {
         this.validateRequest(roomId, request);
-        gameResourceService.deleteResource(resourceId);
+        gameResourceService.deleteResource(list);
     }
 
     // 게임 결과창 출력

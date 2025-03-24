@@ -2,6 +2,7 @@ package com.games.balancegameback.web.game;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
+import com.games.balancegameback.dto.game.GameResourceDeleteRequest;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
@@ -112,16 +113,15 @@ public class GameResourceController {
             @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다."),
             @ApiResponse(responseCode = "404", description = "해당 리소스는 없습니다.")
     })
-    @DeleteMapping(value = "/{gameId}/resources/{resourceId}")
+    @DeleteMapping(value = "/{gameId}/resources")
     public ResponseEntity<Boolean> deleteResource(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
-            @Parameter(name = "resourceId", description = "리소스의 ID", required = true)
-            @PathVariable(name = "resourceId") Long resourceId,
+            @RequestBody GameResourceDeleteRequest gameResourceDeleteRequest,
 
             HttpServletRequest request) {
-        gameService.deleteResource(gameId, resourceId, request);
+        gameService.deleteResource(gameId, gameResourceDeleteRequest.getList(), request);
         return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
     }
 }
