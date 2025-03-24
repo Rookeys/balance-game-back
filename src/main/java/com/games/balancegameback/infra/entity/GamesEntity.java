@@ -63,6 +63,7 @@ public class GamesEntity extends BaseTimeEntity {
         gamesEntity.accessType = games.getAccessType();
         gamesEntity.category = games.getCategory();
         gamesEntity.users = UsersEntity.from(games.getUsers());
+        gamesEntity.isBlind = games.getIsBlind();
 
         // GameInviteCodeEntity 설정
         if (games.getGameInviteCode() != null) {
