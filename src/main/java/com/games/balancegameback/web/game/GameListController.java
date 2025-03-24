@@ -38,7 +38,7 @@ public class GameListController {
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "15") int size,
 
-            @Parameter(name = "title", description = "검색할 리소스 제목")
+            @Parameter(name = "title", description = "검색할 내용")
             @RequestParam(name = "title", required = false) String title,
 
             @Parameter(name = "category", description = "카테고리",
