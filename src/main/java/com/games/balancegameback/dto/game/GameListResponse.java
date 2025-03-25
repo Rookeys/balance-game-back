@@ -25,7 +25,7 @@ public class GameListResponse {
     @Schema(description = "설명")
     private String description;
 
-    @Schema(description = "썸네일 블라인드 여부")
+    @Schema(description = "썸네일 블라인드 여부", name = "isBlind")
     private Boolean isBlind;
 
     @Schema(description = "카테고리")
