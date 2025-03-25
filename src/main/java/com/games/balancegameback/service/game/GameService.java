@@ -126,9 +126,15 @@ public class GameService {
     }
 
     // 리소스를 삭제함
-    public void deleteResource(Long roomId, List<Long> list, HttpServletRequest request) {
+    public void deleteResource(Long roomId, Long resourceId, HttpServletRequest request) {
         this.validateRequest(roomId, request);
-        gameResourceService.deleteResource(list);
+        gameResourceService.deleteResource(resourceId);
+    }
+
+    // 리소스를 선택 삭제함
+    public void deleteSelectResources(Long roomId, List<Long> list, HttpServletRequest request) {
+        this.validateRequest(roomId, request);
+        gameResourceService.deleteSelectResources(list);
     }
 
     // 게임 결과창 출력

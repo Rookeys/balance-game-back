@@ -91,10 +91,6 @@ public class GamesEntity extends BaseTimeEntity {
                             .isActive(this.gameInviteCode.getIsActive())
                             .build()
                         : null)
-                .categories(this.categories != null
-                        ? this.categories.stream()
-                        .map(GameCategoryEntity::toModel)
-                        .toList() : null)
                 .build();
     }
 

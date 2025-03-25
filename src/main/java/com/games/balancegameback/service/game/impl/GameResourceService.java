@@ -130,7 +130,17 @@ public class GameResourceService {
     }
 
     @Transactional
-    public void deleteResource(List<Long> list) {
+    public void deleteResource(Long resourceId) {
+        GameResources resources = gameResourceRepository.findById(resourceId);
+        gameResourceRepository.deleteById(resourceId);
+
+        if (resources.getImages() != null) {
+            s3Service.deleteImageByUrl(resources.getImages().getFileUrl());
+        }
+    }
+
+    @Transactional
+    public void deleteSelectResources(List<Long> list) {
         for (Long resourceId : list) {
             GameResources resources = gameResourceRepository.findById(resourceId);
             gameResourceRepository.deleteById(resourceId);
