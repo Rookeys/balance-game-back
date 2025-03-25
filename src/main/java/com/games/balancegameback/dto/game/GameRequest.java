@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 public class GameRequest {
@@ -35,5 +37,5 @@ public class GameRequest {
 
     @Schema(description = "카테고리 설정")
     @NotBlank(message = "카테고리 설정은 필수입니다.")
-    private Category category;
+    private List<Category> category;
 }

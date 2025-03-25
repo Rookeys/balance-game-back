@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class GameResponse {
@@ -32,5 +34,5 @@ public class GameResponse {
     private String inviteCode;
 
     @Schema(description = "카테고리 설정")
-    private Category category;
+    private List<Category> category;
 }

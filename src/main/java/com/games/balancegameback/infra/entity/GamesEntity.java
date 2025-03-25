@@ -35,10 +35,6 @@ public class GamesEntity extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private AccessType accessType;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Category category;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_uid")
     private UsersEntity users;
@@ -52,6 +48,9 @@ public class GamesEntity extends BaseTimeEntity {
     @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GamePlayEntity> gamePlayList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GameCategoryEntity> categories = new ArrayList<>();
+
     public static GamesEntity from(Games games) {
         if (games == null) return null;
 
@@ -61,7 +60,6 @@ public class GamesEntity extends BaseTimeEntity {
         gamesEntity.description = games.getDescription();
         gamesEntity.isNamePrivate = games.getIsNamePrivate();
         gamesEntity.accessType = games.getAccessType();
-        gamesEntity.category = games.getCategory();
         gamesEntity.users = UsersEntity.from(games.getUsers());
         gamesEntity.isBlind = games.getIsBlind();
 
@@ -70,7 +68,7 @@ public class GamesEntity extends BaseTimeEntity {
             GameInviteCodeEntity inviteCodeEntity = GameInviteCodeEntity.from(games.getGameInviteCode());
             gamesEntity.gameInviteCode = inviteCodeEntity;
 
-            // 순환 참조 방지: gamesEntity만 설정
+            // 순환 참조 방지: gamesEntity 만 설정
             inviteCodeEntity.setGames(gamesEntity);
         }
 
@@ -85,7 +83,6 @@ public class GamesEntity extends BaseTimeEntity {
                 .isNamePrivate(isNamePrivate)
                 .isBlind(isBlind)
                 .accessType(accessType)
-                .category(category)
                 .users(users.toModel())
                 .gameInviteCode(this.gameInviteCode != null
                         ? GameInviteCode.builder()
@@ -94,6 +91,10 @@ public class GamesEntity extends BaseTimeEntity {
                             .isActive(this.gameInviteCode.getIsActive())
                             .build()
                         : null)
+                .categories(this.categories != null
+                        ? this.categories.stream()
+                        .map(GameCategoryEntity::toModel)
+                        .toList() : null)
                 .build();
     }
 
@@ -103,7 +104,6 @@ public class GamesEntity extends BaseTimeEntity {
         this.isNamePrivate = games.getIsNamePrivate();
         this.isBlind = games.getIsBlind();
         this.accessType = games.getAccessType();
-        this.category = games.getCategory();
     }
 }
 

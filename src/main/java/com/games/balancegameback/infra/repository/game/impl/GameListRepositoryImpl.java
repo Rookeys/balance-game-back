@@ -2,6 +2,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
+import com.games.balancegameback.domain.game.GameCategory;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Repository
@@ -34,6 +36,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         QGamesEntity games = QGamesEntity.gamesEntity;
         QUsersEntity users = QUsersEntity.usersEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGameCategoryEntity gameCategory = QGameCategoryEntity.gameCategoryEntity;
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
@@ -41,7 +44,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         BooleanBuilder builder = new BooleanBuilder();
         BooleanBuilder totalBuilder = new BooleanBuilder();
 
-        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, users, resources, results);
+        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, users, resources, results, gameCategory);
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
         List<Tuple> resultTuples = jpaQueryFactory.selectDistinct(
@@ -52,11 +55,11 @@ public class GameListRepositoryImpl implements GameListRepository {
                         images.fileUrl,
                         games.isNamePrivate,
                         games.createdDate,
-                        games.category,
                         games.isBlind
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
                 .leftJoin(games.users, users)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
@@ -74,7 +77,6 @@ public class GameListRepositoryImpl implements GameListRepository {
             String profileImageUrl = tuple.get(images.fileUrl);
             boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
-            Category category = tuple.get(games.category);
             Boolean isBlind = tuple.get(games.isBlind);
 
             if (isPrivate) {
@@ -94,6 +96,15 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .offset(0)
                     .limit(2)
                     .fetch();
+
+            // 카테고리 리스트 발급
+            List<Category> category = jpaQueryFactory
+                    .selectFrom(gameCategory)
+                    .where(gameCategory.games.id.eq(roomId))
+                    .fetch()
+                    .stream()
+                    .map(GameCategoryEntity::getCategory)
+                    .toList();
 
             // 전체 플레이 횟수
             Long totalPlayNums = jpaQueryFactory
@@ -154,6 +165,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
                 .leftJoin(games.users, users)
                 .where(totalBuilder)
                 .groupBy(games.id)
@@ -165,7 +177,8 @@ public class GameListRepositoryImpl implements GameListRepository {
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
                             GameSearchRequest request, QGamesEntity games, QUsersEntity users,
-                            QGameResourcesEntity resources, QGameResultsEntity results) {
+                            QGameResourcesEntity resources, QGameResultsEntity results,
+                            QGameCategoryEntity gameCategory) {
         if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
@@ -185,8 +198,8 @@ public class GameListRepositoryImpl implements GameListRepository {
         }
 
         if (request.getCategory() != null) {
-            builder.and(games.category.eq(request.getCategory()));
-            totalBuilder.and(games.category.eq(request.getCategory()));
+            builder.and(gameCategory.category.in(request.getCategory()));
+            totalBuilder.and(gameCategory.category.in(request.getCategory()));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
