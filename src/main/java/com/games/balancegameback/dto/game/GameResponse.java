@@ -21,11 +21,11 @@ public class GameResponse {
     @Schema(description = "설명")
     private String description;
 
-    @Schema(description = "익명 여부")
-    private boolean isNamePrivate;
+    @Schema(description = "익명 여부", name = "isNamePrivate")
+    private boolean namePrivate;
 
-    @Schema(description = "썸네일 블라인드 여부")
-    private boolean isBlind;
+    @Schema(description = "썸네일 블라인드 여부", name = "isBlind")
+    private boolean blind;
 
     @Schema(description = "접근 권한")
     private AccessType accessType;
