@@ -20,7 +20,7 @@ public class GameListService {
         return gameListRepository.getGameList(cursorId, pageable, searchRequest);
     }
 
-    public GameCategoryNumsResponse getCategoryNums() {
-        return gameListRepository.getCategoryCounts();
+    public GameCategoryNumsResponse getCategoryNums(String title) {
+        return gameListRepository.getCategoryCounts(title);
     }
 }

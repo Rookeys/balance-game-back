@@ -65,7 +65,10 @@ public class GameListController {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
     @GetMapping(value = "/categories")
-    public GameCategoryNumsResponse getCategoryNums() {
-        return gameService.getCategoryNums();
+    public GameCategoryNumsResponse getCategoryNums(
+            @Parameter(name = "title", description = "검색할 내용")
+            @RequestParam(name = "title", required = false) String title) {
+
+        return gameService.getCategoryNums(title);
     }
 }

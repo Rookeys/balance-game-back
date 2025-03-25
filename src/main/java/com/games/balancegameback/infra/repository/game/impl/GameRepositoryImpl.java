@@ -46,19 +46,18 @@ public class GameRepositoryImpl implements GameRepository {
         GamesEntity gamesEntity = gameRepository.findById(roomId).orElseThrow(() ->
                 new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
-        Games games = gamesEntity.toModel();
-
         return GameResponse.builder()
                 .roomId(roomId)
-                .title(games.getTitle())
-                .description(games.getDescription())
-                .isNamePrivate(games.getIsNamePrivate())
-                .isBlind(games.getIsBlind())
-                .accessType(games.getAccessType())
-                .inviteCode(games.getGameInviteCode().getInviteCode())
-                .category(games.getCategories().stream()
+                .title(gamesEntity.getTitle())
+                .description(gamesEntity.getDescription())
+                .isNamePrivate(gamesEntity.getIsNamePrivate())
+                .isBlind(gamesEntity.getIsBlind())
+                .accessType(gamesEntity.getAccessType())
+                .inviteCode(gamesEntity.getGameInviteCode().getInviteCode())
+                .category(gamesEntity.getCategories().stream()
+                        .map(GameCategoryEntity::toModel)
                         .map(GameCategory::getCategory)
-                        .toList())
+                        .collect(Collectors.toList()))
                 .build();
     }
 

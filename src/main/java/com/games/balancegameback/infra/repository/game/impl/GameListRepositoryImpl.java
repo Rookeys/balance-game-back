@@ -33,9 +33,22 @@ public class GameListRepositoryImpl implements GameListRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public GameCategoryNumsResponse getCategoryCounts() {
+    public GameCategoryNumsResponse getCategoryCounts(String title) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
         QGameCategoryEntity category = QGameCategoryEntity.gameCategoryEntity;
+        QUsersEntity users = QUsersEntity.usersEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+
         Map<Category, Long> counts = new EnumMap<>(Category.class);
+        BooleanBuilder builder = new BooleanBuilder();
+        // 리소스 갯수가 2개 이상인 경우만 포함.
+        builder.and(games.gameResources.size().goe(2));
+
+        if (title != null) {
+            builder.and(games.title.containsIgnoreCase(title)
+                    .or(resources.title.containsIgnoreCase(title))
+                    .or(users.nickname.containsIgnoreCase(title).and(games.isNamePrivate.eq(false))));
+        }
 
         // DB에 등록되지 않은 카테고리가 있으면 0 으로 표시하기 위해 전체 초기화
         for (Category cat : Category.values()) {
@@ -43,15 +56,19 @@ public class GameListRepositoryImpl implements GameListRepository {
         }
 
         List<Tuple> result = jpaQueryFactory
-                .select(category.category, category.category.count())
+                .select(category.category, games.id.countDistinct())
                 .from(category)
+                .join(category.games, games)
+                .join(games.users, users)
+                .join(games.gameResources, resources)
+                .where(builder)
                 .groupBy(category.category)
                 .fetch();
 
         // DB 에 존재하는 데이터는 덮어쓰기
         for (Tuple tuple : result) {
             Category cat = tuple.get(category.category);
-            Long count = Optional.ofNullable(tuple.get(category.category.count())).orElse(0L);
+            Long count = Optional.ofNullable(tuple.get(games.id.countDistinct())).orElse(0L);
             counts.put(cat, count);
         }
 
@@ -240,11 +257,11 @@ public class GameListRepositoryImpl implements GameListRepository {
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
             builder.and(games.title.containsIgnoreCase(request.getTitle())
                     .or(resources.title.containsIgnoreCase(request.getTitle()))
-                    .or(users.nickname.containsIgnoreCase(request.getTitle())).and(games.isNamePrivate.eq(false)));
+                    .or(users.nickname.containsIgnoreCase(request.getTitle()).and(games.isNamePrivate.eq(false))));
 
             totalBuilder.and(games.title.containsIgnoreCase(request.getTitle())
                     .or(resources.title.containsIgnoreCase(request.getTitle()))
-                    .or(users.nickname.containsIgnoreCase(request.getTitle())).and(games.isNamePrivate.eq(false)));
+                    .or(users.nickname.containsIgnoreCase(request.getTitle()).and(games.isNamePrivate.eq(false))));
         }
     }
 

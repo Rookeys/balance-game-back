@@ -10,5 +10,5 @@ public interface GameListRepository {
 
     CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable, GameSearchRequest searchRequest);
 
-    GameCategoryNumsResponse getCategoryCounts();
+    GameCategoryNumsResponse getCategoryCounts(String title);
 }

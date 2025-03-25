@@ -49,8 +49,8 @@ public class GameService {
     }
 
     // 각 카테고리 별 게임 수 출력
-    public GameCategoryNumsResponse getCategoryNums() {
-        return gameListService.getCategoryNums();
+    public GameCategoryNumsResponse getCategoryNums(String title) {
+        return gameListService.getCategoryNums(title);
     }
 
     // 게임방 생성
