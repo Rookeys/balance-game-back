@@ -48,6 +48,11 @@ public class GameService {
         return gameListService.getMainGameList(cursorId, pageable, searchRequest);
     }
 
+    // 각 카테고리 별 게임 수 출력
+    public GameCategoryNumsResponse getCategoryNums() {
+        return gameListService.getCategoryNums();
+    }
+
     // 게임방 생성
     public Long saveGame(GameRequest gameRequest, HttpServletRequest request) {
         return gameRoomService.saveGame(gameRequest, request);
@@ -192,7 +197,7 @@ public class GameService {
         gameResultCommentService.updateComment(commentId, commentRequest, request);
     }
 
-    //
+    // 게임 결과 댓글 삭제
     public void deleteResultComment(Long commentId, HttpServletRequest request) {
         gameResultCommentService.deleteComment(commentId, request);
     }

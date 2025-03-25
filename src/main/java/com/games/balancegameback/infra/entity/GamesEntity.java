@@ -3,7 +3,6 @@ package com.games.balancegameback.infra.entity;
 import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
-import com.games.balancegameback.domain.game.enums.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 

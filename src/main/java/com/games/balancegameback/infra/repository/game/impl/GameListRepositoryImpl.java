@@ -2,9 +2,9 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
-import com.games.balancegameback.domain.game.GameCategory;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameListSelectionResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
@@ -20,8 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -29,6 +31,39 @@ import java.util.stream.Collectors;
 public class GameListRepositoryImpl implements GameListRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
+
+    @Override
+    public GameCategoryNumsResponse getCategoryCounts() {
+        QGameCategoryEntity category = QGameCategoryEntity.gameCategoryEntity;
+        Map<Category, Long> counts = new EnumMap<>(Category.class);
+
+        // DB에 등록되지 않은 카테고리가 있으면 0 으로 표시하기 위해 전체 초기화
+        for (Category cat : Category.values()) {
+            counts.put(cat, 0L);
+        }
+
+        List<Tuple> result = jpaQueryFactory
+                .select(category.category, category.category.count())
+                .from(category)
+                .groupBy(category.category)
+                .fetch();
+
+        // DB 에 존재하는 데이터는 덮어쓰기
+        for (Tuple tuple : result) {
+            Category cat = tuple.get(category.category);
+            Long count = Optional.ofNullable(tuple.get(category.category.count())).orElse(0L);
+            counts.put(cat, count);
+        }
+
+        int total = counts.values().stream()
+                .mapToInt(Long::intValue)
+                .sum();
+
+        return GameCategoryNumsResponse.builder()
+                .totalNums(total)
+                .categoryNums(counts)
+                .build();
+    }
 
     @Override
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,

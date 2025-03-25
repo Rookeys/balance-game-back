@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
 import com.games.balancegameback.service.game.repository.GameListRepository;
@@ -17,5 +18,9 @@ public class GameListService {
     public CustomPageImpl<GameListResponse> getMainGameList(Long cursorId, Pageable pageable,
                                                             GameSearchRequest searchRequest) {
         return gameListRepository.getGameList(cursorId, pageable, searchRequest);
+    }
+
+    public GameCategoryNumsResponse getCategoryNums() {
+        return gameListRepository.getCategoryCounts();
     }
 }
