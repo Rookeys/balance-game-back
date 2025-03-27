@@ -4,6 +4,7 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
+import com.games.balancegameback.domain.game.GameCategory;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
@@ -45,17 +46,18 @@ public class GameRepositoryImpl implements GameRepository {
         GamesEntity gamesEntity = gameRepository.findById(roomId).orElseThrow(() ->
                 new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
-        Games games = gamesEntity.toModel();
-
         return GameResponse.builder()
                 .roomId(roomId)
-                .title(games.getTitle())
-                .description(games.getDescription())
-                .isNamePrivate(games.getIsNamePrivate())
-                .isBlind(games.getIsBlind())
-                .accessType(games.getAccessType())
-                .inviteCode(games.getGameInviteCode().getInviteCode())
-                .category(games.getCategory())
+                .title(gamesEntity.getTitle())
+                .description(gamesEntity.getDescription())
+                .namePrivate(gamesEntity.getIsNamePrivate())
+                .blind(gamesEntity.getIsBlind())
+                .accessType(gamesEntity.getAccessType())
+                .inviteCode(gamesEntity.getGameInviteCode().getInviteCode())
+                .category(gamesEntity.getCategories().stream()
+                        .map(GameCategoryEntity::toModel)
+                        .map(GameCategory::getCategory)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -73,12 +75,13 @@ public class GameRepositoryImpl implements GameRepository {
                                                                    GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGameCategoryEntity gameCategory = QGameCategoryEntity.gameCategoryEntity;
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
-        this.setOptions(builder, cursorId, searchRequest, games);
+        this.setOptions(builder, cursorId, searchRequest, games, resources, gameCategory);
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
@@ -89,11 +92,12 @@ public class GameRepositoryImpl implements GameRepository {
                         games.users.nickname,
                         images.fileUrl,
                         games.createdDate,
-                        games.category,
                         games.isBlind
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id, games.title, games.description)
@@ -108,7 +112,6 @@ public class GameRepositoryImpl implements GameRepository {
             String nickname = tuple.get(games.users.nickname);
             String profileImageUrl = tuple.get(images.fileUrl);
             OffsetDateTime createdAt = tuple.get(games.createdDate);
-            Category category = tuple.get(games.category);
             Boolean isBlind = tuple.get(games.isBlind);
 
             List<Tuple> tuples = jpaQueryFactory.select(
@@ -124,6 +127,15 @@ public class GameRepositoryImpl implements GameRepository {
                     .offset(0)
                     .limit(2)
                     .fetch();
+
+            // 카테고리 리스트 발급
+            List<Category> category = jpaQueryFactory
+                    .selectFrom(gameCategory)
+                    .where(gameCategory.games.id.eq(roomId))
+                    .fetch()
+                    .stream()
+                    .map(GameCategoryEntity::getCategory)
+                    .toList();
 
             // 전체 플레이 횟수
             Long totalPlayNums = jpaQueryFactory
@@ -182,6 +194,8 @@ public class GameRepositoryImpl implements GameRepository {
         Long totalElements = jpaQueryFactory
                 .select(games.id.countDistinct())
                 .from(games)
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
                 .where(games.users.email.eq(users.getEmail()))
                 .fetchOne();
 
@@ -225,8 +239,8 @@ public class GameRepositoryImpl implements GameRepository {
         s3Service.deleteImagesAsync(imageUrls);
     }
 
-    private void setOptions(BooleanBuilder builder, Long cursorId,
-                            GameSearchRequest request, QGamesEntity games) {
+    private void setOptions(BooleanBuilder builder, Long cursorId, GameSearchRequest request,
+                            QGamesEntity games, QGameResourcesEntity resources, QGameCategoryEntity gameCategory) {
         if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
@@ -236,11 +250,12 @@ public class GameRepositoryImpl implements GameRepository {
         }
 
         if (request.getCategory() != null) {
-            builder.and(games.category.eq(request.getCategory()));
+            builder.and(gameCategory.category.in(request.getCategory()));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(games.title.containsIgnoreCase(request.getTitle()));
+            builder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle())));
         }
     }
 

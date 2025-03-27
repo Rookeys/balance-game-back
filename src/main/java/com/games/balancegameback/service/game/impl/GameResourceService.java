@@ -21,6 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GameResourceService {
@@ -134,6 +136,18 @@ public class GameResourceService {
 
         if (resources.getImages() != null) {
             s3Service.deleteImageByUrl(resources.getImages().getFileUrl());
+        }
+    }
+
+    @Transactional
+    public void deleteSelectResources(List<Long> list) {
+        for (Long resourceId : list) {
+            GameResources resources = gameResourceRepository.findById(resourceId);
+            gameResourceRepository.deleteById(resourceId);
+
+            if (resources.getImages() != null) {
+                s3Service.deleteImageByUrl(resources.getImages().getFileUrl());
+            }
         }
     }
 }

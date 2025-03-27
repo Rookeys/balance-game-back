@@ -4,6 +4,7 @@ import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameListSelectionResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
@@ -19,7 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -29,10 +33,62 @@ public class GameListRepositoryImpl implements GameListRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
+    public GameCategoryNumsResponse getCategoryCounts(String title) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+        QGameCategoryEntity category = QGameCategoryEntity.gameCategoryEntity;
+        QUsersEntity users = QUsersEntity.usersEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+
+        Map<Category, Long> counts = new EnumMap<>(Category.class);
+        BooleanBuilder builder = new BooleanBuilder();
+        // 리소스 갯수가 2개 이상인 경우만 포함.
+        builder.and(games.gameResources.size().goe(2));
+
+        if (title != null) {
+            builder.and(games.title.containsIgnoreCase(title)
+                    .or(resources.title.containsIgnoreCase(title))
+                    .or(users.nickname.containsIgnoreCase(title).and(games.isNamePrivate.eq(false))));
+        }
+
+        // DB에 등록되지 않은 카테고리가 있으면 0 으로 표시하기 위해 전체 초기화
+        for (Category cat : Category.values()) {
+            counts.put(cat, 0L);
+        }
+
+        List<Tuple> result = jpaQueryFactory
+                .select(category.category, games.id.countDistinct())
+                .from(category)
+                .join(category.games, games)
+                .join(games.users, users)
+                .join(games.gameResources, resources)
+                .where(builder)
+                .groupBy(category.category)
+                .fetch();
+
+        // DB 에 존재하는 데이터는 덮어쓰기
+        for (Tuple tuple : result) {
+            Category cat = tuple.get(category.category);
+            Long count = Optional.ofNullable(tuple.get(games.id.countDistinct())).orElse(0L);
+            counts.put(cat, count);
+        }
+
+        int total = counts.values().stream()
+                .mapToInt(Long::intValue)
+                .sum();
+
+        return GameCategoryNumsResponse.builder()
+                .totalNums(total)
+                .categoryNums(counts)
+                .build();
+    }
+
+    @Override
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
                                                         GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QUsersEntity users = QUsersEntity.usersEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGameCategoryEntity gameCategory = QGameCategoryEntity.gameCategoryEntity;
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
@@ -40,7 +96,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         BooleanBuilder builder = new BooleanBuilder();
         BooleanBuilder totalBuilder = new BooleanBuilder();
 
-        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, results);
+        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, users, resources, results, gameCategory);
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
         List<Tuple> resultTuples = jpaQueryFactory.selectDistinct(
@@ -51,10 +107,12 @@ public class GameListRepositoryImpl implements GameListRepository {
                         images.fileUrl,
                         games.isNamePrivate,
                         games.createdDate,
-                        games.category,
                         games.isBlind
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
+                .leftJoin(games.users, users)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id)
@@ -71,7 +129,6 @@ public class GameListRepositoryImpl implements GameListRepository {
             String profileImageUrl = tuple.get(images.fileUrl);
             boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
-            Category category = tuple.get(games.category);
             Boolean isBlind = tuple.get(games.isBlind);
 
             if (isPrivate) {
@@ -91,6 +148,15 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .offset(0)
                     .limit(2)
                     .fetch();
+
+            // 카테고리 리스트 발급
+            List<Category> category = jpaQueryFactory
+                    .selectFrom(gameCategory)
+                    .where(gameCategory.games.id.eq(roomId))
+                    .fetch()
+                    .stream()
+                    .map(GameCategoryEntity::getCategory)
+                    .toList();
 
             // 전체 플레이 횟수
             Long totalPlayNums = jpaQueryFactory
@@ -150,6 +216,9 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .select(games.id.countDistinct())
                 .from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
+                .leftJoin(games.users, users)
                 .where(totalBuilder)
                 .groupBy(games.id)
                 .having(games.gameResources.size().goe(2))
@@ -159,7 +228,9 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
-                            GameSearchRequest request, QGamesEntity games, QGameResultsEntity results) {
+                            GameSearchRequest request, QGamesEntity games, QUsersEntity users,
+                            QGameResourcesEntity resources, QGameResultsEntity results,
+                            QGameCategoryEntity gameCategory) {
         if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
@@ -179,13 +250,18 @@ public class GameListRepositoryImpl implements GameListRepository {
         }
 
         if (request.getCategory() != null) {
-            builder.and(games.category.eq(request.getCategory()));
-            totalBuilder.and(games.category.eq(request.getCategory()));
+            builder.and(gameCategory.category.in(request.getCategory()));
+            totalBuilder.and(gameCategory.category.in(request.getCategory()));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(games.title.containsIgnoreCase(request.getTitle()));
-            totalBuilder.and(games.title.containsIgnoreCase(request.getTitle()));
+            builder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle()))
+                    .or(users.nickname.containsIgnoreCase(request.getTitle()).and(games.isNamePrivate.eq(false))));
+
+            totalBuilder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle()))
+                    .or(users.nickname.containsIgnoreCase(request.getTitle()).and(games.isNamePrivate.eq(false))));
         }
     }
 

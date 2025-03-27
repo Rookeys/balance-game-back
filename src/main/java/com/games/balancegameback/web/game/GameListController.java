@@ -3,6 +3,7 @@ package com.games.balancegameback.web.game;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
 import com.games.balancegameback.service.game.GameService;
@@ -38,7 +39,7 @@ public class GameListController {
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "15") int size,
 
-            @Parameter(name = "title", description = "검색할 리소스 제목")
+            @Parameter(name = "title", description = "검색할 내용")
             @RequestParam(name = "title", required = false) String title,
 
             @Parameter(name = "category", description = "카테고리",
@@ -57,5 +58,17 @@ public class GameListController {
                 .build();
 
         return gameService.getMainGameList(cursorId, pageable, searchRequest);
+    }
+
+    @Operation(summary = "각 카테고리 별 게임 갯수 출력 API", description = "각 카테고리 별 게임 갯수를 출력한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "발급 완료")
+    })
+    @GetMapping(value = "/categories")
+    public GameCategoryNumsResponse getCategoryNums(
+            @Parameter(name = "title", description = "검색할 내용")
+            @RequestParam(name = "title", required = false) String title) {
+
+        return gameService.getCategoryNums(title);
     }
 }

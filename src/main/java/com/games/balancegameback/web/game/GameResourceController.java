@@ -2,6 +2,7 @@ package com.games.balancegameback.web.game;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
+import com.games.balancegameback.dto.game.GameResourceDeleteRequest;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
@@ -122,6 +123,26 @@ public class GameResourceController {
 
             HttpServletRequest request) {
         gameService.deleteResource(gameId, resourceId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
+    }
+
+    @Operation(summary = "게임 리소스 선택 삭제 API", description = "등록된 리소스를 선택 삭제할 수 있다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "리소스 삭제 완료"),
+            @ApiResponse(responseCode = "400", description = "resource & room ID 값은 필수입니다."),
+            @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다."),
+            @ApiResponse(responseCode = "404", description = "해당 리소스는 없습니다.")
+    })
+    @DeleteMapping(value = "/{gameId}/resources")
+    public ResponseEntity<Boolean> deleteSelectResources(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
+            @RequestBody GameResourceDeleteRequest gameResourceDeleteRequest,
+
+            HttpServletRequest request) {
+        gameService.deleteSelectResources(gameId, gameResourceDeleteRequest.getList(), request);
         return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
     }
 }

@@ -25,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GameService {
@@ -44,6 +46,11 @@ public class GameService {
     public CustomPageImpl<GameListResponse> getMainGameList(Long cursorId, Pageable pageable,
                                                             GameSearchRequest searchRequest) {
         return gameListService.getMainGameList(cursorId, pageable, searchRequest);
+    }
+
+    // 각 카테고리 별 게임 수 출력
+    public GameCategoryNumsResponse getCategoryNums(String title) {
+        return gameListService.getCategoryNums(title);
     }
 
     // 게임방 생성
@@ -129,6 +136,12 @@ public class GameService {
         gameResourceService.deleteResource(resourceId);
     }
 
+    // 리소스를 선택 삭제함
+    public void deleteSelectResources(Long roomId, List<Long> list, HttpServletRequest request) {
+        this.validateRequest(roomId, request);
+        gameResourceService.deleteSelectResources(list);
+    }
+
     // 게임 결과창 출력
     public CustomPageImpl<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
                                                      GameResourceSearchRequest request,
@@ -184,7 +197,7 @@ public class GameService {
         gameResultCommentService.updateComment(commentId, commentRequest, request);
     }
 
-    //
+    // 게임 결과 댓글 삭제
     public void deleteResultComment(Long commentId, HttpServletRequest request) {
         gameResultCommentService.deleteComment(commentId, request);
     }

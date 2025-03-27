@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 public class GameRequest {
@@ -18,13 +20,13 @@ public class GameRequest {
     @Schema(description = "방 설명")
     private String description;
 
-    @Schema(description = "익명 여부")
+    @Schema(description = "익명 여부", name = "isNamePrivate")
     @NotBlank(message = "익명 여부 결정은 필수입니다.")
-    private boolean isNamePrivate;
+    private boolean namePrivate = false;
 
-    @Schema(description = "썸네일 블라인드 여부")
+    @Schema(description = "썸네일 블라인드 여부", name = "isBlind")
     @NotBlank(message = "썸네일 블라인드 여부 결정은 필수입니다.")
-    private boolean isBlind;
+    private boolean blind = false;
 
     @Schema(description = "접근 레벨 설정")
     @NotBlank(message = "접근 레벨 설정은 필수입니다.")
@@ -35,5 +37,5 @@ public class GameRequest {
 
     @Schema(description = "카테고리 설정")
     @NotBlank(message = "카테고리 설정은 필수입니다.")
-    private Category category;
+    private List<Category> category;
 }

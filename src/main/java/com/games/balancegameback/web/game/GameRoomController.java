@@ -66,6 +66,7 @@ public class GameRoomController {
             @PathVariable(name = "gameId") Long gameId,
 
             @RequestBody @Valid GameRequest gameRequest,
+
             HttpServletRequest request) {
         gameService.updateGameStatus(gameId, gameRequest, request);
         return ResponseEntity.ok(Boolean.TRUE);
