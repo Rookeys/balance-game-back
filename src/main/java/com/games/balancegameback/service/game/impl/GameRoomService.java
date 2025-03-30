@@ -51,7 +51,7 @@ public class GameRoomService {
                 .build();
 
         // 카테고리 저장
-        for (Category category : gameRequest.getCategory()) {
+        for (Category category : gameRequest.getCategories()) {
             GameCategory gameCategory = GameCategory.builder()
                     .category(category)
                     .games(games)
@@ -97,7 +97,7 @@ public class GameRoomService {
         games.update(gameRequest);
 
         gameInviteService.updateInviteCode(gameRequest.getInviteCode(), games);
-        gameCategoryService.updateCategory(gameRequest.getCategory(), games);
+        gameCategoryService.updateCategory(gameRequest.getCategories(), games);
 
         gameRepository.update(games);
     }

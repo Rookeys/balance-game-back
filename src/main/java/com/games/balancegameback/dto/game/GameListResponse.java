@@ -30,7 +30,7 @@ public class GameListResponse {
     private Boolean isBlind;
 
     @Schema(description = "카테고리")
-    private List<Category> category;
+    private List<Category> categories;
 
     @Schema(description = "총 플레이 횟수")
     private int totalPlayNums;

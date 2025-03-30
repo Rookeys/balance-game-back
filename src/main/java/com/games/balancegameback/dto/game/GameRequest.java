@@ -37,5 +37,5 @@ public class GameRequest {
 
     @Schema(description = "카테고리 설정")
     @NotBlank(message = "카테고리 설정은 필수입니다.")
-    private List<Category> category;
+    private List<Category> categories;
 }

@@ -34,5 +34,5 @@ public class GameResponse {
     private String inviteCode;
 
     @Schema(description = "카테고리 설정")
-    private List<Category> category;
+    private List<Category> categories;
 }
