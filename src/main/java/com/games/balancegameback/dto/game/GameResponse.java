@@ -33,6 +33,6 @@ public class GameResponse {
     @Schema(description = "초대 코드")
     private String inviteCode;
 
-    @Schema(description = "카테고리 설정")
+    @Schema(description = "카테고리 설정", name = "categories")
     private List<Category> categories;
 }

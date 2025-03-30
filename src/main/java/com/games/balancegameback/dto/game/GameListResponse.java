@@ -29,7 +29,7 @@ public class GameListResponse {
     @Schema(description = "썸네일 블라인드 여부", name = "isBlind")
     private Boolean isBlind;
 
-    @Schema(description = "카테고리")
+    @Schema(description = "카테고리", name = "categories")
     private List<Category> categories;
 
     @Schema(description = "총 플레이 횟수")
