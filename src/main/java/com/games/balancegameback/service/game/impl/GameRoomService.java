@@ -37,7 +37,6 @@ public class GameRoomService {
             throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
         }
 
-        List<GameCategory> categories = new ArrayList<>();
         Users users = userUtils.findUserByToken(request);
 
         // 게임방 생성
@@ -50,16 +49,6 @@ public class GameRoomService {
                 .users(users)
                 .build();
 
-        // 카테고리 저장
-        for (Category category : gameRequest.getCategories()) {
-            GameCategory gameCategory = GameCategory.builder()
-                    .category(category)
-                    .games(games)
-                    .build();
-
-            categories.add(gameCategory);
-        }
-
         // 초대 코드 생성 및 관계 설정
         GameInviteCode gameInviteCode = GameInviteCode.builder()
                 .inviteCode(gameRequest.getInviteCode() != null ? gameRequest.getInviteCode() : "")
@@ -69,9 +58,11 @@ public class GameRoomService {
 
         // 양방향 관계 설정
         games.setGameInviteCode(gameInviteCode);
-        games.setCategories(categories);
 
-        return gameRepository.save(games).getId();
+        games = gameRepository.save(games);
+        gameCategoryService.saveCategory(gameRequest.getCategories(), games);
+
+        return games.getId();
     }
 
     public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
