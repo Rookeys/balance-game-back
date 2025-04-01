@@ -44,8 +44,8 @@ public class GameRoomService {
                 .title(gameRequest.getTitle())
                 .description(gameRequest.getDescription())
                 .accessType(gameRequest.getAccessType())
-                .isNamePrivate(gameRequest.isNamePrivate())
-                .isBlind(gameRequest.isBlind())
+                .isNamePrivate(gameRequest.isExistsNamePrivate())
+                .isBlind(gameRequest.isExistsBlind())
                 .users(users)
                 .build();
 

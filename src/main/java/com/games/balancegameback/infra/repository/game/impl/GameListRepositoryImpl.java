@@ -196,7 +196,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .title(title)
                     .description(description)
                     .categories(category)
-                    .isBlind(isBlind)
+                    .existsBlind(isBlind)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
                     .createdAt(createdAt)

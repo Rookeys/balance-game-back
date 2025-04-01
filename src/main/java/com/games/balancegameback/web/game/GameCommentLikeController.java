@@ -37,7 +37,7 @@ public class GameCommentLikeController {
 
             HttpServletRequest request) {
 
-        gameService.toggleLike(commentId, likeRequest.isLiked(), likeRequest.getSortType(), request);
+        gameService.toggleLike(commentId, likeRequest.isExistsLiked(), likeRequest.getSortType(), request);
         return ResponseEntity.ok(Boolean.TRUE);
     }
 }

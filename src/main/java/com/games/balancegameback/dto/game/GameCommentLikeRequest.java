@@ -16,7 +16,7 @@ public class GameCommentLikeRequest {
 
     @Schema(description = "좋아요 신청/취소")
     @NotBlank
-    private boolean isLiked;
+    private boolean existsLiked;
 
     @Schema(description = "댓글 종류", implementation = CommentType.class)
     @NotBlank
