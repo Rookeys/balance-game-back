@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class GameResourceCommentRequest {
 
     @Schema(description = "부모 댓글 Id")
+    @NotBlank(message = "부모 댓글의 ID는 필수입니다.")
     private Long parentId;
 
     @Schema(description = "댓글")
