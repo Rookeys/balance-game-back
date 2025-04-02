@@ -21,11 +21,11 @@ public class GameResponse {
     @Schema(description = "설명")
     private String description;
 
-    @Schema(description = "익명 여부", name = "isNamePrivate")
-    private boolean namePrivate;
+    @Schema(description = "익명 여부")
+    private boolean existsNamePrivate;
 
-    @Schema(description = "썸네일 블라인드 여부", name = "isBlind")
-    private boolean blind;
+    @Schema(description = "썸네일 블라인드 여부")
+    private boolean existsBlind;
 
     @Schema(description = "접근 권한")
     private AccessType accessType;
@@ -33,6 +33,6 @@ public class GameResponse {
     @Schema(description = "초대 코드")
     private String inviteCode;
 
-    @Schema(description = "카테고리 설정")
-    private List<Category> category;
+    @Schema(description = "카테고리 설정", name = "categories")
+    private List<Category> categories;
 }

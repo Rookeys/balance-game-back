@@ -41,8 +41,8 @@ public class Games {
     public void update(GameRequest gameRequest) {
         this.title = gameRequest.getTitle();
         this.description = gameRequest.getDescription();
-        this.isNamePrivate = gameRequest.isNamePrivate();
-        this.isBlind = gameRequest.isBlind();
+        this.isNamePrivate = gameRequest.isExistsNamePrivate();
+        this.isBlind = gameRequest.isExistsBlind();
         this.accessType = gameRequest.getAccessType();
     }
 }

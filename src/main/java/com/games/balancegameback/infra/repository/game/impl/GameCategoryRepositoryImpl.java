@@ -14,7 +14,13 @@ public class GameCategoryRepositoryImpl implements GameCategoryRepository {
     private final GameCategoryJpaRepository gameCategoryRepository;
 
     @Override
+    public void save(GameCategory gameCategory) {
+        gameCategoryRepository.save(GameCategoryEntity.from(gameCategory));
+    }
+
+    @Override
     public void update(GameCategory gameCategory) {
+        // 추후 기능 확장 시 변경 예정
         gameCategoryRepository.save(GameCategoryEntity.from(gameCategory));
     }
 

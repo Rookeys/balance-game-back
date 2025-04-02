@@ -5,6 +5,7 @@ import com.games.balancegameback.domain.user.enums.LoginType;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ public class SignUpRequest {
     private String email;
 
     @Schema(description = "로그인 타입", implementation = LoginType.class)
-    @NotBlank(message = "로그인 타입은 비어 있을 수 없습니다.")
+    @NotNull(message = "로그인 타입은 비어 있을 수 없습니다.")
     private LoginType loginType;
 
     @Schema(description = "소셜 로그인 측 서버에서 발급받은 토큰")

@@ -4,11 +4,9 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.domain.game.GameCategory;
 import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
-import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.service.game.repository.GameRepository;
@@ -18,9 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +32,6 @@ public class GameRoomService {
             throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
         }
 
-        List<GameCategory> categories = new ArrayList<>();
         Users users = userUtils.findUserByToken(request);
 
         // 게임방 생성
@@ -45,20 +39,10 @@ public class GameRoomService {
                 .title(gameRequest.getTitle())
                 .description(gameRequest.getDescription())
                 .accessType(gameRequest.getAccessType())
-                .isNamePrivate(gameRequest.isNamePrivate())
-                .isBlind(gameRequest.isBlind())
+                .isNamePrivate(gameRequest.isExistsNamePrivate())
+                .isBlind(gameRequest.isExistsBlind())
                 .users(users)
                 .build();
-
-        // 카테고리 저장
-        for (Category category : gameRequest.getCategory()) {
-            GameCategory gameCategory = GameCategory.builder()
-                    .category(category)
-                    .games(games)
-                    .build();
-
-            categories.add(gameCategory);
-        }
 
         // 초대 코드 생성 및 관계 설정
         GameInviteCode gameInviteCode = GameInviteCode.builder()
@@ -69,9 +53,11 @@ public class GameRoomService {
 
         // 양방향 관계 설정
         games.setGameInviteCode(gameInviteCode);
-        games.setCategories(categories);
 
-        return gameRepository.save(games).getId();
+        games = gameRepository.save(games);
+        gameCategoryService.saveCategory(gameRequest.getCategories(), games);
+
+        return games.getId();
     }
 
     public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
@@ -97,7 +83,7 @@ public class GameRoomService {
         games.update(gameRequest);
 
         gameInviteService.updateInviteCode(gameRequest.getInviteCode(), games);
-        gameCategoryService.updateCategory(gameRequest.getCategory(), games);
+        gameCategoryService.updateCategory(gameRequest.getCategories(), games);
 
         gameRepository.update(games);
     }

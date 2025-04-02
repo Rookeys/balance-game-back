@@ -32,7 +32,7 @@ public class GameRoomController {
     })
     @PostMapping(value = "")
     public ResponseEntity<Long> saveGame(
-            @RequestBody GameRequest gameRequest,
+            @RequestBody @Valid GameRequest gameRequest,
             HttpServletRequest request) {
         Long id = gameService.saveGame(gameRequest, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(id);

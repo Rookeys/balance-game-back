@@ -16,6 +16,17 @@ public class GameCategoryService {
 
     private final GameCategoryRepository gameCategoryRepository;
 
+    public void saveCategory(List<Category> categories, Games games) {
+        for (Category category : categories) {
+            GameCategory gameCategory = GameCategory.builder()
+                    .category(category)
+                    .games(games)
+                    .build();
+
+            gameCategoryRepository.save(gameCategory);
+        }
+    }
+
     @Transactional
     public void updateCategory(List<Category> categories, Games games) {
         gameCategoryRepository.deleteAll(games.getId());
