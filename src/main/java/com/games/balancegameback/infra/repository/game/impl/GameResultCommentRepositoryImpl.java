@@ -16,6 +16,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
@@ -57,7 +58,10 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                                                                               GameCommentSearchRequest searchRequest) {
         QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
-        QUsersEntity user = QUsersEntity.usersEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGamesEntity games = QGamesEntity.gamesEntity;
+        QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
+        QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(comments.games.id.eq(gameId));
@@ -73,16 +77,22 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         GameResultCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
-                        user.nickname.as("nickname"),
+                        new CaseBuilder()
+                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .otherwise(user.nickname)
+                                .as("nickname"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
-                        this.isLikedExpression(users)
+                        this.isLikedExpression(users).as("existsLiked"),
+                        comments.users.uid.eq(gameUser.uid).as("existsWriter")
                 ))
                 .from(comments)
-                .where(builder)
-                .join(comments.users, user)
+                .leftJoin(comments.users, user)
+                .leftJoin(comments.games, games)
+                .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
+                .where(builder)
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();

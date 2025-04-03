@@ -32,6 +32,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     "/swagger-ui/**", "/v3/api-docs/**",
                     "/api/v1/games/{gameId}/play", "/api/v1/games/{gameId}/play/{playId}",
                     "/api/v1/games/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
+                    "/api/v1/games/resources/{resourceId}/comments/{parentId}",
                     "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
                     "/api/v1/users/exists", "/api/v1/games/list", "/api/v1/games/categories", "/api/v1/games/{gameId}"
             ),

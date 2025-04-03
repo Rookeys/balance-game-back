@@ -44,12 +44,13 @@ public class GameResourceCommentService {
     @Transactional
     public void addComment(Long resourceId, GameResourceCommentRequest commentRequest,
                            HttpServletRequest request) {
-        Users users = userUtils.findUserByToken(request);
-        GameResources gameResources = gameResourceRepository.findById(resourceId);
 
         if (commentsRepository.existsByResourceIdAndParentId(resourceId, commentRequest.getParentId())) {
             throw new BadRequestException("대댓글에 답글을 달 수 없습니다.", ErrorCode.RUNTIME_EXCEPTION);
         }
+
+        Users users = userUtils.findUserByToken(request);
+        GameResources gameResources = gameResourceRepository.findById(resourceId);
 
         GameResourceComments comments = GameResourceComments.builder()
                 .comment(commentRequest.getComment())

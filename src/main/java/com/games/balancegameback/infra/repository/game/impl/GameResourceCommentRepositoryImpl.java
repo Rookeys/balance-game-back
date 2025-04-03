@@ -17,6 +17,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
@@ -64,16 +65,18 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                                                                                         GameCommentSearchRequest request) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
-        QUsersEntity user = QUsersEntity.usersEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGamesEntity games = QGamesEntity.gamesEntity;
+        QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
+        QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(comments.gameResources.id.eq(resourceId));
-        builder.and(comments.parent.isNull());  // 부모 댓글만 찾아옴.
+        builder.and(comments.parent.isNull());
 
         this.setOptions(builder, cursorId, request, comments);
-        // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
-        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
 
+        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
         List<GameResourceParentCommentResponse> list = jpaQueryFactory
@@ -81,18 +84,25 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         GameResourceParentCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
-                        user.nickname.as("nickname"),
+                        new CaseBuilder()
+                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .otherwise(user.nickname)
+                                .as("nickname"),
                         comments.children.size().as("children"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.isDeleted.as("isDeleted"),
                         comments.likes.size().as("like"),
-                        this.isLikedExpression(users)
+                        this.isLikedExpression(users).as("existsLiked"),
+                        comments.users.uid.eq(gameUser.uid).as("existsWriter")
                 ))
                 .from(comments)
-                .where(builder)
-                .join(comments.users, user)
+                .leftJoin(comments.users, user)
+                .leftJoin(comments.gameResources, resources)
+                .leftJoin(resources.games, games)
+                .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
+                .where(builder)
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -115,7 +125,10 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                                                                                                   GameCommentSearchRequest request) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
-        QUsersEntity user = QUsersEntity.usersEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGamesEntity games = QGamesEntity.gamesEntity;
+        QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
+        QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(comments.parent.id.eq(parentId));   // 대댓글만 찾아옴.
@@ -131,16 +144,23 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         GameResourceChildrenCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
-                        user.nickname.as("nickname"),
+                        new CaseBuilder()
+                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .otherwise(user.nickname)
+                                .as("nickname"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
-                        this.isLikedExpression(users).as("isLiked")
+                        this.isLikedExpression(users).as("existsLiked"),
+                        comments.users.uid.eq(gameUser.uid).as("existsWriter")
                 ))
                 .from(comments)
-                .where(builder)
-                .join(comments.users, user)
+                .leftJoin(comments.users, user)
+                .leftJoin(comments.gameResources, resources)
+                .leftJoin(resources.games, games)
+                .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
+                .where(builder)
                 .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
