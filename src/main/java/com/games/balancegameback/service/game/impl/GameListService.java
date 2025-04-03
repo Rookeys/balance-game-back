@@ -1,9 +1,7 @@
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
-import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameSearchRequest;
+import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.service.game.repository.GameListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -22,5 +20,9 @@ public class GameListService {
 
     public GameCategoryNumsResponse getCategoryNums(String title) {
         return gameListRepository.getCategoryCounts(title);
+    }
+
+    public GameDetailResponse getGameStatus(Long gameId) {
+        return gameListRepository.getGameStatus(gameId);
     }
 }

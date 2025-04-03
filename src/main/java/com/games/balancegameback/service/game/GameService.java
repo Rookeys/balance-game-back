@@ -53,14 +53,19 @@ public class GameService {
         return gameListService.getCategoryNums(title);
     }
 
+    // 게임 설정값 반환
+    public GameDetailResponse getGameStatus(Long gameId) {
+        return gameListService.getGameStatus(gameId);
+    }
+
     // 게임방 생성
     public Long saveGame(GameRequest gameRequest, HttpServletRequest request) {
         return gameRoomService.saveGame(gameRequest, request);
     }
 
-    // 게임 설정값 반환
-    public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
-        return gameRoomService.getGameStatus(gameId, request);
+    // 내가 만든 게임방 설정값 반환
+    public GameResponse getMyGameStatus(Long gameId, HttpServletRequest request) {
+        return gameRoomService.getMyGameStatus(gameId, request);
     }
 
     // 내가 만든 게임들 리스트 반환

@@ -3,9 +3,7 @@ package com.games.balancegameback.web.game;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
-import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
-import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameSearchRequest;
+import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.service.game.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -58,6 +56,18 @@ public class GameListController {
                 .build();
 
         return gameService.getMainGameList(cursorId, pageable, searchRequest);
+    }
+
+    @Operation(summary = "게임방 정보 확인 API", description = "특정 게임방의 정보를 확인함.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "게임방의 정보 확인 성공")
+    })
+    @GetMapping(value = "/{gameId}")
+    public GameDetailResponse getGameStatus(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId) {
+
+        return gameService.getGameStatus(gameId);
     }
 
     @Operation(summary = "각 카테고리 별 게임 갯수 출력 API", description = "각 카테고리 별 게임 갯수를 출력한다.")
