@@ -38,21 +38,6 @@ public class GameRoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
-    @Operation(summary = "게임방 정보 확인 API", description = "특정 게임방의 설정을 확인함.")
-    @SecurityRequirement(name = "bearerAuth")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "게임방 설정 내역 발급 성공"),
-            @ApiResponse(responseCode = "401", description = "게임 주인이 아닙니다.")
-    })
-    @GetMapping(value = "/{gameId}")
-    public GameResponse getGameStatus(
-            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
-            @PathVariable(name = "gameId") Long gameId,
-
-            HttpServletRequest request) {
-        return gameService.getGameStatus(gameId, request);
-    }
-
     @Operation(summary = "게임방 설정 업데이트 API", description = "게임방의 설정들을 변경 가능.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {

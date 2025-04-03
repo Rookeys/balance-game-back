@@ -1,13 +1,12 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
-import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
-import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameListSelectionResponse;
-import com.games.balancegameback.dto.game.GameSearchRequest;
+import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.service.game.repository.GameListRepository;
@@ -83,6 +82,125 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
 
     @Override
+    public GameDetailResponse getGameStatus(Long gameId) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+        QUsersEntity users = QUsersEntity.usersEntity;
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGameCategoryEntity gameCategory = QGameCategoryEntity.gameCategoryEntity;
+        QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
+        QLinksEntity links = QLinksEntity.linksEntity;
+
+        Tuple tuple = jpaQueryFactory.selectDistinct(
+                        games.id,
+                        games.title,
+                        games.description,
+                        games.users.nickname,
+                        images.fileUrl,
+                        games.isNamePrivate,
+                        games.createdDate,
+                        games.updatedDate,
+                        games.isBlind
+                ).from(games)
+                .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
+                .leftJoin(games.users, users)
+                .leftJoin(images).on(images.users.uid.eq(games.users.uid))
+                .where(games.id.eq(gameId))
+                .groupBy(games.id)
+                .having(games.gameResources.size().goe(2))
+                .fetchOne();
+
+        if (tuple == null) {
+            throw new NotFoundException("Game not found", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
+        Long roomId = tuple.get(games.id);
+        String title = tuple.get(games.title);
+        String description = tuple.get(games.description);
+        String nickname = tuple.get(games.users.nickname);
+        String profileImageUrl = tuple.get(images.fileUrl);
+        boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
+        OffsetDateTime createdAt = tuple.get(games.createdDate);
+        OffsetDateTime updatedAt = tuple.get(games.updatedDate);
+        Boolean isBlind = tuple.get(games.isBlind);
+
+        if (isPrivate) {
+            nickname = "익명";
+            profileImageUrl = null;
+        }
+
+        List<Category> category = jpaQueryFactory
+                .selectFrom(gameCategory)
+                .where(gameCategory.games.id.eq(roomId))
+                .fetch()
+                .stream()
+                .map(GameCategoryEntity::getCategory)
+                .toList();
+
+        Long totalPlayNums = jpaQueryFactory
+                .select(results.id.count())
+                .from(results)
+                .where(results.gameResources.games.id.eq(roomId))
+                .fetchOne();
+
+        Long totalResourceNums = jpaQueryFactory
+                .select(resources.id.count())
+                .from(resources)
+                .where(resources.games.id.eq(roomId))
+                .fetchOne();
+
+        List<Tuple> tuples = jpaQueryFactory.select(
+                        resources.id,
+                        resources.images.fileUrl.coalesce(resources.links.urls),
+                        resources.images.mediaType.coalesce(resources.links.mediaType),
+                        resources.title
+                ).from(resources)
+                .leftJoin(resources.images, images)
+                .leftJoin(resources.links, links)
+                .where(resources.games.id.eq(roomId))
+                .orderBy(resources.winningLists.size().desc(), resources.id.desc())
+                .limit(2)
+                .fetch();
+
+        GameListSelectionResponse leftSelection = (!tuples.isEmpty()) ?
+                GameListSelectionResponse.builder()
+                        .id(tuples.getFirst().get(resources.id))
+                        .title(tuples.getFirst().get(resources.title))
+                        .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
+                        .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                        .build()
+                : null;
+
+        GameListSelectionResponse rightSelection = (!tuples.isEmpty()) ?
+                GameListSelectionResponse.builder()
+                        .id(tuples.getLast().get(resources.id))
+                        .title(tuples.getLast().get(resources.title))
+                        .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
+                        .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                        .build()
+                : null;
+
+        return GameDetailResponse.builder()
+                .title(title)
+                .description(description)
+                .categories(category)
+                .existsBlind(isBlind)
+                .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
+                .totalResourceNums(totalResourceNums != null ? totalResourceNums.intValue() : 0)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .userResponse(UserMainResponse.builder()
+                        .nickname(nickname)
+                        .profileImageUrl(profileImageUrl)
+                        .build())
+                .leftSelection(leftSelection)
+                .rightSelection(rightSelection)
+                .build();
+    }
+
+    @Override
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
                                                         GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
@@ -133,6 +251,7 @@ public class GameListRepositoryImpl implements GameListRepository {
 
             if (isPrivate) {
                 nickname = "익명";
+                profileImageUrl = null;
             }
 
             List<Tuple> tuples = jpaQueryFactory.select(

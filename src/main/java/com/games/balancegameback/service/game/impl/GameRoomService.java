@@ -60,7 +60,7 @@ public class GameRoomService {
         return games.getId();
     }
 
-    public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
+    public GameResponse getMyGameStatus(Long gameId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(gameId, users);
 
