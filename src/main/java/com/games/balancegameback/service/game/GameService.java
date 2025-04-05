@@ -2,6 +2,7 @@ package com.games.balancegameback.service.game;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.CommentType;
@@ -105,12 +106,20 @@ public class GameService {
         return gameResourceService.getResource(gameId, resourceId);
     }
 
-    // 등록된 리소스 목록을 반환
+    // 등록된 리소스 목록을 반환 (CursorId)
     public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                    GameResourceSearchRequest gameResourceSearchRequest,
                                                    HttpServletRequest request) {
         this.validateRequest(gameId, request);
         return gameResourceService.getResources(gameId, cursorId, pageable, gameResourceSearchRequest);
+    }
+
+    // 등록된 리소스 목록을 반환 (Page)
+    public CustomBasedPageImpl<GameResourceResponse> getResourcesUsingPage(Long gameId, Pageable pageable,
+                                                                           GameResourceSearchRequest gameResourceSearchRequest,
+                                                                           HttpServletRequest request) {
+        this.validateRequest(gameId, request);
+        return gameResourceService.getResourcesUsingPage(gameId, pageable, gameResourceSearchRequest);
     }
 
     // 등록한 리소스의 정보를 수정함

@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.game;
 
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.dto.game.GameResourceDeleteRequest;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,14 +61,14 @@ public class GameResourceController {
     }
 
 
-    @Operation(summary = "게임 리소스 리스트 발급 API", description = "해당 게임방의 리소스 목록을 제공한다.")
+    @Operation(summary = "게임 리소스 리스트 발급 API (CursorId)", description = "해당 게임방의 리소스 목록을 제공한다.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "발급 완료"),
             @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
     })
     @GetMapping(value = "/{gameId}/resources")
-    public CustomPageImpl<GameResourceResponse> getResources(
+    public CustomPageImpl<GameResourceResponse> getResourcesUsingCursorId(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
@@ -74,7 +76,7 @@ public class GameResourceController {
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
-            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
             @Parameter(name = "title", description = "검색할 리소스 제목")
             @RequestParam(name = "title", required = false) String title,
@@ -92,6 +94,42 @@ public class GameResourceController {
                 .build();
 
         return gameService.getResources(gameId, cursorId, pageable, searchRequest, request);
+    }
+
+    @Operation(summary = "게임 리소스 리스트 발급 API (Page)", description = "해당 게임방의 리소스 목록을 제공한다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "발급 완료"),
+            @ApiResponse(responseCode = "401", description = "게임룸 호스트가 아닙니다.")
+    })
+    @GetMapping(value = "/{gameId}/resources/page")
+    public CustomBasedPageImpl<GameResourceResponse> getResourcesUsingPage(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
+            @Parameter(name = "page", description = "페이지 넘버")
+            @RequestParam(name = "page", defaultValue = "1")
+            @Min(value = 1, message = "페이지 번호는 1 이상이어야 합니다.") int page,
+
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+
+            @Parameter(name = "title", description = "검색할 리소스 제목")
+            @RequestParam(name = "title", required = false) String title,
+
+            @Parameter(name = "sortType", description = "정렬 방식",
+                    schema = @Schema(implementation = GameResourceSortType.class))
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameResourceSortType sortType,
+
+            HttpServletRequest request) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        GameResourceSearchRequest searchRequest = GameResourceSearchRequest.builder()
+                .title(title)
+                .sortType(sortType)
+                .build();
+
+        return gameService.getResourcesUsingPage(gameId, pageable, searchRequest, request);
     }
 
     @Operation(summary = "게임 리소스 수정 API", description = "리소스의 제목이나 URL 등을 수정할 수 있다.")

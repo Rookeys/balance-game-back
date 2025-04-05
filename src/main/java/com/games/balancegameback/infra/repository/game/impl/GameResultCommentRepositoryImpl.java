@@ -58,7 +58,6 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                                                                               GameCommentSearchRequest searchRequest) {
         QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
-        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGamesEntity games = QGamesEntity.gamesEntity;
         QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
         QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
