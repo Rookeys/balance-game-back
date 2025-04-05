@@ -1,7 +1,6 @@
 package com.games.balancegameback.web.game;
 
 import com.games.balancegameback.dto.game.GameRequest;
-import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.service.game.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

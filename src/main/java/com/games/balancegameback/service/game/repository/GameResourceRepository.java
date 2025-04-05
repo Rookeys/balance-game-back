@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.game.repository;
 
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.dto.game.GameResourceResponse;
@@ -21,6 +22,9 @@ public interface GameResourceRepository {
 
     CustomPageImpl<GameResourceResponse> findByGameId(Long gameId, Long cursorId, Pageable pageable,
                                                       GameResourceSearchRequest request);
+
+    CustomBasedPageImpl<GameResourceResponse> findByGameIdWithPaging(Long gameId, Pageable pageable,
+                                                                     GameResourceSearchRequest request);
 
     void update(GameResources gameResources);
 

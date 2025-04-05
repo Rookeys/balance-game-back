@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.game.impl;
 
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.Games;
@@ -33,6 +34,10 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
+    public Integer getCountResourcesInGames(Long gameId) {
+        return gameResourceRepository.countByGameId(gameId);
+    }
+
     public GameResourceResponse getResource(Long gameId, Long resourceId) {
         GameResources resources = gameResourceRepository.findById(resourceId);
         int totalNums = gameResultRepository.countByGameId(gameId);
@@ -58,6 +63,11 @@ public class GameResourceService {
     public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                              GameResourceSearchRequest request) {
         return gameResourceRepository.findByGameId(gameId, cursorId, pageable, request);
+    }
+
+    public CustomBasedPageImpl<GameResourceResponse> getResourcesUsingPage(Long gameId, Pageable pageable,
+                                                                           GameResourceSearchRequest request) {
+        return gameResourceRepository.findByGameIdWithPaging(gameId, pageable, request);
     }
 
     @Transactional

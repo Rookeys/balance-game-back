@@ -2,6 +2,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
@@ -141,6 +142,55 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
 
         return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
     }
+
+    @Override
+    public CustomBasedPageImpl<GameResourceResponse> findByGameIdWithPaging(Long gameId, Pageable pageable,
+                                                                            GameResourceSearchRequest request) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
+        QLinksEntity links = QLinksEntity.linksEntity;
+
+        BooleanBuilder builder = new BooleanBuilder();
+        BooleanBuilder totalBuilder = new BooleanBuilder();
+
+        builder.and(resources.games.id.eq(gameId));
+        totalBuilder.and(resources.games.id.eq(gameId));
+
+        this.setOptions(builder, totalBuilder, null, request, resources);
+
+        OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
+
+        List<GameResourceResponse> list = jpaQueryFactory
+                .select(Projections.constructor(
+                        GameResourceResponse.class,
+                        resources.id.as("resourceId"),
+                        resources.title,
+                        images.mediaType.coalesce(MediaType.LINK).as("type"),
+                        images.fileUrl.coalesce(links.urls).as("content"),
+                        links.startSec,
+                        links.endSec,
+                        resources.winningLists.size().as("winningLists"),
+                        this.getTotalPlayNumsSubQuery(gameId)
+                ))
+                .from(resources)
+                .leftJoin(resources.images, images)
+                .leftJoin(resources.links, links)
+                .where(builder)
+                .orderBy(orderSpecifier)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long totalElements = jpaQueryFactory
+                .select(resources.count())
+                .from(resources)
+                .where(totalBuilder)
+                .fetchOne();
+
+        return new CustomBasedPageImpl<>(list, pageable, totalElements != null ? totalElements : 0L);
+    }
+
+
 
     @Override
     public void update(GameResources gameResources) {
