@@ -33,6 +33,10 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
+    public Integer getCountResourcesInGames(Long gameId) {
+        return gameResourceRepository.countByGameId(gameId);
+    }
+
     public GameResourceResponse getResource(Long gameId, Long resourceId) {
         GameResources resources = gameResourceRepository.findById(resourceId);
         int totalNums = gameResultRepository.countByGameId(gameId);

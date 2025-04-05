@@ -52,6 +52,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/list").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/categories").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/resources/count").permitAll()
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated(); // 그 외 모든 요청은 검증 필요
                 })

@@ -46,6 +46,19 @@ public class GameResourceController {
     }
 
 
+    @Operation(summary = "게임방 내 리소스 총 갯수 반환 API", description = "해당 게임방의 리소스 총 갯수를 반환함.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "리소스 총 갯수 반환 성공")
+    })
+    @GetMapping(value = "/{gameId}/resources/count")
+    public Integer getCountResourcesInGames(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId) {
+
+        return gameService.getCountResourcesInGames(gameId);
+    }
+
+
     @Operation(summary = "게임 리소스 리스트 발급 API", description = "해당 게임방의 리소스 목록을 제공한다.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {

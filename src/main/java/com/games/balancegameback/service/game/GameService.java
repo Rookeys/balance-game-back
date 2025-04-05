@@ -63,6 +63,11 @@ public class GameService {
         return gameRoomService.saveGame(gameRequest, request);
     }
 
+    // 해당 게임방 내 리소스 총 갯수 반환
+    public Integer getCountResourcesInGames(Long gameId) {
+        return gameResourceService.getCountResourcesInGames(gameId);
+    }
+
     // 내가 만든 게임방 설정값 반환
     public GameResponse getMyGameStatus(Long gameId, HttpServletRequest request) {
         return gameRoomService.getMyGameStatus(gameId, request);
