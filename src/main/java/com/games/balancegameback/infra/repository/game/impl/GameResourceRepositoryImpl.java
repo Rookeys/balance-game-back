@@ -190,8 +190,6 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         return new CustomBasedPageImpl<>(list, pageable, totalElements != null ? totalElements : 0L);
     }
 
-
-
     @Override
     public void update(GameResources gameResources) {
         GameResourcesEntity entity = gameResourceJpaRepository.findById(gameResources.getId())
