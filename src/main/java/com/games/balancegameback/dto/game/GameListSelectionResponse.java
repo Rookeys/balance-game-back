@@ -24,4 +24,10 @@ public class GameListSelectionResponse {
 
     @Schema(description = "이미지 / 유튜브 링크 URL")
     private String content;
+
+    @Schema(description = "유튜브 URL 시작 초")
+    private int startSec;
+
+    @Schema(description = "유튜브 URL 끝 초")
+    private int endSec;
 }

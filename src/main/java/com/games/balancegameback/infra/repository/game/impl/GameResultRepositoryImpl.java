@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResults;
@@ -81,6 +82,59 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .fetchOne();
 
         return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
+    }
+
+    @Override
+    public CustomBasedPageImpl<GameResultResponse> findGameResultRankingWithPaging(Long gameId, Pageable pageable,
+                                                                                   GameResourceSearchRequest request) {
+        QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
+        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
+        QLinksEntity links = QLinksEntity.linksEntity;
+
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(gameResources.games.id.eq(gameId));
+
+        // 검색어 필터
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+        }
+
+        // 정렬 기준
+        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType());
+
+        // 본문 조회
+        List<GameResultResponse> results = jpaQueryFactory
+                .select(Projections.constructor(
+                        GameResultResponse.class,
+                        gameResources.id.as("resourceId"),
+                        gameResources.title,
+                        images.mediaType.coalesce(MediaType.LINK).as("type"),
+                        images.fileUrl.coalesce(links.urls).as("content"),
+                        links.startSec,
+                        links.endSec,
+                        gameResources.winningLists.size().as("winningLists"),
+                        gameResourceRepository.getTotalPlayNumsSubQuery(gameId)
+                ))
+                .from(gameResources)
+                .leftJoin(gameResults).on(gameResults.gameResources.eq(gameResources))
+                .leftJoin(gameResources.images, images)
+                .leftJoin(gameResources.links, links)
+                .where(builder)
+                .groupBy(gameResources.id)
+                .orderBy(orderSpecifier)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        // 전체 개수
+        Long totalCount = jpaQueryFactory
+                .select(gameResources.count())
+                .from(gameResources)
+                .where(builder)
+                .fetchOne();
+
+        return new CustomBasedPageImpl<>(results, pageable, totalCount != null ? totalCount : 0L);
     }
 
     @Override

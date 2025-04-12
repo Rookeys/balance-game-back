@@ -18,13 +18,22 @@ public interface GameResourceCommentRepository {
 
     void delete(GameResourceComments gameResourceComments);
 
-    CustomPageImpl<GameResourceParentCommentResponse> findByGameResourceComments(Long resourceId, Long cursorId,
+    CustomPageImpl<GameResourceParentCommentResponse> findByGameResourceComments(Long gameId, Long resourceId, Long cursorId,
                                                                                  Users users, Pageable pageable,
                                                                                  GameCommentSearchRequest request);
 
-    CustomPageImpl<GameResourceChildrenCommentResponse> findByGameResourceChildrenComments(Long parentId, Long cursorId,
+    CustomPageImpl<GameResourceChildrenCommentResponse> findByGameResourceChildrenComments(Long gameId, Long resourceId,
+                                                                                           Long parentId, Long cursorId,
                                                                                            Users users, Pageable pageable,
                                                                                            GameCommentSearchRequest request);
 
-    boolean existsByResourceIdAndParentId(Long resourceId, Long parentId);
+    boolean existsByGameIdAndResourceIdAndCommentId(Long gameId, Long resourceId, Long commentId);
+
+    boolean existsById(Long commentId);
+
+    boolean isChildComment(Long parentId);
+
+    boolean existsByGameIdAndResourceId(Long gameId, Long resourceId);
+
+    boolean existsByGameIdAndCommentId(Long gameId, Long commentId);
 }

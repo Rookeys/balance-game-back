@@ -35,7 +35,7 @@ public class GameListController {
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
-            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
             @Parameter(name = "title", description = "검색할 내용")
             @RequestParam(name = "title", required = false) String title,

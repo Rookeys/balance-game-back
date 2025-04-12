@@ -60,17 +60,34 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     }
 
     @Override
-    public CustomPageImpl<GameResourceParentCommentResponse> findByGameResourceComments(Long resourceId, Long cursorId,
+    public CustomPageImpl<GameResourceParentCommentResponse> findByGameResourceComments(Long gameId, Long resourceId, Long cursorId,
                                                                                         Users users, Pageable pageable,
                                                                                         GameCommentSearchRequest request) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
         QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
         QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
+        // gameId 와 resourceId 가 맞게 왔는지 확인.
+        BooleanExpression condition = resources.id.eq(resourceId)
+                .and(resources.games.id.eq(gameId));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(resources)
+                .where(condition)
+                .fetchFirst();
+
+        if (result == null) {
+            throw new NotFoundException("존재하지 않는 경로입니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
+        // gameId 와 resourceId 가 맞게 왔는지 확인.
         BooleanBuilder builder = new BooleanBuilder();
+        builder.and(comments.gameResources.games.id.eq(gameId));
         builder.and(comments.gameResources.id.eq(resourceId));
         builder.and(comments.parent.isNull());
 
@@ -85,9 +102,17 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
                         new CaseBuilder()
-                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("익명")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
+                        new CaseBuilder()
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("")
+                                .otherwise(images.fileUrl)
+                                .as("profileImageUrl"),
                         comments.children.size().as("children"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
@@ -98,6 +123,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
+                .leftJoin(images).on(images.users.email.eq(user.email))
                 .leftJoin(comments.gameResources, resources)
                 .leftJoin(resources.games, games)
                 .leftJoin(games.users, gameUser)
@@ -120,17 +146,37 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     }
 
     @Override
-    public CustomPageImpl<GameResourceChildrenCommentResponse> findByGameResourceChildrenComments(Long parentId, Long cursorId,
+    public CustomPageImpl<GameResourceChildrenCommentResponse> findByGameResourceChildrenComments(Long gameId, Long resourceId,
+                                                                                                  Long parentId, Long cursorId,
                                                                                                   Users users, Pageable pageable,
                                                                                                   GameCommentSearchRequest request) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
         QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
         QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
+        // gameId 와 resourceId, parentId 가 맞게 왔는지 확인.
+        BooleanExpression condition = comments.id.eq(parentId)
+                .and(comments.gameResources.id.eq(resourceId))
+                .and(comments.gameResources.games.id.eq(gameId));
+
+        Integer existCheck = jpaQueryFactory
+                .selectOne()
+                .from(comments)
+                .where(condition)
+                .fetchFirst();
+
+        if (existCheck == null) {
+            throw new NotFoundException("존재하지 않는 댓글 경로입니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
+        // 데이터 실존 확인 이후 get 쿼리 준비.
         BooleanBuilder builder = new BooleanBuilder();
+        builder.and(comments.gameResources.games.id.eq(gameId));
+        builder.and(comments.gameResources.id.eq(resourceId));
         builder.and(comments.parent.id.eq(parentId));   // 대댓글만 찾아옴.
 
         this.setOptions(builder, cursorId, request, comments);
@@ -145,9 +191,17 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
                         new CaseBuilder()
-                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("익명")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
+                        new CaseBuilder()
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("")
+                                .otherwise(images.fileUrl)
+                                .as("profileImageUrl"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
@@ -156,6 +210,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
+                .leftJoin(images).on(images.users.email.eq(user.email))
                 .leftJoin(comments.gameResources, resources)
                 .leftJoin(resources.games, games)
                 .leftJoin(games.users, gameUser)
@@ -178,23 +233,69 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     }
 
     @Override
-    public boolean existsByResourceIdAndParentId(Long resourceId, Long parentId) {
+    public boolean existsByGameIdAndResourceIdAndCommentId(Long gameId, Long resourceId, Long commentId) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
 
-        if (parentId == null) {
-            return false;
-        }
+        BooleanExpression condition = comments.id.eq(commentId)
+                .and(comments.gameResources.id.eq(resourceId))
+                .and(comments.gameResources.games.id.eq(gameId));
 
-        BooleanExpression condition = comments.gameResources.id.eq(resourceId)
-                .and(comments.parent.id.eq(parentId));
-
-        Integer count = jpaQueryFactory
+        Integer result = jpaQueryFactory
                 .selectOne()
                 .from(comments)
                 .where(condition)
                 .fetchFirst();
 
-        return count != null;
+        return result != null;
+    }
+
+    @Override
+    public boolean existsById(Long commentId) {
+        return gameResourceCommentRepository.existsById(commentId);
+    }
+
+    @Override
+    public boolean isChildComment(Long parentId) {
+        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
+
+        BooleanExpression condition = comments.id.eq(parentId)
+                .and(comments.parent.isNotNull());
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(comments)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
+    }
+
+    @Override
+    public boolean existsByGameIdAndResourceId(Long gameId, Long resourceId) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+
+        BooleanExpression condition = resources.id.eq(resourceId)
+                .and(resources.games.id.eq(gameId));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(resources)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
+    }
+
+    @Override
+    public boolean existsByGameIdAndCommentId(Long gameId, Long commentId) {
+        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
+
+        return jpaQueryFactory
+                .selectOne()
+                .from(comments)
+                .where(comments.id.eq(commentId)
+                        .and(comments.gameResources.games.id.eq(gameId)))
+                .fetchFirst() != null;
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,

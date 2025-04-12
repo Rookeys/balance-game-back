@@ -59,6 +59,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
         QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
         QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
@@ -71,15 +72,24 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
+        assert users != null;
         List<GameResultCommentResponse> list = jpaQueryFactory
                 .selectDistinct(Projections.constructor(
                         GameResultCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
                         new CaseBuilder()
-                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("익명")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
+                        new CaseBuilder()
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("")
+                                .otherwise(images.fileUrl)
+                                .as("profileImageUrl"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
@@ -88,6 +98,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
+                .leftJoin(images).on(images.users.email.eq(user.email))
                 .leftJoin(comments.games, games)
                 .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
@@ -112,6 +123,18 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
     public GameResultComments findById(Long id) {
         return gameResultCommentJpaRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("해당하는 데이터가 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION)).toModel();
+    }
+
+    @Override
+    public boolean existsByGameIdAndCommentId(Long gameId, Long commentId) {
+        QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
+
+        return jpaQueryFactory
+                .selectOne()
+                .from(comments)
+                .where(comments.id.eq(commentId)
+                        .and(comments.games.id.eq(gameId)))
+                .fetchFirst() != null;
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,

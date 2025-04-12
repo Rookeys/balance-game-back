@@ -31,11 +31,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             "GET", Set.of(
                     "/swagger-ui/**", "/v3/api-docs/**",
                     "/api/v1/games/{gameId}/play", "/api/v1/games/{gameId}/play/{playId}",
-                    "/api/v1/games/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
-                    "/api/v1/games/resources/{resourceId}/comments/{parentId}",
+                    "/api/v1/games/{gameId}/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
+                    "/api/v1/games/{gameId}/results/page", "/api/v1/games/{gameId}",
+                    "/api/v1/games/{gameId}/resources/{resourceId}/comments/{parentId}",
                     "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
                     "/api/v1/games/{gameId}/resources/count", "/api/v1/users/exists", "/api/v1/games/list",
-                    "/api/v1/games/categories", "/api/v1/games/{gameId}"
+                    "/api/v1/games/categories"
             ),
             "POST", Set.of(
                     "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
@@ -131,6 +132,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
+        json.put("status", errorCode.getStatus());
         json.put("code", errorCode.getCode());
         json.put("message", errorCode.getMessage());
 
