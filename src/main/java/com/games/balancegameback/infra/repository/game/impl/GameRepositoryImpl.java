@@ -18,6 +18,7 @@ import com.games.balancegameback.service.media.impl.S3Service;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -203,8 +204,19 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     @Override
-    public boolean existsByIdAndUsers(Long gameId, Users users) {
-        return gameRepository.existsByIdAndUsers(gameId, UsersEntity.from(users));
+    public boolean existsIdAndUsersEmail(Long gameId, String email) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+
+        BooleanExpression condition = games.id.eq(gameId)
+                .and(games.users.email.eq(email));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(games)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
     }
 
     @Override

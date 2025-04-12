@@ -1,5 +1,8 @@
 package com.games.balancegameback.service.game.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
@@ -39,6 +42,10 @@ public class GameResourceService {
     }
 
     public GameResourceResponse getResource(Long gameId, Long resourceId) {
+        if (!gameResourceRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
+            throw new NotFoundException("잘못된 경로입니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
         GameResources resources = gameResourceRepository.findById(resourceId);
         int totalNums = gameResultRepository.countByGameId(gameId);
 
@@ -160,4 +167,10 @@ public class GameResourceService {
             }
         }
     }
+
+//    private void validateGameIdAndResourceId(Long gameId, Long resourceId) {
+//        if (!gameResourceRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
+//            throw new NotFoundException("gameId와 resourceId가 일치하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+//        }
+//    }
 }

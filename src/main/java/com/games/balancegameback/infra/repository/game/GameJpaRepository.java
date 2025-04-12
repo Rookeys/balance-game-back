@@ -8,5 +8,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GameJpaRepository extends JpaRepository<GamesEntity, Long> {
 
-    boolean existsByIdAndUsers(Long id, UsersEntity user);
 }

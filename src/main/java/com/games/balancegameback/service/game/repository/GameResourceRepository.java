@@ -31,4 +31,6 @@ public interface GameResourceRepository {
     Integer countByGameId(Long gameId);
 
     void deleteById(Long id);
+
+    boolean existsByGameIdAndResourceId(Long gameId, Long resourceId);
 }

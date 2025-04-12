@@ -16,6 +16,7 @@ import com.games.balancegameback.infra.repository.game.GameResourceJpaRepository
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.*;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
@@ -210,6 +211,22 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         }
 
         gameResourceJpaRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsByGameIdAndResourceId(Long gameId, Long resourceId) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+
+        BooleanExpression condition = resources.id.eq(resourceId)
+                .and(resources.games.id.eq(gameId));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(resources)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
     }
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,
