@@ -2,7 +2,6 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResults;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.domain.media.enums.MediaType;
@@ -72,8 +71,11 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
+        boolean hasNext = list.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            list.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(gameResources.count())
