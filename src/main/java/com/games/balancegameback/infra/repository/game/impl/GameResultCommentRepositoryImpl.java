@@ -3,7 +3,6 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResultComments;
 import com.games.balancegameback.domain.game.enums.CommentSortType;
 import com.games.balancegameback.domain.user.Users;
@@ -59,6 +58,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
         QGameCommentLikesEntity commentLikes = QGameCommentLikesEntity.gameCommentLikesEntity;
         QGamesEntity games = QGamesEntity.gamesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
         QUsersEntity user = QUsersEntity.usersEntity; // 댓글 작성자
         QUsersEntity gameUser = new QUsersEntity("gameUser"); // 게임 제작자
 
@@ -71,15 +71,24 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
+        assert users != null;
         List<GameResultCommentResponse> list = jpaQueryFactory
                 .selectDistinct(Projections.constructor(
                         GameResultCommentResponse.class,
                         comments.id.as("commentId"),
                         comments.comment.as("comment"),
                         new CaseBuilder()
-                                .when(games.isNamePrivate.isTrue()).then("익명")
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("익명")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
+                        new CaseBuilder()
+                                .when(comments.users.uid.eq(gameUser.uid)
+                                        .and(games.isNamePrivate.isTrue()))
+                                .then("")
+                                .otherwise(images.fileUrl)
+                                .as("profileImageUrl"),
                         comments.createdDate.as("createdDateTime"),
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
@@ -88,16 +97,20 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
+                .leftJoin(images).on(images.users.email.eq(user.email))
                 .leftJoin(comments.games, games)
                 .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
                 .where(builder)
-                .orderBy(orderSpecifier)
+                .orderBy(orderSpecifier, comments.id.asc())
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
+        boolean hasNext = list.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            list.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(comments.count())
@@ -114,57 +127,58 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                 new NotFoundException("해당하는 데이터가 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION)).toModel();
     }
 
-    private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
-                            QGameResultCommentsEntity comments) {
-        if (cursorId != null && request.getSortType().equals(CommentSortType.OLD)) {
-            builder.and(comments.id.gt(cursorId));
-        }
+    @Override
+    public boolean existsByGameIdAndCommentId(Long gameId, Long commentId) {
+        QGameResultCommentsEntity comments = QGameResultCommentsEntity.gameResultCommentsEntity;
 
-        if (cursorId != null && request.getSortType().equals(CommentSortType.RECENT)) {
-            builder.and(comments.id.lt(cursorId));
-        }
-
-        if (request.getSortType().equals(CommentSortType.LIKE_DESC) || request.getSortType().equals(CommentSortType.LIKE_ASC)) {
-            this.applyOtherSortOptions(builder, cursorId, request, comments);
-        }
-
-        if (request.getContent() != null && !request.getContent().isEmpty()) {
-            builder.and(comments.comment.containsIgnoreCase(request.getContent()));
-        }
+        return jpaQueryFactory
+                .selectOne()
+                .from(comments)
+                .where(comments.id.eq(commentId)
+                        .and(comments.games.id.eq(gameId)))
+                .fetchFirst() != null;
     }
 
-    private void applyOtherSortOptions(BooleanBuilder builder, Long cursorId,
-                                      GameCommentSearchRequest request, QGameResultCommentsEntity comments) {
-        NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
-        Integer cursorLikeCount = null;
-
-        if (cursorId != null) {
-            cursorLikeCount = jpaQueryFactory
-                    .select(comments.likes.size().coalesce(0))
-                    .from(comments)
-                    .where(comments.id.eq(cursorId))
-                    .fetchOne();
-        }
-
-        // cursorId 가 없다면 바로 탈출
-        if (cursorId == null || cursorLikeCount == null) {
+    private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
+                            QGameResultCommentsEntity comments) {
+        if (cursorId == null) {
             return;
         }
 
-        if (request.getSortType().equals(CommentSortType.LIKE_DESC)) {
-            builder.and(
-                    new BooleanBuilder()
-                            .or(likeCount.lt(cursorLikeCount))
-                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
-            );
-        }
+        CommentSortType sortType = request.getSortType();
+        QGameResultCommentsEntity cursorTarget = QGameResultCommentsEntity.gameResultCommentsEntity;
 
-        if (request.getSortType().equals(CommentSortType.LIKE_ASC)) {
-            builder.and(
-                    new BooleanBuilder()
-                            .or(likeCount.gt(cursorLikeCount))
-                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
-            );
+        // 커서 기준 댓글의 좋아요 수 가져오기
+        Integer cursorLikeCount;
+
+        if (sortType == CommentSortType.LIKE_ASC || sortType == CommentSortType.LIKE_DESC) {
+            cursorLikeCount = jpaQueryFactory
+                    .select(cursorTarget.likes.size().coalesce(0))
+                    .from(cursorTarget)
+                    .where(cursorTarget.id.eq(cursorId))
+                    .fetchOne();
+
+            if (cursorLikeCount == null) {
+                return;
+            }
+
+            NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
+
+            if (sortType == CommentSortType.LIKE_DESC) {
+                builder.and(
+                        likeCount.lt(cursorLikeCount)
+                                .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+                );
+            } else {
+                builder.and(
+                        likeCount.gt(cursorLikeCount)
+                                .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+                );
+            }
+        } else if (sortType == CommentSortType.RECENT) {
+            builder.and(comments.id.lt(cursorId));
+        } else if (sortType == CommentSortType.OLD) {
+            builder.and(comments.id.gt(cursorId));
         }
     }
 

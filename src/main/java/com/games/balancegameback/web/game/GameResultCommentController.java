@@ -33,7 +33,7 @@ public class GameResultCommentController {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
     @GetMapping(value = "/{gameId}/results/comments")
-    public CustomPageImpl<GameResultCommentResponse> getParentCommentsByGameResource(
+    public CustomPageImpl<GameResultCommentResponse> getCommentsByGameResult(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 
@@ -41,7 +41,7 @@ public class GameResultCommentController {
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
-            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
             @Parameter(name = "content", description = "검색할 댓글 내용")
             @RequestParam(name = "content", required = false) String content,

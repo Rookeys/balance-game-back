@@ -3,7 +3,6 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.*;
@@ -258,6 +257,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                             resources.id,
                             resources.images.fileUrl.coalesce(resources.links.urls),
                             resources.images.mediaType.coalesce(resources.links.mediaType),
+                            links.startSec.coalesce(0),
+                            links.endSec.coalesce(0),
                             resources.title
                     ).from(resources)
                     .leftJoin(resources.images, images)
@@ -298,6 +299,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                             .title(tuples.getFirst().get(resources.title))
                             .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
                             .build()
                     : null;
 
@@ -307,6 +310,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                             .title(tuples.getLast().get(resources.title))
                             .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
                             .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
                             .build()
                     : null;
 
@@ -328,8 +333,11 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .build();
         }).collect(Collectors.toList());    // toList() 는 불변 리스트로 반환되기 Collectors 로 한번 감싸줘야 함.
 
-        boolean hasNext = PaginationUtils.hasNextPage(resultList, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
+        boolean hasNext = resultList.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            resultList.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(games.id.countDistinct())

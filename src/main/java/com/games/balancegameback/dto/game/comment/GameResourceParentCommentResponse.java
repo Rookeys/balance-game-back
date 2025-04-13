@@ -23,6 +23,9 @@ public class GameResourceParentCommentResponse {
     @Schema(description = "작성자 닉네임")
     private String nickname;
 
+    @Schema(description = "작성자 프로필 사진")
+    private String profileImageUrl;
+
     @Schema(description = "대댓글 개수")
     private int children;
 

@@ -3,7 +3,6 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameCategory;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.Category;
@@ -18,6 +17,7 @@ import com.games.balancegameback.service.media.impl.S3Service;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -188,8 +188,11 @@ public class GameRepositoryImpl implements GameRepository {
                     .build();
         }).collect(Collectors.toList());    // toList() 는 불변 리스트로 반환되기 Collectors 로 한번 감싸줘야 함.
 
-        boolean hasNext = PaginationUtils.hasNextPage(resultList, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
+        boolean hasNext = resultList.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            resultList.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(games.id.countDistinct())
@@ -203,8 +206,19 @@ public class GameRepositoryImpl implements GameRepository {
     }
 
     @Override
-    public boolean existsByIdAndUsers(Long gameId, Users users) {
-        return gameRepository.existsByIdAndUsers(gameId, UsersEntity.from(users));
+    public boolean existsIdAndUsersEmail(Long gameId, String email) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+
+        BooleanExpression condition = games.id.eq(gameId)
+                .and(games.users.email.eq(email));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(games)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
     }
 
     @Override
