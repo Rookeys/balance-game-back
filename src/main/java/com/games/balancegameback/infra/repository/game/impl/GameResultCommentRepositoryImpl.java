@@ -103,12 +103,15 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                 .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
                 .where(builder)
-                .orderBy(orderSpecifier)
+                .orderBy(orderSpecifier, comments.id.asc())
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
+        boolean hasNext = list.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            list.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(comments.count())
@@ -139,55 +142,44 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameCommentSearchRequest request,
                             QGameResultCommentsEntity comments) {
-        if (cursorId != null && request.getSortType().equals(CommentSortType.OLD)) {
-            builder.and(comments.id.gt(cursorId));
-        }
-
-        if (cursorId != null && request.getSortType().equals(CommentSortType.RECENT)) {
-            builder.and(comments.id.lt(cursorId));
-        }
-
-        if (request.getSortType().equals(CommentSortType.LIKE_DESC) || request.getSortType().equals(CommentSortType.LIKE_ASC)) {
-            this.applyOtherSortOptions(builder, cursorId, request, comments);
-        }
-
-        if (request.getContent() != null && !request.getContent().isEmpty()) {
-            builder.and(comments.comment.containsIgnoreCase(request.getContent()));
-        }
-    }
-
-    private void applyOtherSortOptions(BooleanBuilder builder, Long cursorId,
-                                      GameCommentSearchRequest request, QGameResultCommentsEntity comments) {
-        NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
-        Integer cursorLikeCount = null;
-
-        if (cursorId != null) {
-            cursorLikeCount = jpaQueryFactory
-                    .select(comments.likes.size().coalesce(0))
-                    .from(comments)
-                    .where(comments.id.eq(cursorId))
-                    .fetchOne();
-        }
-
-        // cursorId 가 없다면 바로 탈출
-        if (cursorId == null || cursorLikeCount == null) {
+        if (cursorId == null) {
             return;
         }
 
-        if (request.getSortType().equals(CommentSortType.LIKE_DESC)) {
-            builder.and(
-                    new BooleanBuilder()
-                            .or(likeCount.lt(cursorLikeCount))
-                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
-            );
-        }
+        CommentSortType sortType = request.getSortType();
+        QGameResultCommentsEntity cursorTarget = QGameResultCommentsEntity.gameResultCommentsEntity;
 
-        if (request.getSortType().equals(CommentSortType.LIKE_ASC)) {
-            builder.and(
-                    new BooleanBuilder()
-                            .or(likeCount.gt(cursorLikeCount))
-                            .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
-            );
+        // 커서 기준 댓글의 좋아요 수 가져오기
+        Integer cursorLikeCount;
+
+        if (sortType == CommentSortType.LIKE_ASC || sortType == CommentSortType.LIKE_DESC) {
+            cursorLikeCount = jpaQueryFactory
+                    .select(cursorTarget.likes.size().coalesce(0))
+                    .from(cursorTarget)
+                    .where(cursorTarget.id.eq(cursorId))
+                    .fetchOne();
+
+            if (cursorLikeCount == null) {
+                return;
+            }
+
+            NumberExpression<Integer> likeCount = comments.likes.size().coalesce(0);
+
+            if (sortType == CommentSortType.LIKE_DESC) {
+                builder.and(
+                        likeCount.lt(cursorLikeCount)
+                                .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+                );
+            } else {
+                builder.and(
+                        likeCount.gt(cursorLikeCount)
+                                .or(likeCount.eq(cursorLikeCount).and(comments.id.gt(cursorId)))
+                );
+            }
+        } else if (sortType == CommentSortType.RECENT) {
+            builder.and(comments.id.lt(cursorId));
+        } else if (sortType == CommentSortType.OLD) {
+            builder.and(comments.id.gt(cursorId));
         }
     }
 

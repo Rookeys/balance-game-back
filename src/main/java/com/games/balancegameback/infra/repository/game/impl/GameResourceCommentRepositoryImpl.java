@@ -133,8 +133,11 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
+        boolean hasNext = list.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            list.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(comments.count())
@@ -220,8 +223,11 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
+        boolean hasNext = list.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            list.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(comments.count())
