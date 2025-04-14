@@ -60,7 +60,7 @@ public class UserManagementController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "확인 성공"),
     })
-    @GetMapping(value = "/exists")
+    @PostMapping(value = "/exists")
     public Boolean existsByNickname(
             @Parameter(name = "nickname", description = "유저 닉네임", required = true)
             @RequestParam(name = "nickname") String nickname) {
