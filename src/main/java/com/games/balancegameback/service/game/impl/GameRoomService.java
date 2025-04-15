@@ -98,7 +98,7 @@ public class GameRoomService {
     }
 
     private void existsHost(Long gameId, Users users) {
-        if (gameRepository.existsIdAndUsersEmail(gameId, users.getEmail())) {
+        if (!gameRepository.existsIdAndUsersEmail(gameId, users.getEmail())) {
             throw new UnAuthorizedException("게임 주인이 아닙니다.", ErrorCode.NOT_ALLOW_WRITE_EXCEPTION);
         }
     }

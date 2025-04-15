@@ -58,7 +58,7 @@ public class MediaService {
             throw new UnAuthorizedException("유효하지 않은 사용자입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
-        if (gameRepository.existsIdAndUsersEmail(gameId, users.getEmail())) {
+        if (!gameRepository.existsIdAndUsersEmail(gameId, users.getEmail())) {
             throw new UnAuthorizedException("정보가 일치하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
     }
