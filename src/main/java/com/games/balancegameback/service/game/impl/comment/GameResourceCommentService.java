@@ -2,6 +2,7 @@ package com.games.balancegameback.service.game.impl.comment;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResourceComments;
@@ -48,11 +49,7 @@ public class GameResourceCommentService {
                            HttpServletRequest request) {
 
         if (!commentsRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
-            throw new BadRequestException("해당 리소스는 존재하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
-        }
-
-        if (!commentsRepository.existsById(commentRequest.getParentId())) {
-            throw new BadRequestException("해당 댓글은 존재하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+            throw new NotFoundException("해당 리소스는 존재하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
         }
 
         if (commentRequest.getParentId() != null && commentsRepository.isChildComment(commentRequest.getParentId())) {

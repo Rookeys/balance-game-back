@@ -238,28 +238,6 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
     }
 
     @Override
-    public boolean existsByGameIdAndResourceIdAndCommentId(Long gameId, Long resourceId, Long commentId) {
-        QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
-
-        BooleanExpression condition = comments.id.eq(commentId)
-                .and(comments.gameResources.id.eq(resourceId))
-                .and(comments.gameResources.games.id.eq(gameId));
-
-        Integer result = jpaQueryFactory
-                .selectOne()
-                .from(comments)
-                .where(condition)
-                .fetchFirst();
-
-        return result != null;
-    }
-
-    @Override
-    public boolean existsById(Long commentId) {
-        return gameResourceCommentRepository.existsById(commentId);
-    }
-
-    @Override
     public boolean isChildComment(Long parentId) {
         QGameResourceCommentsEntity comments = QGameResourceCommentsEntity.gameResourceCommentsEntity;
 
