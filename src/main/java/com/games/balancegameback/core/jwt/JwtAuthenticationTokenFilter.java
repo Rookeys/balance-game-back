@@ -35,13 +35,13 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     "/api/v1/games/{gameId}/results/page", "/api/v1/games/{gameId}",
                     "/api/v1/games/{gameId}/resources/{resourceId}/comments/{parentId}",
                     "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
-                    "/api/v1/games/{gameId}/resources/count", "/api/v1/users/exists", "/api/v1/games/list",
+                    "/api/v1/games/{gameId}/resources/count", "/api/v1/games/list",
                     "/api/v1/games/categories"
             ),
             "POST", Set.of(
                     "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
                     "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
-                    "/api/v1/games/{gameId}/play"
+                    "/api/v1/games/{gameId}/play", "/api/v1/users/exists"
             ),
             "PUT", Set.of(
                     "/api/v1/games/{gameId}/play/{playId}"
