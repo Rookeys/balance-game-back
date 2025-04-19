@@ -12,6 +12,7 @@ import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResultCommentJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultCommentRepository;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -68,7 +69,9 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         this.setOptions(builder, cursorId, searchRequest, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
-        BooleanExpression existsMineCondition = users != null ? user.uid.eq(users.getUid()) : Expressions.FALSE;
+
+        BooleanExpression isMine = users != null ? user.uid.eq(users.getUid()) : Expressions.asBoolean(false);
+        Expression<Boolean> existsMineAlias = isMine.as("existsMine");
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
@@ -94,7 +97,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        existsMineCondition.as("existsMine")
+                        existsMineAlias
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
