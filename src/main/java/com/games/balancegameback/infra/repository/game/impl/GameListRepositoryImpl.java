@@ -161,8 +161,8 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         List<Tuple> tuples = jpaQueryFactory.select(
                         resources.id,
-                        resources.images.fileUrl.coalesce(resources.links.urls),
-                        resources.images.mediaType.coalesce(resources.links.mediaType),
+                        images.fileUrl.coalesce(links.urls),
+                        images.mediaType.coalesce(links.mediaType),
                         links.startSec.coalesce(0),
                         links.endSec.coalesce(0),
                         resources.title
@@ -178,8 +178,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                 GameListSelectionResponse.builder()
                         .id(tuples.getFirst().get(resources.id))
                         .title(tuples.getFirst().get(resources.title))
-                        .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                        .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                        .type(tuples.getFirst().get(images.mediaType.coalesce(links.mediaType)))
+                        .content(tuples.getFirst().get(images.fileUrl.coalesce(links.urls)))
                         .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
                         .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
                         .build()
@@ -189,8 +189,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                 GameListSelectionResponse.builder()
                         .id(tuples.getLast().get(resources.id))
                         .title(tuples.getLast().get(resources.title))
-                        .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                        .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                        .type(tuples.getLast().get(images.mediaType.coalesce(links.mediaType)))
+                        .content(tuples.getLast().get(images.fileUrl.coalesce(links.urls)))
                         .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
                         .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
                         .build()
@@ -271,8 +271,8 @@ public class GameListRepositoryImpl implements GameListRepository {
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
-                            resources.images.fileUrl.coalesce(resources.links.urls),
-                            resources.images.mediaType.coalesce(resources.links.mediaType),
+                            images.fileUrl.coalesce(links.urls),
+                            images.mediaType.coalesce(links.mediaType),
                             links.startSec.coalesce(0),
                             links.endSec.coalesce(0),
                             resources.title
@@ -313,8 +313,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getFirst().get(resources.id))
                             .title(tuples.getFirst().get(resources.title))
-                            .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getFirst().get(images.mediaType.coalesce(links.mediaType)))
+                            .content(tuples.getFirst().get(images.fileUrl.coalesce(links.urls)))
                             .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
                             .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
                             .build()
@@ -324,8 +324,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getLast().get(resources.id))
                             .title(tuples.getLast().get(resources.title))
-                            .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getLast().get(images.mediaType.coalesce(links.mediaType)))
+                            .content(tuples.getLast().get(images.fileUrl.coalesce(links.urls)))
                             .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
                             .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
                             .build()
