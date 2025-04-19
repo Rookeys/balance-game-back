@@ -55,8 +55,8 @@ public class GameService {
     }
 
     // 게임 설정값 반환
-    public GameDetailResponse getGameStatus(Long gameId) {
-        return gameListService.getGameStatus(gameId);
+    public GameDetailResponse getGameStatus(Long gameId, HttpServletRequest request) {
+        return gameListService.getGameStatus(gameId, request);
     }
 
     // 게임방 생성

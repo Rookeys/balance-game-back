@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -118,6 +119,8 @@ public class GameRepositoryImpl implements GameRepository {
                             resources.id,
                             resources.images.fileUrl.coalesce(resources.links.urls),
                             resources.images.mediaType.coalesce(resources.links.mediaType),
+                            links.startSec.coalesce(0),
+                            links.endSec.coalesce(0),
                             resources.title
                     ).from(resources)
                     .leftJoin(resources.images, images)
@@ -157,6 +160,8 @@ public class GameRepositoryImpl implements GameRepository {
                             .id(tuples.getFirst().get(resources.id))
                             .title(tuples.getFirst().get(resources.title))
                             .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
+                            .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
                             .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;
@@ -166,6 +171,8 @@ public class GameRepositoryImpl implements GameRepository {
                             .id(tuples.getLast().get(resources.id))
                             .title(tuples.getLast().get(resources.title))
                             .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
+                            .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
                             .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
                             .build()
                     : null;

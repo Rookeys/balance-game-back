@@ -5,6 +5,7 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
@@ -12,6 +13,8 @@ import com.games.balancegameback.service.game.repository.GameListRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -81,7 +84,7 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
 
     @Override
-    public GameDetailResponse getGameStatus(Long gameId) {
+    public GameDetailResponse getGameStatus(Long gameId, Users user) {
         QGamesEntity games = QGamesEntity.gamesEntity;
         QUsersEntity users = QUsersEntity.usersEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
@@ -89,6 +92,8 @@ public class GameListRepositoryImpl implements GameListRepository {
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
+
+        BooleanExpression existsMineCondition = user != null ? users.uid.eq(user.getUid()) : Expressions.FALSE;
 
         Tuple tuple = jpaQueryFactory.selectDistinct(
                         games.id,
@@ -99,7 +104,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.isNamePrivate,
                         games.createdDate,
                         games.updatedDate,
-                        games.isBlind
+                        games.isBlind,
+                        existsMineCondition
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
@@ -124,6 +130,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         OffsetDateTime createdAt = tuple.get(games.createdDate);
         OffsetDateTime updatedAt = tuple.get(games.updatedDate);
         Boolean isBlind = tuple.get(games.isBlind);
+        Boolean existsMine = tuple.get(existsMineCondition);
 
         if (isPrivate) {
             nickname = "익명";
@@ -192,6 +199,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .description(description)
                 .categories(category)
                 .existsBlind(isBlind)
+                .existsMine(existsMine)
                 .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                 .totalResourceNums(totalResourceNums != null ? totalResourceNums.intValue() : 0)
                 .createdAt(createdAt)

@@ -40,4 +40,7 @@ public class GameResourceChildrenCommentResponse {
 
     @Schema(description = "작성자 본인 확인")
     private boolean existsWriter;
+
+    @Schema(description = "댓글 작성자 본인 확인")
+    private boolean existsMine;
 }

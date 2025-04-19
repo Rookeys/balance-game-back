@@ -93,6 +93,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         this.setOptions(builder, cursorId, request, comments);
 
         BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
+        BooleanExpression existsMineCondition = users != null ? user.uid.eq(users.getUid()) : Expressions.FALSE;
+
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
         List<GameResourceParentCommentResponse> list = jpaQueryFactory
@@ -118,7 +120,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.isDeleted.as("isDeleted"),
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
-                        comments.users.uid.eq(gameUser.uid).as("existsWriter")
+                        comments.users.uid.eq(gameUser.uid).as("existsWriter"),
+                        existsMineCondition.as("existsMine")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
@@ -184,6 +187,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         this.setOptions(builder, cursorId, request, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
+        BooleanExpression existsMineCondition = users != null ? user.uid.eq(users.getUid()) : Expressions.FALSE;
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
@@ -208,7 +212,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
-                        comments.users.uid.eq(gameUser.uid).as("existsWriter")
+                        comments.users.uid.eq(gameUser.uid).as("existsWriter"),
+                        existsMineCondition.as("existsMine")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
