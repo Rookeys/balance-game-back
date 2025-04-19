@@ -240,7 +240,7 @@ public class GameService {
     private void validateRequest(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
 
-        if (!gameRepository.existsIdAndUsersEmail(roomId, users.getEmail())) {
+        if (!gameRepository.existsIdAndUsers(roomId, users)) {
             throw new UnAuthorizedException("정보가 일치하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
     }

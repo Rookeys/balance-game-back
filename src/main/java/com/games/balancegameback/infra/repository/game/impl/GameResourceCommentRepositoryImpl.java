@@ -93,7 +93,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
 
         this.setOptions(builder, cursorId, request, comments);
 
-        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
+        BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
         BooleanExpression isMine = users != null ? user.uid.eq(users.getUid()) : Expressions.asBoolean(false);
         Expression<Boolean> existsMineAlias = isMine.as("existsMine");
@@ -128,7 +128,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
-                .leftJoin(images).on(images.users.email.eq(user.email))
+                .leftJoin(images).on(images.users.uid.eq(user.uid))
                 .leftJoin(comments.gameResources, resources)
                 .leftJoin(resources.games, games)
                 .leftJoin(games.users, gameUser)
@@ -189,7 +189,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
 
         this.setOptions(builder, cursorId, request, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
-        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
+        BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
         BooleanExpression isMine = users != null ? user.uid.eq(users.getUid()) : Expressions.asBoolean(false);
         Expression<Boolean> existsMineAlias = isMine.as("existsMine");
@@ -222,7 +222,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
-                .leftJoin(images).on(images.users.email.eq(user.email))
+                .leftJoin(images).on(images.users.uid.eq(user.uid))
                 .leftJoin(comments.gameResources, resources)
                 .leftJoin(resources.games, games)
                 .leftJoin(games.users, gameUser)
@@ -365,7 +365,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         return users != null ? JPAExpressions.selectOne()
                 .from(commentLikes)
                 .where(commentLikes.resourceComments.id.eq(comments.id)
-                        .and(commentLikes.users.email.eq(users.getEmail())))
+                        .and(commentLikes.users.uid.eq(users.getUid())))
                 .exists()
                 : Expressions.asBoolean(false);
     }

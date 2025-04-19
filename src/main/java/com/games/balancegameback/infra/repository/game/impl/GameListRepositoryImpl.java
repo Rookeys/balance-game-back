@@ -201,7 +201,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .description(description)
                 .categories(category)
                 .existsBlind(isBlind)
-                .existsMine(existsMine)
+                .existsMine(Boolean.TRUE.equals(existsMine))
                 .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                 .totalResourceNums(totalResourceNums != null ? totalResourceNums.intValue() : 0)
                 .createdAt(createdAt)

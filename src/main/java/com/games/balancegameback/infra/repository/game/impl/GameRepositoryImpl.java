@@ -206,18 +206,18 @@ public class GameRepositoryImpl implements GameRepository {
                 .from(games)
                 .leftJoin(games.gameResources, resources)
                 .leftJoin(games.categories, gameCategory)
-                .where(games.users.email.eq(users.getEmail()))
+                .where(games.users.uid.eq(users.getUid()))
                 .fetchOne();
 
         return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
     }
 
     @Override
-    public boolean existsIdAndUsersEmail(Long gameId, String email) {
+    public boolean existsIdAndUsers(Long gameId, Users users) {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
         BooleanExpression condition = games.id.eq(gameId)
-                .and(games.users.email.eq(email));
+                .and(games.users.uid.eq(users.getUid()));
 
         Integer result = jpaQueryFactory
                 .selectOne()
