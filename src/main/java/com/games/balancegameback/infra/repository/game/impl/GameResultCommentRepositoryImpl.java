@@ -69,6 +69,11 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         this.setOptions(builder, cursorId, searchRequest, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
+
+        String userUid = users != null ? users.getUid() : "";
+        Expression<Boolean> existsMineExpression = Expressions.booleanTemplate("{0} COLLATE utf8mb4_general_ci = {1} COLLATE utf8mb4_general_ci",
+                comments.users.uid, userUid);
+
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
         List<GameResultCommentResponse> list = jpaQueryFactory
@@ -93,9 +98,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        Expressions.booleanTemplate("binary {0} = binary {1}",
-                                comments.users.uid, users != null ? users.getUid() : "")
-
+                        existsMineExpression
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
