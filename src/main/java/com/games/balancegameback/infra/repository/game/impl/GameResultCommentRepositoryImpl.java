@@ -70,7 +70,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
-        BooleanExpression isMine = users != null ? user.uid.eq(users.getUid()) : Expressions.asBoolean(false);
+        BooleanExpression isMine = users != null ? Expressions.asBoolean(user.uid.eq(users.getUid())) : Expressions.asBoolean(false);
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
