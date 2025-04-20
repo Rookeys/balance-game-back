@@ -120,9 +120,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        users != null && users.getUid() != null ?
-                                comments.users.uid.eq(users.getUid()).as("existsMine") :
-                                Expressions.asBoolean(false).as("existsMine")
+                        Expressions.booleanTemplate("{0} = {1}", comments.users.uid,
+                                users != null ? users.getUid() : "")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
@@ -212,9 +211,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        users != null && users.getUid() != null ?
-                                comments.users.uid.eq(users.getUid()).as("existsMine") :
-                                Expressions.asBoolean(false).as("existsMine")
+                        Expressions.booleanTemplate("{0} = {1}", comments.users.uid,
+                                users != null ? users.getUid() : "")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
