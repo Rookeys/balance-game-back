@@ -55,8 +55,8 @@ public class GameService {
     }
 
     // 게임 설정값 반환
-    public GameDetailResponse getGameStatus(Long gameId) {
-        return gameListService.getGameStatus(gameId);
+    public GameDetailResponse getGameStatus(Long gameId, HttpServletRequest request) {
+        return gameListService.getGameStatus(gameId, request);
     }
 
     // 게임방 생성
@@ -240,7 +240,7 @@ public class GameService {
     private void validateRequest(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
 
-        if (!gameRepository.existsIdAndUsersEmail(roomId, users.getEmail())) {
+        if (!gameRepository.existsIdAndUsers(roomId, users)) {
             throw new UnAuthorizedException("정보가 일치하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
     }

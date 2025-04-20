@@ -10,7 +10,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -65,9 +67,11 @@ public class GameListController {
     @GetMapping(value = "/{gameId}")
     public GameDetailResponse getGameStatus(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true)
-            @PathVariable(name = "gameId") Long gameId) {
+            @PathVariable(name = "gameId") Long gameId,
 
-        return gameService.getGameStatus(gameId);
+            HttpServletRequest request) {
+
+        return gameService.getGameStatus(gameId, request);
     }
 
     @Operation(summary = "각 카테고리 별 게임 갯수 출력 API", description = "각 카테고리 별 게임 갯수를 출력한다.")

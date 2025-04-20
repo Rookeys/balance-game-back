@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -116,8 +117,10 @@ public class GameRepositoryImpl implements GameRepository {
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
-                            resources.images.fileUrl.coalesce(resources.links.urls),
-                            resources.images.mediaType.coalesce(resources.links.mediaType),
+                            images.fileUrl.coalesce(links.urls),
+                            images.mediaType.coalesce(links.mediaType),
+                            links.startSec.coalesce(0),
+                            links.endSec.coalesce(0),
                             resources.title
                     ).from(resources)
                     .leftJoin(resources.images, images)
@@ -156,8 +159,10 @@ public class GameRepositoryImpl implements GameRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getFirst().get(resources.id))
                             .title(tuples.getFirst().get(resources.title))
-                            .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getFirst().get(images.mediaType.coalesce(links.mediaType)))
+                            .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
+                            .content(tuples.getFirst().get(images.fileUrl.coalesce(links.urls)))
                             .build()
                     : null;
 
@@ -165,8 +170,10 @@ public class GameRepositoryImpl implements GameRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getLast().get(resources.id))
                             .title(tuples.getLast().get(resources.title))
-                            .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getLast().get(images.mediaType.coalesce(links.mediaType)))
+                            .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
+                            .content(tuples.getLast().get(images.fileUrl.coalesce(links.urls)))
                             .build()
                     : null;
 
@@ -199,18 +206,18 @@ public class GameRepositoryImpl implements GameRepository {
                 .from(games)
                 .leftJoin(games.gameResources, resources)
                 .leftJoin(games.categories, gameCategory)
-                .where(games.users.email.eq(users.getEmail()))
+                .where(games.users.uid.eq(users.getUid()))
                 .fetchOne();
 
         return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
     }
 
     @Override
-    public boolean existsIdAndUsersEmail(Long gameId, String email) {
+    public boolean existsIdAndUsers(Long gameId, Users users) {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
         BooleanExpression condition = games.id.eq(gameId)
-                .and(games.users.email.eq(email));
+                .and(games.users.uid.eq(users.getUid()));
 
         Integer result = jpaQueryFactory
                 .selectOne()

@@ -18,7 +18,7 @@ public interface GameRepository {
 
     CustomPageImpl<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable, GameSearchRequest searchRequest);
 
-    boolean existsIdAndUsersEmail(Long gameId, String email);
+    boolean existsIdAndUsers(Long gameId, Users users);
 
     boolean existsGameRounds(Long gameId, int roundNumber);
 

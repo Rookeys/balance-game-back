@@ -10,6 +10,7 @@ import com.games.balancegameback.dto.game.comment.GameCommentSearchRequest;
 import com.games.balancegameback.dto.game.comment.GameResultCommentResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResultCommentJpaRepository;
+import com.games.balancegameback.infra.repository.user.UserJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultCommentRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -31,6 +32,7 @@ import java.util.List;
 public class GameResultCommentRepositoryImpl implements GameResultCommentRepository {
 
     private final GameResultCommentJpaRepository gameResultCommentJpaRepository;
+    private final UserJpaRepository userRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -67,11 +69,18 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
 
         this.setOptions(builder, cursorId, searchRequest, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
-        BooleanExpression leftJoinCondition = users != null ? comments.users.email.eq(users.getEmail()) : Expressions.FALSE;
+        BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
+
+        boolean isMine;
+
+        if (users != null) {
+            isMine = userRepository.existsByUid(users.getUid());
+        } else {
+            isMine = false;
+        }
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
-        assert users != null;
         List<GameResultCommentResponse> list = jpaQueryFactory
                 .selectDistinct(Projections.constructor(
                         GameResultCommentResponse.class,
@@ -93,11 +102,12 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         comments.updatedDate.as("updatedDateTime"),
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
-                        comments.users.uid.eq(gameUser.uid).as("existsWriter")
+                        comments.users.uid.eq(gameUser.uid).as("existsWriter"),
+                        Expressions.asBoolean(isMine)
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
-                .leftJoin(images).on(images.users.email.eq(user.email))
+                .leftJoin(images).on(images.users.uid.eq(user.uid))
                 .leftJoin(comments.games, games)
                 .leftJoin(games.users, gameUser)
                 .leftJoin(commentLikes).on(leftJoinCondition)
@@ -202,7 +212,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         return users != null ? JPAExpressions.selectOne()
                 .from(commentLikes)
                 .where(commentLikes.resultComments.id.eq(comments.id)
-                        .and(commentLikes.users.email.eq(users.getEmail())))
+                        .and(commentLikes.users.uid.eq(users.getUid())))
                 .exists()
                 : Expressions.asBoolean(false);
     }

@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.game.repository;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
 import com.games.balancegameback.dto.game.GameDetailResponse;
 import com.games.balancegameback.dto.game.GameListResponse;
@@ -13,5 +14,5 @@ public interface GameListRepository {
 
     GameCategoryNumsResponse getCategoryCounts(String title);
 
-    GameDetailResponse getGameStatus(Long gameId);
+    GameDetailResponse getGameStatus(Long gameId, Users users);
 }

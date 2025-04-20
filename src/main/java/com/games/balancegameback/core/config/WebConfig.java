@@ -26,6 +26,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:3000",
                         "https://front.balancegame.site",
                         "https://balance-game-front-deploy.vercel.app",
+                        "https://zznpk.com",
                         "http://localhost:8888",
                         "https://api.balancegame.site")
                 .exposedHeaders("authorization", "refreshToken", "Set-Cookie")

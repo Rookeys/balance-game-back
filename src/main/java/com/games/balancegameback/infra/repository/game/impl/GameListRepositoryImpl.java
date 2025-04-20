@@ -5,13 +5,18 @@ import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
+import com.games.balancegameback.infra.repository.game.GameJpaRepository;
+import com.games.balancegameback.infra.repository.user.UserJpaRepository;
 import com.games.balancegameback.service.game.repository.GameListRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +34,7 @@ import java.util.stream.Collectors;
 public class GameListRepositoryImpl implements GameListRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final UserJpaRepository userRepository;
 
     @Override
     public GameCategoryNumsResponse getCategoryCounts(String title) {
@@ -81,7 +87,7 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
 
     @Override
-    public GameDetailResponse getGameStatus(Long gameId) {
+    public GameDetailResponse getGameStatus(Long gameId, Users user) {
         QGamesEntity games = QGamesEntity.gamesEntity;
         QUsersEntity users = QUsersEntity.usersEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
@@ -89,6 +95,14 @@ public class GameListRepositoryImpl implements GameListRepository {
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
+
+        boolean isMine;
+
+        if (user != null) {
+            isMine = userRepository.existsByUid(user.getUid());
+        } else {
+            isMine = false;
+        }
 
         Tuple tuple = jpaQueryFactory.selectDistinct(
                         games.id,
@@ -99,7 +113,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.isNamePrivate,
                         games.createdDate,
                         games.updatedDate,
-                        games.isBlind
+                        games.isBlind,
+                        Expressions.asBoolean(isMine)
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
@@ -124,6 +139,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         OffsetDateTime createdAt = tuple.get(games.createdDate);
         OffsetDateTime updatedAt = tuple.get(games.updatedDate);
         Boolean isBlind = tuple.get(games.isBlind);
+        boolean existsMine = Boolean.TRUE.equals(tuple.get(Expressions.asBoolean(isMine)));
 
         if (isPrivate) {
             nickname = "익명";
@@ -152,8 +168,10 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         List<Tuple> tuples = jpaQueryFactory.select(
                         resources.id,
-                        resources.images.fileUrl.coalesce(resources.links.urls),
-                        resources.images.mediaType.coalesce(resources.links.mediaType),
+                        images.fileUrl.coalesce(links.urls),
+                        images.mediaType.coalesce(links.mediaType),
+                        links.startSec.coalesce(0),
+                        links.endSec.coalesce(0),
                         resources.title
                 ).from(resources)
                 .leftJoin(resources.images, images)
@@ -167,8 +185,10 @@ public class GameListRepositoryImpl implements GameListRepository {
                 GameListSelectionResponse.builder()
                         .id(tuples.getFirst().get(resources.id))
                         .title(tuples.getFirst().get(resources.title))
-                        .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                        .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                        .type(tuples.getFirst().get(images.mediaType.coalesce(links.mediaType)))
+                        .content(tuples.getFirst().get(images.fileUrl.coalesce(links.urls)))
+                        .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
+                        .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
                         .build()
                 : null;
 
@@ -176,8 +196,10 @@ public class GameListRepositoryImpl implements GameListRepository {
                 GameListSelectionResponse.builder()
                         .id(tuples.getLast().get(resources.id))
                         .title(tuples.getLast().get(resources.title))
-                        .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                        .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                        .type(tuples.getLast().get(images.mediaType.coalesce(links.mediaType)))
+                        .content(tuples.getLast().get(images.fileUrl.coalesce(links.urls)))
+                        .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
+                        .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
                         .build()
                 : null;
 
@@ -186,6 +208,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .description(description)
                 .categories(category)
                 .existsBlind(isBlind)
+                .existsMine(existsMine)
                 .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                 .totalResourceNums(totalResourceNums != null ? totalResourceNums.intValue() : 0)
                 .createdAt(createdAt)
@@ -255,8 +278,8 @@ public class GameListRepositoryImpl implements GameListRepository {
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
-                            resources.images.fileUrl.coalesce(resources.links.urls),
-                            resources.images.mediaType.coalesce(resources.links.mediaType),
+                            images.fileUrl.coalesce(links.urls),
+                            images.mediaType.coalesce(links.mediaType),
                             links.startSec.coalesce(0),
                             links.endSec.coalesce(0),
                             resources.title
@@ -297,8 +320,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getFirst().get(resources.id))
                             .title(tuples.getFirst().get(resources.title))
-                            .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getFirst().get(images.mediaType.coalesce(links.mediaType)))
+                            .content(tuples.getFirst().get(images.fileUrl.coalesce(links.urls)))
                             .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
                             .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
                             .build()
@@ -308,8 +331,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getLast().get(resources.id))
                             .title(tuples.getLast().get(resources.title))
-                            .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getLast().get(images.mediaType.coalesce(links.mediaType)))
+                            .content(tuples.getLast().get(images.fileUrl.coalesce(links.urls)))
                             .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
                             .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
                             .build()

@@ -26,6 +26,9 @@ public class GameDetailResponse {
     @Schema(description = "썸네일 블라인드 여부")
     private Boolean existsBlind;
 
+    @Schema(description = "게임 제작자 본인 확인")
+    private boolean existsMine;
+
     @Schema(description = "카테고리", name = "categories")
     private List<Category> categories;
 
