@@ -94,9 +94,6 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         this.setOptions(builder, cursorId, request, comments);
 
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
-
-        BooleanExpression isMine = users != null ? user.uid.eq(users.getUid()) : Expressions.asBoolean(false);
-
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
         List<GameResourceParentCommentResponse> list = jpaQueryFactory
@@ -123,7 +120,9 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        isMine.as("existsMine")
+                        users != null && users.getUid() != null ?
+                                comments.users.uid.eq(users.getUid()).as("existsMine") :
+                                Expressions.asBoolean(false).as("existsMine")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
@@ -189,9 +188,6 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         this.setOptions(builder, cursorId, request, comments);
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
-
-        BooleanExpression isMine = users != null ? Expressions.asBoolean(user.uid.eq(users.getUid())) : Expressions.asBoolean(false);
-
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
         List<GameResourceChildrenCommentResponse> list = jpaQueryFactory
@@ -216,7 +212,9 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        isMine.as("existsMine")
+                        users != null && users.getUid() != null ?
+                                comments.users.uid.eq(users.getUid()).as("existsMine") :
+                                Expressions.asBoolean(false).as("existsMine")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
