@@ -9,10 +9,11 @@ import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
+import com.games.balancegameback.infra.repository.game.GameJpaRepository;
+import com.games.balancegameback.infra.repository.user.UserJpaRepository;
 import com.games.balancegameback.service.game.repository.GameListRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 public class GameListRepositoryImpl implements GameListRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final UserJpaRepository userRepository;
 
     @Override
     public GameCategoryNumsResponse getCategoryCounts(String title) {
@@ -94,8 +96,13 @@ public class GameListRepositoryImpl implements GameListRepository {
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
 
-        BooleanExpression isMine = user != null ? users.uid.eq(user.getUid()) : Expressions.asBoolean(false);
-        // Expression<Boolean> existsMineAlias = isMine.as("existsMine");
+        boolean isMine;
+
+        if (user != null) {
+            isMine = userRepository.existsByUid(user.getUid());
+        } else {
+            isMine = false;
+        }
 
         Tuple tuple = jpaQueryFactory.selectDistinct(
                         games.id,
@@ -106,8 +113,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.isNamePrivate,
                         games.createdDate,
                         games.updatedDate,
-                        games.isBlind
-                        //existsMineAlias
+                        games.isBlind,
+                        Expressions.asBoolean(isMine)
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
@@ -132,7 +139,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         OffsetDateTime createdAt = tuple.get(games.createdDate);
         OffsetDateTime updatedAt = tuple.get(games.updatedDate);
         Boolean isBlind = tuple.get(games.isBlind);
-        //Boolean existsMine = tuple.get(existsMineAlias);
+        boolean existsMine = Boolean.TRUE.equals(tuple.get(Expressions.asBoolean(isMine)));
 
         if (isPrivate) {
             nickname = "익명";
@@ -201,7 +208,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .description(description)
                 .categories(category)
                 .existsBlind(isBlind)
-                //.existsMine(Boolean.TRUE.equals(existsMine))
+                .existsMine(existsMine)
                 .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                 .totalResourceNums(totalResourceNums != null ? totalResourceNums.intValue() : 0)
                 .createdAt(createdAt)
