@@ -11,6 +11,7 @@ import com.games.balancegameback.dto.game.comment.GameResourceChildrenCommentRes
 import com.games.balancegameback.dto.game.comment.GameResourceParentCommentResponse;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResourceCommentJpaRepository;
+import com.games.balancegameback.infra.repository.user.UserJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResourceCommentRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Expression;
@@ -33,6 +34,7 @@ import java.util.List;
 public class GameResourceCommentRepositoryImpl implements GameResourceCommentRepository {
 
     private final GameResourceCommentJpaRepository gameResourceCommentRepository;
+    private final UserJpaRepository userRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -95,9 +97,13 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
 
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
-        String userUid = users != null ? users.getUid() : "";
-        Expression<Boolean> existsMineExpression = Expressions.booleanTemplate("{0} COLLATE utf8mb4_general_ci = {1} COLLATE utf8mb4_general_ci",
-                comments.users.uid, userUid);
+        boolean isMine;
+
+        if (users != null) {
+            isMine = userRepository.existsByUid(users.getUid());
+        } else {
+            isMine = false;
+        }
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
@@ -125,7 +131,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        existsMineExpression
+                        Expressions.asBoolean(isMine)
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
@@ -192,9 +198,13 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
-        String userUid = users != null ? users.getUid() : "";
-        Expression<Boolean> existsMineExpression = Expressions.booleanTemplate("{0} COLLATE utf8mb4_general_ci = {1} COLLATE utf8mb4_general_ci",
-                comments.users.uid, userUid);
+        boolean isMine;
+
+        if (users != null) {
+            isMine = userRepository.existsByUid(users.getUid());
+        } else {
+            isMine = false;
+        }
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
 
@@ -220,7 +230,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        existsMineExpression
+                        Expressions.asBoolean(isMine)
 
                 ))
                 .from(comments)
