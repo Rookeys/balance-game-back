@@ -70,9 +70,11 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         // 비로그인 회원은 좋아요를 표시했는지 안했는지 모르기 때문에 조건 추가.
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
-        String userUid = users != null ? users.getUid() : "";
-        Expression<Boolean> existsMineExpression = Expressions.booleanTemplate("{0} COLLATE utf8mb4_general_ci = {1} COLLATE utf8mb4_general_ci",
-                comments.users.uid, userUid);
+        // existsMine 비교 조건 - 문자열 길이를 활용한 안전한 비교 방식
+        Expression<Boolean> existsMineExpression = users != null
+                ? Expressions.booleanTemplate("char_length({0}) = char_length({1}) and {0} = {1}",
+                    comments.users.uid, Expressions.constant(users.getUid()))
+                    : Expressions.FALSE;
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
