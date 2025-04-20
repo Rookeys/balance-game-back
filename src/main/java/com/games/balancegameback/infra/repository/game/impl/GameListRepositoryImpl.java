@@ -95,7 +95,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         QLinksEntity links = QLinksEntity.linksEntity;
 
         BooleanExpression isMine = user != null ? users.uid.eq(user.getUid()) : Expressions.asBoolean(false);
-        Expression<Boolean> existsMineAlias = isMine.as("existsMine");
+        // Expression<Boolean> existsMineAlias = isMine.as("existsMine");
 
         Tuple tuple = jpaQueryFactory.selectDistinct(
                         games.id,
@@ -106,8 +106,8 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.isNamePrivate,
                         games.createdDate,
                         games.updatedDate,
-                        games.isBlind,
-                        existsMineAlias
+                        games.isBlind
+                        //existsMineAlias
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
@@ -132,7 +132,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         OffsetDateTime createdAt = tuple.get(games.createdDate);
         OffsetDateTime updatedAt = tuple.get(games.updatedDate);
         Boolean isBlind = tuple.get(games.isBlind);
-        Boolean existsMine = tuple.get(existsMineAlias);
+        //Boolean existsMine = tuple.get(existsMineAlias);
 
         if (isPrivate) {
             nickname = "익명";
@@ -201,7 +201,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .description(description)
                 .categories(category)
                 .existsBlind(isBlind)
-                .existsMine(Boolean.TRUE.equals(existsMine))
+                //.existsMine(Boolean.TRUE.equals(existsMine))
                 .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                 .totalResourceNums(totalResourceNums != null ? totalResourceNums.intValue() : 0)
                 .createdAt(createdAt)

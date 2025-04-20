@@ -71,7 +71,6 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
         BooleanExpression leftJoinCondition = users != null ? comments.users.uid.eq(users.getUid()) : Expressions.FALSE;
 
         BooleanExpression isMine = users != null ? user.uid.eq(users.getUid()) : Expressions.asBoolean(false);
-        Expression<Boolean> existsMineAlias = isMine.as("existsMine");
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
@@ -97,7 +96,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        existsMineAlias
+                        isMine.as("existsMine")
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
