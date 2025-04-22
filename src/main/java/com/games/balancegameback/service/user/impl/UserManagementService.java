@@ -53,7 +53,12 @@ public class UserManagementService {
 
     @Transactional
     public void resign(HttpServletRequest request) {
-        Users user = userUtils.findUserByToken(request);
+        Users user = userUtils.findUserByRefreshToken(request);
+
+        if (user == null) {
+            throw new UnAuthorizedException("Empty RefreshToken", ErrorCode.EMPTY_JWT_CLAIMS);
+        }
+
         user.setDeleted(true);
 
         userRepository.update(user);

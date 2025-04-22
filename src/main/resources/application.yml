@@ -93,3 +93,7 @@ jwt:
 jasypt:
   encryptor:
     bean: jasyptStringEncryptor
+
+front:
+  secret: ENC(Q6CWMk4jLFIcQEi9GTuWcUeL2o4jJms27Yl4lbC+CZZnReCgo2P3WWInRwhF8O+u)
+

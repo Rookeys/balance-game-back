@@ -41,7 +41,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             "POST", Set.of(
                     "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
                     "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
-                    "/api/v1/games/{gameId}/play", "/api/v1/users/exists"
+                    "/api/v1/games/{gameId}/play", "/api/v1/users/exists", "/api/v1/users/cancel/resign"
             ),
             "PUT", Set.of(
                     "/api/v1/games/{gameId}/play/{playId}"
@@ -50,7 +50,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Map<String, Set<String>> REQUIRED_PATHS = Map.of(
             "POST", Set.of(
-                    "/api/v1/users/refresh", "/api/v1/users/logout"
+                    "/api/v1/users/refresh", "/api/v1/users/logout", "/api/v1/users/resign"
             )
     );
 
@@ -118,12 +118,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     private void handleRefreshToken(String refreshToken, String method, String path, FilterChain filterChain,
                                     HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException, JSONException {
-        if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
-                && requiredPath(method, path)) {
-            filterChain.doFilter(request, response);
-        } else {
+        if (!jwtTokenProvider.validateToken(refreshToken) && !redisRepository.isRefreshTokenValid(refreshToken)
+                && !requiredPath(method, path)) {
             throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
         }
+
+        filterChain.doFilter(request, response);
     }
 
     // 에러 발생 시 Response 생성.
