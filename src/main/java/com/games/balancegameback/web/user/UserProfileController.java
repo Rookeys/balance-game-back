@@ -6,6 +6,8 @@ import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
+import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
+import com.games.balancegameback.dto.user.UserReportRequest;
 import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
 import com.games.balancegameback.service.game.GameService;
@@ -22,6 +24,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -107,6 +110,24 @@ public class UserProfileController {
 
             HttpServletRequest request) {
         return gameService.getMyGameStatus(gameId, request);
+    }
+
+    @Operation(summary = "유저 신고 API", description = "정책에 맞지 않는 유저를 신고함.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "신고 완료"),
+            @ApiResponse(responseCode = "400", description = "필수 정보값이 누락됨."),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
+            @ApiResponse(responseCode = "404", description = "해당 유저는 존재하지 않음.")
+    })
+    @PostMapping(value = "/report")
+    public ResponseEntity<Boolean> submitUserReport(
+            @RequestBody @Valid UserReportRequest userReportRequest,
+
+            HttpServletRequest request) {
+
+        gameService.submitUserReport(userReportRequest, request);
+        return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 }
 

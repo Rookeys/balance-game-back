@@ -24,6 +24,13 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Users findByNickname(String nickname) {
+        UsersEntity users = userRepository.findByNickname(nickname).orElseThrow(()
+                -> new NotFoundException("해당 닉네임을 가진 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+        return users.toModel();
+    }
+
+    @Override
     public Optional<Users> findByUserEmail(String email) {
         Optional<UsersEntity> users = userRepository.findByEmail(email);
         return users.map(UsersEntity::toModel);
