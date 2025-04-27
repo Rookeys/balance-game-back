@@ -13,8 +13,11 @@ import com.games.balancegameback.dto.game.gameplay.GameInfoResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
+import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
+import com.games.balancegameback.dto.game.report.GameReportRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
+import com.games.balancegameback.dto.user.UserReportRequest;
 import com.games.balancegameback.service.game.impl.*;
 import com.games.balancegameback.service.game.impl.comment.GameCommentLikesService;
 import com.games.balancegameback.service.game.impl.comment.GameResourceCommentService;
@@ -37,6 +40,7 @@ public class GameService {
     private final GameResourceService gameResourceService;
     private final GamePlayService gamePlayService;
     private final GameResultService gameResultService;
+    private final GameReportService gameReportService;
     private final GameResourceCommentService gameResourceCommentService;
     private final GameResultCommentService gameResultCommentService;
     private final GameCommentLikesService gameCommentLikesService;
@@ -234,6 +238,28 @@ public class GameService {
     // 좋아요 처리 서비스
     public void toggleLike(Long gameId, Long commentId, boolean isLiked, CommentType commentType, HttpServletRequest request) {
         gameCommentLikesService.toggleLike(gameId, commentId, isLiked, commentType, request);
+    }
+
+    // 게임방 신고 서비스
+    public void submitGamesReport(Long gameId, GameReportRequest gameReportRequest, HttpServletRequest request) {
+        gameReportService.submitGamesReport(gameId, gameReportRequest, request);
+    }
+
+    // 게임 리소스 신고 서비스
+    public void submitGameResourcesReport(Long gameId, Long resourceId, GameReportRequest gameReportRequest,
+                                          HttpServletRequest request) {
+        gameReportService.submitGameResourcesReport(gameId, resourceId, gameReportRequest, request);
+    }
+
+    // 유저 신고 서비스
+    public void submitUserReport(UserReportRequest userReportRequest, HttpServletRequest request) {
+        gameReportService.submitUserReport(userReportRequest, request);
+    }
+
+    // 게임 댓글 신고 서비스
+    public void submitGameCommentsReport(Long gameId, GameCommentReportRequest commentReportRequest,
+                                         HttpServletRequest request) {
+        gameReportService.submitGameCommentsReport(gameId, commentReportRequest, request);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.
