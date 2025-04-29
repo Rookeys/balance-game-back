@@ -71,7 +71,6 @@ public class PresignedUrlService {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(fileName)
-                .acl(ObjectCannedACL.PUBLIC_READ)
                 .build();
 
         // Presign 요청 설정
