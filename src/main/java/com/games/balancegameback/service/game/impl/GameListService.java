@@ -18,8 +18,9 @@ public class GameListService {
     private final UserUtils userUtils;
 
     public CustomPageImpl<GameListResponse> getMainGameList(Long cursorId, Pageable pageable,
-                                                            GameSearchRequest searchRequest) {
-        return gameListRepository.getGameList(cursorId, pageable, searchRequest);
+                                                            GameSearchRequest searchRequest, HttpServletRequest request) {
+        Users users = userUtils.findUserByToken(request);
+        return gameListRepository.getGameList(cursorId, pageable, searchRequest, users);
     }
 
     public GameCategoryNumsResponse getCategoryNums(String title) {

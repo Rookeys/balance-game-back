@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +47,9 @@ public class GameListController {
 
             @Parameter(name = "sortType", description = "정렬 방식",
                     schema = @Schema(implementation = GameSortType.class, name = "GameSortType"))
-            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameSortType sortType) {
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameSortType sortType,
+
+            HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(0, size);
         GameSearchRequest searchRequest = GameSearchRequest.builder()
@@ -57,7 +58,7 @@ public class GameListController {
                 .category(category)
                 .build();
 
-        return gameService.getMainGameList(cursorId, pageable, searchRequest);
+        return gameService.getMainGameList(cursorId, pageable, searchRequest, request);
     }
 
     @Operation(summary = "게임방 정보 확인 API", description = "특정 게임방의 정보를 확인함.")
