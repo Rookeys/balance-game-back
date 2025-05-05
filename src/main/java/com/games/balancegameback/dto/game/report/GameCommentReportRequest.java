@@ -1,6 +1,5 @@
 package com.games.balancegameback.dto.game.report;
 
-import com.games.balancegameback.domain.game.enums.report.CommentReportReason;
 import com.games.balancegameback.domain.game.enums.report.ReportTargetType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
