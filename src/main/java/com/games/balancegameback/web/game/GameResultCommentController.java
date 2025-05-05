@@ -115,7 +115,7 @@ public class GameResultCommentController {
             @ApiResponse(responseCode = "404", description = "해당 댓글은 존재하지 않습니다.")
     })
     @DeleteMapping(value = "/{gameId}/results/comments/{commentId}")
-    public ResponseEntity<Boolean> deleteResourceComment(
+    public ResponseEntity<Boolean> deleteResultComment(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true)
             @PathVariable(name = "gameId") Long gameId,
 

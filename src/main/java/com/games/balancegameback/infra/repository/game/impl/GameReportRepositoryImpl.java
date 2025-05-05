@@ -3,6 +3,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.Report;
+import com.games.balancegameback.domain.game.enums.report.ReportTargetType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
 import com.games.balancegameback.dto.game.report.GameReportRequest;
@@ -37,6 +38,7 @@ public class GameReportRepositoryImpl implements GameReportRepository {
                 .from(games)
                 .where(games.id.eq(gameId))
                 .fetchFirst();
+
         return result != null;
     }
 
@@ -48,6 +50,7 @@ public class GameReportRepositoryImpl implements GameReportRepository {
                 .where(resources.games.id.eq(gameId)
                         .and(resources.id.eq(resourceId)))
                 .fetchFirst();
+
         return result != null;
     }
 
@@ -97,6 +100,19 @@ public class GameReportRepositoryImpl implements GameReportRepository {
     }
 
     @Override
+    public void saveGameResourceReport(Long gameId, Long resourceId, Users users, GameReportRequest gameReportRequest) {
+        Report report = Report.builder()
+                .targetType(gameReportRequest.getTargetType())
+                .targetId(resourceId)
+                .reporter(users)
+                .reasons(new ArrayList<>(gameReportRequest.getReasons()))
+                .etcReason(gameReportRequest.getEtcReason())
+                .build();
+
+        reportRepository.save(ReportEntity.from(report));
+    }
+
+    @Override
     public void saveCommentReport(Long gameId, Users users, GameCommentReportRequest commentReportRequest) {
         Report report = Report.builder()
                 .targetType(commentReportRequest.getTargetType())
@@ -121,6 +137,76 @@ public class GameReportRepositoryImpl implements GameReportRepository {
                 .build();
 
         reportRepository.save(ReportEntity.from(report));
+    }
+
+    @Override
+    public boolean existsGameReport(Long gameId, String uid) {
+        QReportEntity report = QReportEntity.reportEntity;
+
+        Integer result = queryFactory
+                .selectOne()
+                .from(report)
+                .where(
+                        report.targetType.eq(ReportTargetType.GAME),
+                        report.targetId.eq(gameId),
+                        report.reporter.uid.eq(uid)
+                )
+                .fetchFirst();
+
+        return result != null;
+    }
+
+    @Override
+    public boolean existsGameResourceReport(Long gameId, Long resourceId, String uid) {
+        QReportEntity report = QReportEntity.reportEntity;
+
+        Integer result = queryFactory
+                .selectOne()
+                .from(report)
+                .where(
+                        report.targetType.eq(ReportTargetType.RESOURCE),
+                        report.targetId.eq(resourceId),
+                        report.reporter.uid.eq(uid)
+                )
+                .fetchFirst();
+
+        return result != null;
+    }
+
+    @Override
+    public boolean existsGameCommentReport(Long gameId, GameCommentReportRequest commentReportRequest, String uid) {
+        QReportEntity report = QReportEntity.reportEntity;
+        Long commentId = commentReportRequest.getTargetId();
+
+        Integer result = queryFactory
+                .selectOne()
+                .from(report)
+                .where(
+                        report.targetType.eq(commentReportRequest.getTargetType()),
+                        report.targetId.eq(commentId),
+                        report.reporter.uid.eq(uid)
+                )
+                .fetchFirst();
+
+        return result != null;
+    }
+
+    @Override
+    public boolean existsUserReport(String nickname, String uid) {
+        QReportEntity report = QReportEntity.reportEntity;
+        Users target = userRepository.findByNickname(nickname);
+
+        Integer result = queryFactory
+                .selectOne()
+                .from(report)
+                .where(
+                        report.targetType.eq(ReportTargetType.USER),
+                        report.targetUid.eq(target.getUid()),
+                        report.reporter.uid.eq(uid)
+                )
+                .fetchFirst();
+
+        return result != null;
     }
 }
 

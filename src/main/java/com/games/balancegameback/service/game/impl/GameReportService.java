@@ -47,6 +47,10 @@ public class GameReportService {
             throw new UnAuthorizedException("잘못된 유저 정보입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
+        if (gameReportRepository.existsGameReport(gameId, users.getUid())) {
+            throw new BadRequestException("이미 신고한 게임입니다.", ErrorCode.DUPLICATE_REPORT_EXCEPTION);
+        }
+
         gameReportRepository.saveGameReport(gameId, users, gameReportRequest);
     }
 
@@ -77,7 +81,11 @@ public class GameReportService {
             throw new UnAuthorizedException("잘못된 유저 정보입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
-        gameReportRepository.saveGameReport(gameId, users, gameReportRequest);
+        if (gameReportRepository.existsGameResourceReport(gameId, resourceId, users.getUid())) {
+            throw new BadRequestException("이미 신고한 리소스입니다.", ErrorCode.DUPLICATE_REPORT_EXCEPTION);
+        }
+
+        gameReportRepository.saveGameResourceReport(gameId, resourceId, users, gameReportRequest);
     }
 
     @Transactional
@@ -125,6 +133,10 @@ public class GameReportService {
             throw new UnAuthorizedException("잘못된 유저 정보입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
+        if (gameReportRepository.existsGameCommentReport(gameId, commentReportRequest, users.getUid())) {
+            throw new BadRequestException("이미 신고한 댓글입니다.", ErrorCode.DUPLICATE_REPORT_EXCEPTION);
+        }
+
         gameReportRepository.saveCommentReport(gameId, users, commentReportRequest);
     }
 
@@ -148,6 +160,10 @@ public class GameReportService {
 
         if (users == null) {
             throw new UnAuthorizedException("잘못된 유저 정보입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
+        }
+
+        if (gameReportRepository.existsUserReport(userReportRequest.getNickname(), users.getUid())) {
+            throw new BadRequestException("이미 신고한 유저입니다.", ErrorCode.DUPLICATE_REPORT_EXCEPTION);
         }
 
         gameReportRepository.saveUserReport(users, userReportRequest);
