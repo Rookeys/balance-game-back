@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -50,7 +52,7 @@ public class UserProfileService {
 
         // 프로필 이미지 삭제 요청 (url 이 비어 있음)
         if (newUrl == null || newUrl.isEmpty()) {
-            if (images != null) {
+            if (images != null && isValidUrl(images.getFileUrl())) {
                 s3Service.deleteImageByUrl(images.getFileUrl());
                 imageRepository.delete(images.getId());
             }
@@ -77,9 +79,24 @@ public class UserProfileService {
         }
 
         // 기존 이미지와 다르면 기존 이미지 삭제 후 새 이미지 등록.
-        s3Service.deleteImageByUrl(images.getFileUrl());
+        if (isValidUrl(images.getFileUrl())) {
+            s3Service.deleteImageByUrl(images.getFileUrl());
+        }
         images.update(newUrl);
         imageRepository.update(images);
+    }
+
+    private boolean isValidUrl(String url) {
+        try {
+            if (url == null || url.isBlank()) {
+                return false;
+            }
+            URI uri = new URI(url);
+            return uri.isAbsolute();
+        } catch (Exception e) {
+            log.warn("잘못된 URL 형식: {}", url);
+            return false;
+        }
     }
 }
 
