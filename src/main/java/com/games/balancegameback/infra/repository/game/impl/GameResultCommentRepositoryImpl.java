@@ -95,7 +95,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
                         users != null
-                            ? comments.users.email.eq(users.getEmail())
+                            ? comments.users.email.eq(users.getUid())
                             : Expressions.asBoolean(false)
                 ))
                 .from(comments)

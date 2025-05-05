@@ -213,7 +213,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
                         users != null
-                            ? comments.users.email.eq(users.getEmail())
+                            ? comments.users.uid.eq(users.getUid())
                             : Expressions.asBoolean(false)
 
                 ))
