@@ -94,7 +94,7 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        users != null ? comments.users.uid.eq(users.getUid()).as("existsMine") : Expressions.asBoolean(false)
+                        users != null ? comments.users.uid.eq(users.getUid()) : Expressions.asBoolean(false)
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
