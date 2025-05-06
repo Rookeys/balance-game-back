@@ -16,5 +16,7 @@ public interface UserRepository {
 
     void update(Users users);
 
+    void delete(Users users);
+
     boolean existsByNickname(String nickname);
 }

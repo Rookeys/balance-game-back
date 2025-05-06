@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GameReportJpaRepository extends JpaRepository<ReportEntity, Long> {
 
+    void deleteByReporterUid(String uid);
 }

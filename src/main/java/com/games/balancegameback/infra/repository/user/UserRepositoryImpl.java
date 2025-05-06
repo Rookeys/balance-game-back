@@ -52,6 +52,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void delete(Users users) {
+        userRepository.delete(UsersEntity.from(users));
+    }
+
+    @Override
     public boolean existsByNickname(String nickname) {
         return userRepository.existsByNickname(nickname);
     }

@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.user;
 
 import com.games.balancegameback.dto.user.*;
+import com.games.balancegameback.infra.repository.user.SchedulerRepository;
 import com.games.balancegameback.service.user.impl.AuthService;
 import com.games.balancegameback.service.user.impl.UserProfileService;
 import com.games.balancegameback.service.user.impl.UserManagementService;
@@ -15,6 +16,7 @@ public class UserService {
     private final AuthService authService;
     private final UserManagementService userManagementService;
     private final UserProfileService userProfileService;
+    private final SchedulerRepository schedulerRepository;
 
     // 카카오 로그인(서버 처리)
     public LoginResponse kakaoLogin(KakaoRequest kakaoRequest, HttpServletRequest request) {
@@ -59,6 +61,16 @@ public class UserService {
     // 회원 탈퇴
     public void resign(HttpServletRequest request) {
         userManagementService.resign(request);
+    }
+
+    // 회원 탈퇴 - 즉시 삭제
+    public void remove(HttpServletRequest request) {
+        schedulerRepository.deleteOldDeletedUsers();
+    }
+
+    // 회원 탈퇴 - 스케쥴러 작동
+    public void deleteDeactivatedUsers() {
+        schedulerRepository.deleteOldDeletedUsers();
     }
 
     // 토큰 재발급
