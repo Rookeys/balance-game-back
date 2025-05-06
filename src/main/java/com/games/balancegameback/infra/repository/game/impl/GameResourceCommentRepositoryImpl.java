@@ -14,7 +14,6 @@ import com.games.balancegameback.infra.repository.game.GameResourceCommentJpaRep
 import com.games.balancegameback.infra.repository.user.UserJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResourceCommentRepository;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -122,7 +121,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        users != null ? comments.users.uid.eq(users.getUid()).as("existsMine") : Expressions.asBoolean(false)
+                        users != null ? comments.users.uid.eq(users.getUid()) : Expressions.asBoolean(false)
                 ))
                 .from(comments)
                 .leftJoin(comments.users, user)
@@ -212,13 +211,7 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                         comments.likes.size().as("like"),
                         this.isLikedExpression(users).as("existsLiked"),
                         comments.users.uid.eq(gameUser.uid).as("existsWriter"),
-                        users != null
-                            ? Expressions.booleanTemplate(
-                                "({0} COLLATE utf8mb4_general_ci = {1} COLLATE utf8mb4_general_ci)",
-                                    comments.users.email,
-                                    users.getUid()
-                                )
-                            : Expressions.asBoolean(false)
+                        users != null ? comments.users.uid.eq(users.getUid()) : Expressions.asBoolean(false)
 
                 ))
                 .from(comments)
