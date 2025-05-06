@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -33,8 +32,11 @@ public class GameResourceCommentController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
-    @GetMapping(value = "/resources/{resourceId}/comments")
+    @GetMapping(value = "/{gameId}/resources/{resourceId}/comments")
     public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
             @Parameter(name = "resourceId", description = "게임 리소스의 ID", required = true)
             @PathVariable(name = "resourceId") Long resourceId,
 
@@ -42,7 +44,7 @@ public class GameResourceCommentController {
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
-            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
             @Parameter(name = "content", description = "검색할 댓글 내용")
             @RequestParam(name = "content", required = false) String content,
@@ -59,15 +61,18 @@ public class GameResourceCommentController {
                 .sortType(sortType)
                 .build();
 
-        return gameService.getParentCommentsByGameResource(resourceId, cursorId, pageable, searchRequest, request);
+        return gameService.getParentCommentsByGameResource(gameId, resourceId, cursorId, pageable, searchRequest, request);
     }
 
     @Operation(summary = "게임 리소스 대댓글 리스트 발급 API", description = "게임 리소스 대댓글 리스트 목록을 제공한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "발급 완료")
     })
-    @GetMapping(value = "/resources/{resourceId}/comments/{parentId}")
+    @GetMapping(value = "/{gameId}/resources/{resourceId}/comments/{parentId}")
     public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
             @Parameter(name = "resourceId", description = "게임 리소스의 ID", required = true)
             @PathVariable(name = "resourceId") Long resourceId,
 
@@ -78,7 +83,7 @@ public class GameResourceCommentController {
             @RequestParam(name = "cursorId", required = false) Long cursorId,
 
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
-            @RequestParam(name = "size", required = false, defaultValue = "15") int size,
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
             @Parameter(name = "content", description = "검색할 댓글 내용")
             @RequestParam(name = "content", required = false) String content,
@@ -95,7 +100,8 @@ public class GameResourceCommentController {
                 .sortType(sortType)
                 .build();
 
-        return gameService.getChildrenCommentsByGameResource(parentId, cursorId, pageable, searchRequest, request);
+        return gameService.getChildrenCommentsByGameResource(gameId, resourceId, parentId,
+                cursorId, pageable, searchRequest, request);
     }
 
     @Operation(summary = "게임 리소스 댓글 등록 API", description = "해당 리소스에 댓글을 등록할 수 있다.")
@@ -106,8 +112,10 @@ public class GameResourceCommentController {
             @ApiResponse(responseCode = "401", description = "로그인한 유저가 아닙니다."),
             @ApiResponse(responseCode = "404", description = "해당 리소스는 존재하지 않습니다.")
     })
-    @PostMapping(value = "/resources/{resourceId}/comments")
+    @PostMapping(value = "/{gameId}/resources/{resourceId}/comments")
     public ResponseEntity<Boolean> addResourceComment(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
 
             @Parameter(name = "resourceId", description = "리소스의 ID", required = true)
             @PathVariable(name = "resourceId") Long resourceId,
@@ -116,7 +124,7 @@ public class GameResourceCommentController {
 
             HttpServletRequest request) {
 
-        gameService.addResourceComment(resourceId, commentRequest, request);
+        gameService.addResourceComment(gameId, resourceId, commentRequest, request);
         return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
     }
 
@@ -128,8 +136,11 @@ public class GameResourceCommentController {
             @ApiResponse(responseCode = "401", description = "작성자가 아닙니다."),
             @ApiResponse(responseCode = "404", description = "해당 댓글은 존재하지 않습니다.")
     })
-    @PutMapping(value = "/resources/{resourceId}/comments/{commentId}")
+    @PutMapping(value = "/{gameId}/resources/{resourceId}/comments/{commentId}")
     public ResponseEntity<Boolean> updateResourceComment(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
             @Parameter(name = "resourceId", description = "리소스의 ID", required = true)
             @PathVariable(name = "resourceId") Long resourceId,
 
@@ -140,7 +151,7 @@ public class GameResourceCommentController {
 
             HttpServletRequest request) {
 
-        gameService.updateResourceComment(commentId, commentRequest, request);
+        gameService.updateResourceComment(gameId, resourceId, commentId, commentRequest, request);
         return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
     }
 
@@ -151,8 +162,11 @@ public class GameResourceCommentController {
             @ApiResponse(responseCode = "401", description = "작성자가 아닙니다."),
             @ApiResponse(responseCode = "404", description = "해당 댓글은 존재하지 않습니다.")
     })
-    @DeleteMapping(value = "/resources/{resourceId}/comments/{commentId}")
+    @DeleteMapping(value = "/{gameId}/resources/{resourceId}/comments/{commentId}")
     public ResponseEntity<Boolean> deleteResourceComment(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
             @Parameter(name = "resourceId", description = "리소스의 ID", required = true)
             @PathVariable(name = "resourceId") Long resourceId,
 
@@ -161,7 +175,7 @@ public class GameResourceCommentController {
 
             HttpServletRequest request) {
 
-        gameService.deleteResourceComment(commentId, request);
+        gameService.deleteResourceComment(gameId, resourceId, commentId, request);
         return ResponseEntity.status(HttpStatus.OK).body(Boolean.TRUE);
     }
 }

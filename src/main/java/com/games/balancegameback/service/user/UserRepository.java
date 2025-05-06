@@ -8,13 +8,15 @@ public interface UserRepository {
 
     Users findByEmail(String email);
 
+    Users findByNickname(String nickname);
+
     Optional<Users> findByUserEmail(String email);
 
     Users save(Users users);
 
     void update(Users users);
 
-    boolean existsByEmailAndDeleted(String email, boolean isDeleted);
+    void delete(Users users);
 
     boolean existsByNickname(String nickname);
 }

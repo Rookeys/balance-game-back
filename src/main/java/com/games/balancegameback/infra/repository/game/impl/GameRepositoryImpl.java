@@ -3,7 +3,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.core.utils.PaginationUtils;
+import com.games.balancegameback.domain.game.GameCategory;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
@@ -17,6 +17,7 @@ import com.games.balancegameback.service.media.impl.S3Service;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -45,17 +47,18 @@ public class GameRepositoryImpl implements GameRepository {
         GamesEntity gamesEntity = gameRepository.findById(roomId).orElseThrow(() ->
                 new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
-        Games games = gamesEntity.toModel();
-
         return GameResponse.builder()
                 .roomId(roomId)
-                .title(games.getTitle())
-                .description(games.getDescription())
-                .isNamePrivate(games.getIsNamePrivate())
-                .isBlind(games.getIsBlind())
-                .accessType(games.getAccessType())
-                .inviteCode(games.getGameInviteCode().getInviteCode())
-                .category(games.getCategory())
+                .title(gamesEntity.getTitle())
+                .description(gamesEntity.getDescription())
+                .existsNamePrivate(gamesEntity.getIsNamePrivate())
+                .existsBlind(gamesEntity.getIsBlind())
+                .accessType(gamesEntity.getAccessType())
+                .inviteCode(gamesEntity.getGameInviteCode().getInviteCode())
+                .categories(gamesEntity.getCategories().stream()
+                        .map(GameCategoryEntity::toModel)
+                        .map(GameCategory::getCategory)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -73,12 +76,13 @@ public class GameRepositoryImpl implements GameRepository {
                                                                    GameSearchRequest searchRequest) {
         QGamesEntity games = QGamesEntity.gamesEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QGameCategoryEntity gameCategory = QGameCategoryEntity.gameCategoryEntity;
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
 
         BooleanBuilder builder = new BooleanBuilder();
-        this.setOptions(builder, cursorId, searchRequest, games);
+        this.setOptions(builder, cursorId, searchRequest, games, resources, gameCategory);
 
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
 
@@ -89,11 +93,12 @@ public class GameRepositoryImpl implements GameRepository {
                         games.users.nickname,
                         images.fileUrl,
                         games.createdDate,
-                        games.category,
                         games.isBlind
                 ).from(games)
                 .join(games.users).on(games.users.uid.eq(users.getUid()))
                 .leftJoin(results).on(results.gameResources.games.eq(games))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id, games.title, games.description)
@@ -108,13 +113,14 @@ public class GameRepositoryImpl implements GameRepository {
             String nickname = tuple.get(games.users.nickname);
             String profileImageUrl = tuple.get(images.fileUrl);
             OffsetDateTime createdAt = tuple.get(games.createdDate);
-            Category category = tuple.get(games.category);
             Boolean isBlind = tuple.get(games.isBlind);
 
             List<Tuple> tuples = jpaQueryFactory.select(
                             resources.id,
-                            resources.images.fileUrl.coalesce(resources.links.urls),
-                            resources.images.mediaType.coalesce(resources.links.mediaType),
+                            images.fileUrl.coalesce(links.urls),
+                            images.mediaType.coalesce(links.mediaType),
+                            links.startSec.coalesce(0),
+                            links.endSec.coalesce(0),
                             resources.title
                     ).from(resources)
                     .leftJoin(resources.images, images)
@@ -124,6 +130,15 @@ public class GameRepositoryImpl implements GameRepository {
                     .offset(0)
                     .limit(2)
                     .fetch();
+
+            // 카테고리 리스트 발급
+            List<Category> category = jpaQueryFactory
+                    .selectFrom(gameCategory)
+                    .where(gameCategory.games.id.eq(roomId))
+                    .fetch()
+                    .stream()
+                    .map(GameCategoryEntity::getCategory)
+                    .toList();
 
             // 전체 플레이 횟수
             Long totalPlayNums = jpaQueryFactory
@@ -144,8 +159,10 @@ public class GameRepositoryImpl implements GameRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getFirst().get(resources.id))
                             .title(tuples.getFirst().get(resources.title))
-                            .type(tuples.getFirst().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getFirst().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getFirst().get(images.mediaType.coalesce(links.mediaType)))
+                            .startSec(Optional.ofNullable(tuples.getFirst().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getFirst().get(links.endSec.coalesce(0))).orElse(0))
+                            .content(tuples.getFirst().get(images.fileUrl.coalesce(links.urls)))
                             .build()
                     : null;
 
@@ -153,8 +170,10 @@ public class GameRepositoryImpl implements GameRepository {
                     GameListSelectionResponse.builder()
                             .id(tuples.getLast().get(resources.id))
                             .title(tuples.getLast().get(resources.title))
-                            .type(tuples.getLast().get(resources.images.mediaType.coalesce(resources.links.mediaType)))
-                            .content(tuples.getLast().get(resources.images.fileUrl.coalesce(resources.links.urls)))
+                            .type(tuples.getLast().get(images.mediaType.coalesce(links.mediaType)))
+                            .startSec(Optional.ofNullable(tuples.getLast().get(links.startSec.coalesce(0))).orElse(0))
+                            .endSec(Optional.ofNullable(tuples.getLast().get(links.endSec.coalesce(0))).orElse(0))
+                            .content(tuples.getLast().get(images.fileUrl.coalesce(links.urls)))
                             .build()
                     : null;
 
@@ -162,8 +181,8 @@ public class GameRepositoryImpl implements GameRepository {
                     .roomId(roomId)
                     .title(title)
                     .description(description)
-                    .category(category)
-                    .isBlind(isBlind)
+                    .categories(category)
+                    .existsBlind(isBlind)
                     .createdAt(createdAt)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
@@ -176,21 +195,37 @@ public class GameRepositoryImpl implements GameRepository {
                     .build();
         }).collect(Collectors.toList());    // toList() 는 불변 리스트로 반환되기 Collectors 로 한번 감싸줘야 함.
 
-        boolean hasNext = PaginationUtils.hasNextPage(resultList, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(resultList, pageable.getPageSize());
+        boolean hasNext = resultList.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            resultList.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(games.id.countDistinct())
                 .from(games)
-                .where(games.users.email.eq(users.getEmail()))
+                .leftJoin(games.gameResources, resources)
+                .leftJoin(games.categories, gameCategory)
+                .where(games.users.uid.eq(users.getUid()))
                 .fetchOne();
 
         return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
     }
 
     @Override
-    public boolean existsByIdAndUsers(Long gameId, Users users) {
-        return gameRepository.existsByIdAndUsers(gameId, UsersEntity.from(users));
+    public boolean existsIdAndUsers(Long gameId, Users users) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+
+        BooleanExpression condition = games.id.eq(gameId)
+                .and(games.users.uid.eq(users.getUid()));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(games)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
     }
 
     @Override
@@ -225,8 +260,8 @@ public class GameRepositoryImpl implements GameRepository {
         s3Service.deleteImagesAsync(imageUrls);
     }
 
-    private void setOptions(BooleanBuilder builder, Long cursorId,
-                            GameSearchRequest request, QGamesEntity games) {
+    private void setOptions(BooleanBuilder builder, Long cursorId, GameSearchRequest request,
+                            QGamesEntity games, QGameResourcesEntity resources, QGameCategoryEntity gameCategory) {
         if (cursorId != null && request.getSortType().equals(GameSortType.OLD)) {
             builder.and(games.id.gt(cursorId));
         }
@@ -236,11 +271,12 @@ public class GameRepositoryImpl implements GameRepository {
         }
 
         if (request.getCategory() != null) {
-            builder.and(games.category.eq(request.getCategory()));
+            builder.and(gameCategory.category.in(request.getCategory()));
         }
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(games.title.containsIgnoreCase(request.getTitle()));
+            builder.and(games.title.containsIgnoreCase(request.getTitle())
+                    .or(resources.title.containsIgnoreCase(request.getTitle())));
         }
     }
 

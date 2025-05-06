@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LinkJpaRepository extends JpaRepository<LinksEntity, Long> {
 
+    void deleteByUsersUid(String uid);
 }

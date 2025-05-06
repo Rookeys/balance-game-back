@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GameInfoResponse {
 
-    @Schema(description = "리소스 제목")
+    @Schema(description = "게임 제목")
     private String title;
 
     @Schema(description = "설명")

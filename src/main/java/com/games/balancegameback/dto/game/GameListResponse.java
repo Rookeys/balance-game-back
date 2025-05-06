@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -26,10 +27,13 @@ public class GameListResponse {
     private String description;
 
     @Schema(description = "썸네일 블라인드 여부")
-    private Boolean isBlind;
+    private Boolean existsBlind;
 
-    @Schema(description = "카테고리", name = "Category")
-    private Category category;
+    @Schema(description = "내 글 여부")
+    private Boolean existsMine;
+
+    @Schema(description = "카테고리", name = "categories")
+    private List<Category> categories;
 
     @Schema(description = "총 플레이 횟수")
     private int totalPlayNums;

@@ -5,6 +5,7 @@ import com.games.balancegameback.core.exception.impl.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -75,7 +76,7 @@ public class PresignedUrlService {
         // Presign 요청 설정
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
                 .putObjectRequest(putObjectRequest)
-                .signatureDuration(Duration.ofMinutes(2)) // 유효 시간 2분
+                .signatureDuration(Duration.ofMinutes(5)) // 유효 시간 5분
                 .build();
 
         // Presigned URL 생성

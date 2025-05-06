@@ -2,6 +2,7 @@ package com.games.balancegameback.service.game;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.CommentType;
@@ -12,8 +13,11 @@ import com.games.balancegameback.dto.game.gameplay.GameInfoResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRequest;
 import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
+import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
+import com.games.balancegameback.dto.game.report.GameReportRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
+import com.games.balancegameback.dto.user.UserReportRequest;
 import com.games.balancegameback.service.game.impl.*;
 import com.games.balancegameback.service.game.impl.comment.GameCommentLikesService;
 import com.games.balancegameback.service.game.impl.comment.GameResourceCommentService;
@@ -25,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GameService {
@@ -34,6 +40,7 @@ public class GameService {
     private final GameResourceService gameResourceService;
     private final GamePlayService gamePlayService;
     private final GameResultService gameResultService;
+    private final GameReportService gameReportService;
     private final GameResourceCommentService gameResourceCommentService;
     private final GameResultCommentService gameResultCommentService;
     private final GameCommentLikesService gameCommentLikesService;
@@ -42,8 +49,18 @@ public class GameService {
 
     // 메인 페이지 출력
     public CustomPageImpl<GameListResponse> getMainGameList(Long cursorId, Pageable pageable,
-                                                            GameSearchRequest searchRequest) {
-        return gameListService.getMainGameList(cursorId, pageable, searchRequest);
+                                                            GameSearchRequest searchRequest, HttpServletRequest request) {
+        return gameListService.getMainGameList(cursorId, pageable, searchRequest, request);
+    }
+
+    // 각 카테고리 별 게임 수 출력
+    public GameCategoryNumsResponse getCategoryNums(String title) {
+        return gameListService.getCategoryNums(title);
+    }
+
+    // 게임 설정값 반환
+    public GameDetailResponse getGameStatus(Long gameId, HttpServletRequest request) {
+        return gameListService.getGameStatus(gameId, request);
     }
 
     // 게임방 생성
@@ -51,9 +68,14 @@ public class GameService {
         return gameRoomService.saveGame(gameRequest, request);
     }
 
-    // 게임 설정값 반환
-    public GameResponse getGameStatus(Long gameId, HttpServletRequest request) {
-        return gameRoomService.getGameStatus(gameId, request);
+    // 해당 게임방 내 리소스 총 갯수 반환
+    public Integer getCountResourcesInGames(Long gameId) {
+        return gameResourceService.getCountResourcesInGames(gameId);
+    }
+
+    // 내가 만든 게임방 설정값 반환
+    public GameResponse getMyGameStatus(Long gameId, HttpServletRequest request) {
+        return gameRoomService.getMyGameStatus(gameId, request);
     }
 
     // 내가 만든 게임들 리스트 반환
@@ -88,12 +110,20 @@ public class GameService {
         return gameResourceService.getResource(gameId, resourceId);
     }
 
-    // 등록된 리소스 목록을 반환
+    // 등록된 리소스 목록을 반환 (CursorId)
     public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                    GameResourceSearchRequest gameResourceSearchRequest,
                                                    HttpServletRequest request) {
         this.validateRequest(gameId, request);
         return gameResourceService.getResources(gameId, cursorId, pageable, gameResourceSearchRequest);
+    }
+
+    // 등록된 리소스 목록을 반환 (Page)
+    public CustomBasedPageImpl<GameResourceResponse> getResourcesUsingPage(Long gameId, Pageable pageable,
+                                                                           GameResourceSearchRequest gameResourceSearchRequest,
+                                                                           HttpServletRequest request) {
+        this.validateRequest(gameId, request);
+        return gameResourceService.getResourcesUsingPage(gameId, pageable, gameResourceSearchRequest);
     }
 
     // 등록한 리소스의 정보를 수정함
@@ -129,6 +159,12 @@ public class GameService {
         gameResourceService.deleteResource(resourceId);
     }
 
+    // 리소스를 선택 삭제함
+    public void deleteSelectResources(Long roomId, List<Long> list, HttpServletRequest request) {
+        this.validateRequest(roomId, request);
+        gameResourceService.deleteSelectResources(list);
+    }
+
     // 게임 결과창 출력
     public CustomPageImpl<GameResultResponse> getResultRanking(Long gameId, Long cursorId,
                                                      GameResourceSearchRequest request,
@@ -136,35 +172,45 @@ public class GameService {
         return gameResultService.getResultRanking(gameId, cursorId, request, pageable);
     }
 
+    // 게임 결과창 출력(page 기반)
+    public CustomBasedPageImpl<GameResultResponse> getResultRankingUsingPage(Long gameId, Pageable pageable,
+                                                                             GameResourceSearchRequest request) {
+        return gameResultService.getResultRankingUsingPage(gameId, pageable, request);
+    }
+
     // 게임 리소스(컷툰 식) 부모 댓글 리스트 출력
-    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long resourceId, Long cursorId,
-                                                                                             Pageable pageable,
+    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long gameId, Long resourceId,
+                                                                                             Long cursorId, Pageable pageable,
                                                                                              GameCommentSearchRequest searchRequest,
                                                                                              HttpServletRequest request) {
-        return gameResourceCommentService.getParentCommentsByGameResource(resourceId, cursorId, pageable, searchRequest, request);
+        return gameResourceCommentService.getParentCommentsByGameResource(gameId, resourceId, cursorId, pageable, searchRequest, request);
     }
 
     // 게임 리소스(컷툰 식) 대댓글 리스트 출력
-    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long parentId, Long cursorId,
+    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long gameId, Long resourceId,
+                                                                                                 Long parentId, Long cursorId,
                                                                                                  Pageable pageable,
                                                                                                  GameCommentSearchRequest searchRequest,
                                                                                                  HttpServletRequest request) {
-        return gameResourceCommentService.getChildrenCommentsByGameResource(parentId, cursorId, pageable, searchRequest, request);
+        return gameResourceCommentService.getChildrenCommentsByGameResource(gameId, resourceId, parentId,
+                cursorId, pageable, searchRequest, request);
     }
 
     // 게임 리소스(컷툰 식) 댓글 작성
-    public void addResourceComment(Long resourceId, GameResourceCommentRequest commentRequest, HttpServletRequest request) {
-        gameResourceCommentService.addComment(resourceId, commentRequest, request);
+    public void addResourceComment(Long gameId, Long resourceId, GameResourceCommentRequest commentRequest,
+                                   HttpServletRequest request) {
+        gameResourceCommentService.addComment(gameId, resourceId, commentRequest, request);
     }
 
     // 게임 리소스(컷툰 식) 댓글 수정
-    public void updateResourceComment(Long commentId, GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
-        gameResourceCommentService.updateComment(commentId, commentRequest, request);
+    public void updateResourceComment(Long gameId, Long resourceId, Long commentId,
+                                      GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
+        gameResourceCommentService.updateComment(gameId, resourceId, commentId, commentRequest, request);
     }
 
     // 게임 리소스(컷툰 식) 댓글 삭제
-    public void deleteResourceComment(Long commentId, HttpServletRequest request) {
-        gameResourceCommentService.deleteComment(commentId, request);
+    public void deleteResourceComment(Long gameId, Long resourceId, Long commentId, HttpServletRequest request) {
+        gameResourceCommentService.deleteComment(gameId, resourceId, commentId, request);
     }
 
     // 게임 결과 댓글 리스트 출력
@@ -184,21 +230,43 @@ public class GameService {
         gameResultCommentService.updateComment(commentId, commentRequest, request);
     }
 
-    //
+    // 게임 결과 댓글 삭제
     public void deleteResultComment(Long commentId, HttpServletRequest request) {
         gameResultCommentService.deleteComment(commentId, request);
     }
 
     // 좋아요 처리 서비스
-    public void toggleLike(Long commentId, boolean isLiked, CommentType commentType, HttpServletRequest request) {
-        gameCommentLikesService.toggleLike(commentId, isLiked, commentType, request);
+    public void toggleLike(Long gameId, Long commentId, boolean isLiked, CommentType commentType, HttpServletRequest request) {
+        gameCommentLikesService.toggleLike(gameId, commentId, isLiked, commentType, request);
+    }
+
+    // 게임방 신고 서비스
+    public void submitGamesReport(Long gameId, GameReportRequest gameReportRequest, HttpServletRequest request) {
+        gameReportService.submitGamesReport(gameId, gameReportRequest, request);
+    }
+
+    // 게임 리소스 신고 서비스
+    public void submitGameResourcesReport(Long gameId, Long resourceId, GameReportRequest gameReportRequest,
+                                          HttpServletRequest request) {
+        gameReportService.submitGameResourcesReport(gameId, resourceId, gameReportRequest, request);
+    }
+
+    // 유저 신고 서비스
+    public void submitUserReport(UserReportRequest userReportRequest, HttpServletRequest request) {
+        gameReportService.submitUserReport(userReportRequest, request);
+    }
+
+    // 게임 댓글 신고 서비스
+    public void submitGameCommentsReport(Long gameId, GameCommentReportRequest commentReportRequest,
+                                         HttpServletRequest request) {
+        gameReportService.submitGameCommentsReport(gameId, commentReportRequest, request);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.
     private void validateRequest(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
 
-        if (!gameRepository.existsByIdAndUsers(roomId, users)) {
+        if (!gameRepository.existsIdAndUsers(roomId, users)) {
             throw new UnAuthorizedException("정보가 일치하지 않습니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
     }

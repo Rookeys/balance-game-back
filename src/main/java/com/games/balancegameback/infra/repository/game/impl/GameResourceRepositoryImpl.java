@@ -2,8 +2,8 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.core.utils.PaginationUtils;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.enums.GameResourceSortType;
 import com.games.balancegameback.domain.media.enums.MediaType;
@@ -15,6 +15,7 @@ import com.games.balancegameback.infra.repository.game.GameResourceJpaRepository
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.*;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
@@ -130,8 +131,11 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
 
-        boolean hasNext = PaginationUtils.hasNextPage(list, pageable.getPageSize());
-        PaginationUtils.removeLastIfHasNext(list, pageable.getPageSize());
+        boolean hasNext = list.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            list.removeLast(); // 안전한 마지막 요소 제거
+        }
 
         Long totalElements = jpaQueryFactory
                 .select(resources.count())
@@ -140,6 +144,53 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
                 .fetchOne();
 
         return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
+    }
+
+    @Override
+    public CustomBasedPageImpl<GameResourceResponse> findByGameIdWithPaging(Long gameId, Pageable pageable,
+                                                                            GameResourceSearchRequest request) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+        QImagesEntity images = QImagesEntity.imagesEntity;
+        QLinksEntity links = QLinksEntity.linksEntity;
+
+        BooleanBuilder builder = new BooleanBuilder();
+        BooleanBuilder totalBuilder = new BooleanBuilder();
+
+        builder.and(resources.games.id.eq(gameId));
+        totalBuilder.and(resources.games.id.eq(gameId));
+
+        this.setOptions(builder, totalBuilder, null, request, resources);
+
+        OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(request.getSortType());
+
+        List<GameResourceResponse> list = jpaQueryFactory
+                .select(Projections.constructor(
+                        GameResourceResponse.class,
+                        resources.id.as("resourceId"),
+                        resources.title,
+                        images.mediaType.coalesce(MediaType.LINK).as("type"),
+                        images.fileUrl.coalesce(links.urls).as("content"),
+                        links.startSec,
+                        links.endSec,
+                        resources.winningLists.size().as("winningLists"),
+                        this.getTotalPlayNumsSubQuery(gameId)
+                ))
+                .from(resources)
+                .leftJoin(resources.images, images)
+                .leftJoin(resources.links, links)
+                .where(builder)
+                .orderBy(orderSpecifier)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long totalElements = jpaQueryFactory
+                .select(resources.count())
+                .from(resources)
+                .where(totalBuilder)
+                .fetchOne();
+
+        return new CustomBasedPageImpl<>(list, pageable, totalElements != null ? totalElements : 0L);
     }
 
     @Override
@@ -162,6 +213,22 @@ public class GameResourceRepositoryImpl implements GameResourceRepository {
         }
 
         gameResourceJpaRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsByGameIdAndResourceId(Long gameId, Long resourceId) {
+        QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
+
+        BooleanExpression condition = resources.id.eq(resourceId)
+                .and(resources.games.id.eq(gameId));
+
+        Integer result = jpaQueryFactory
+                .selectOne()
+                .from(resources)
+                .where(condition)
+                .fetchFirst();
+
+        return result != null;
     }
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,

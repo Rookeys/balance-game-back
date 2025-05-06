@@ -6,8 +6,6 @@ import com.games.balancegameback.domain.user.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.util.UUID;
-
 @Getter
 @Entity
 @Table(name = "users")

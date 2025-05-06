@@ -93,6 +93,11 @@ public class AuthService {
 
     public void logout(HttpServletRequest request) {
         String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
+
+        if (refreshToken == null) {
+            throw new UnAuthorizedException("Empty RefreshToken", ErrorCode.EMPTY_JWT_CLAIMS);
+        }
+
         redisRepository.delValues(refreshToken);
     }
 

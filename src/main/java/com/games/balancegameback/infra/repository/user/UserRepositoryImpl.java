@@ -3,8 +3,10 @@ package com.games.balancegameback.infra.repository.user;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.user.Users;
+import com.games.balancegameback.infra.entity.QUsersEntity;
 import com.games.balancegameback.infra.entity.UsersEntity;
 import com.games.balancegameback.service.user.UserRepository;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -15,11 +17,19 @@ import java.util.Optional;
 public class UserRepositoryImpl implements UserRepository {
 
     private final UserJpaRepository userRepository;
+    private final JPAQueryFactory jpaQueryFactory;
 
     @Override
     public Users findByEmail(String email) {
         UsersEntity users = userRepository.findByEmail(email).orElseThrow(()
                 -> new NotFoundException("해당 이메일을 가진 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
+        return users.toModel();
+    }
+
+    @Override
+    public Users findByNickname(String nickname) {
+        UsersEntity users = userRepository.findByNickname(nickname).orElseThrow(()
+                -> new NotFoundException("해당 닉네임을 가진 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
         return users.toModel();
     }
 
@@ -42,8 +52,8 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean existsByEmailAndDeleted(String email, boolean isDeleted) {
-        return userRepository.existsByEmailAndIsDeleted(email, isDeleted);
+    public void delete(Users users) {
+        userRepository.delete(UsersEntity.from(users));
     }
 
     @Override

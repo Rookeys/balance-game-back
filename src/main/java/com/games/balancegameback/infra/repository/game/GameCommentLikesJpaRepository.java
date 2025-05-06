@@ -14,4 +14,6 @@ public interface GameCommentLikesJpaRepository extends JpaRepository<GameComment
     boolean existsByUsersEmailAndResourceCommentsId(String email, Long commentId);
 
     boolean existsByUsersEmailAndResultCommentsId(String email, Long commentId);
+
+    void deleteByUsersUid(String uid);
 }

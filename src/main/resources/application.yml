@@ -14,7 +14,7 @@ spring:
       max-request-size: 50MB
 
   datasource:
-    url: ENC(1cyyQ/RpeXUSqqHniFsPZ73sKafsovk8laIVFUIVeBH5oR0MYZ+99v3pEXIN3Mk7OEjYmTztxXZhbwQnI+Ccp9XBu5cAt3x3Fj0smgntNsf3MJpMeI5E6MeQN+mKcc2r)
+    url: ENC(lfhjdtOKefCg84mlaHn1XVOccnRH9/DvkkZJ/U/oJLeZkd4+i+bQQRftbuBBKgLbzbRKpc2FKkxZFIXWltLMmhwzpVun2d8mTVB10t7d0Opk45NTFrFCM7oUuYpJXiHLFNAYk7cicV9FH9FYZb402Nf7GwGyGHN2vGuFSwTbu42cwR85VVTO3XH6ICvG6/RVV/MeXUqtkjpMvuA6xomHkQfULobuE7R3hvtrXtJfZQbbxrkojdX1lBOBa2sV1n6p)
     username: ENC(/CyspIvvF6dNHOEFtUrFTg==)
     password: ENC(iyfDvnpBLAn2JgPYybtabOmRY72ej6IB)
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -28,6 +28,9 @@ spring:
         show_sql: true
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+        connection.characterEncoding: utf8mb4
+        connection.useUnicode: true
+        connection.collation: utf8mb4_0900_ai_ci
 
   mvc:
     pathmatch:
@@ -81,8 +84,8 @@ cloud:
 
 jwt:
   secret: ENC(RnxzhwA89XJzO4TUyxgV/PnW76a1js2bl3fUmHhFqlZjo0EpTx9EQeKyoNZ0LyirrFWRz2jXx/886s2MOnvDx4TFsQs5pYHTfPYJYV3wLjE34NwIzrE6DWnRnQ26b0ueI3jw6tYO8vW1al9KcyhavMkjAQ1PhcTH0gNQD0imFXruxxT2qYxtbR/CT7ErOZ+2lrevEDutMZG/2zez66W9mDrUNYdQ6Zwdij8J4CvrcgtVhteUZFIz6eVJb72SnPap1/yxD6rmEzMB/pjNqNN/m14xODPTbrHnqOFAS+c/TZ0=)
-  accessTokenExpiration: ENC(3SILZhqKsTa28bgYIYu8Lg==)
-  refreshTokenExpiration: ENC(2Ily8VmFFYVxg19u2omwH7m6kx/InJ+7)
+  accessTokenExpiration: 86400000
+  refreshTokenExpiration: 604800000
 
 #management:
 #  endpoints:
@@ -93,3 +96,7 @@ jwt:
 jasypt:
   encryptor:
     bean: jasyptStringEncryptor
+
+front:
+  secret: ENC(Q6CWMk4jLFIcQEi9GTuWcUeL2o4jJms27Yl4lbC+CZZnReCgo2P3WWInRwhF8O+u)
+

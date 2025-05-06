@@ -20,4 +20,6 @@ public interface GameResultCommentRepository {
                                                                        GameCommentSearchRequest searchRequest);
 
     GameResultComments findById(Long id);
+
+    boolean existsByGameIdAndCommentId(Long gameId, Long commentId);
 }

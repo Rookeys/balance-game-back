@@ -2,6 +2,7 @@ package com.games.balancegameback.service.game.impl.comment;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResourceComments;
@@ -25,31 +26,38 @@ public class GameResourceCommentService {
     private final GameResourceRepository gameResourceRepository;
     private final UserUtils userUtils;
 
-    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long resourceId, Long cursorId,
-                                                                                             Pageable pageable,
+    public CustomPageImpl<GameResourceParentCommentResponse> getParentCommentsByGameResource(Long gameId, Long resourceId,
+                                                                                             Long cursorId, Pageable pageable,
                                                                                              GameCommentSearchRequest searchRequest,
                                                                                              HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        return commentsRepository.findByGameResourceComments(resourceId, cursorId, users, pageable, searchRequest);
+        return commentsRepository.findByGameResourceComments(gameId, resourceId, cursorId, users, pageable, searchRequest);
     }
 
-    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long parentId, Long cursorId,
+    public CustomPageImpl<GameResourceChildrenCommentResponse> getChildrenCommentsByGameResource(Long gameId, Long resourceId,
+                                                                                                 Long parentId, Long cursorId,
                                                                                                  Pageable pageable,
                                                                                                  GameCommentSearchRequest searchRequest,
                                                                                                  HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
-        return commentsRepository.findByGameResourceChildrenComments(parentId, cursorId, users, pageable, searchRequest);
+        return commentsRepository.findByGameResourceChildrenComments(gameId, resourceId, parentId, cursorId,
+                users, pageable, searchRequest);
     }
 
     @Transactional
-    public void addComment(Long resourceId, GameResourceCommentRequest commentRequest,
+    public void addComment(Long gameId, Long resourceId, GameResourceCommentRequest commentRequest,
                            HttpServletRequest request) {
-        Users users = userUtils.findUserByToken(request);
-        GameResources gameResources = gameResourceRepository.findById(resourceId);
 
-        if (commentsRepository.existsByResourceIdAndParentId(resourceId, commentRequest.getParentId())) {
+        if (!commentsRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
+            throw new NotFoundException("해당 리소스는 존재하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
+        if (commentRequest.getParentId() != null && commentsRepository.isChildComment(commentRequest.getParentId())) {
             throw new BadRequestException("대댓글에 답글을 달 수 없습니다.", ErrorCode.RUNTIME_EXCEPTION);
         }
+
+        Users users = userUtils.findUserByToken(request);
+        GameResources gameResources = gameResourceRepository.findById(resourceId);
 
         GameResourceComments comments = GameResourceComments.builder()
                 .comment(commentRequest.getComment())
@@ -65,11 +73,16 @@ public class GameResourceCommentService {
     }
 
     @Transactional
-    public void updateComment(Long commentId, GameResourceCommentUpdateRequest commentRequest, HttpServletRequest request) {
+    public void updateComment(Long gameId, Long resourceId, Long commentId, GameResourceCommentUpdateRequest commentRequest,
+                              HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         GameResourceComments comments = commentsRepository.findById(commentId);
 
-        if (!comments.getUsers().getEmail().equals(users.getEmail())) {
+        boolean matchesGame = comments.getGameResources().getGames().getId().equals(gameId);
+        boolean matchesResource = comments.getGameResources().getId().equals(resourceId);
+        boolean isAuthor = comments.getUsers().getEmail().equals(users.getEmail());
+
+        if (!matchesGame || !matchesResource || !isAuthor) {
             throw new UnAuthorizedException("잘못된 접근입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
@@ -78,15 +91,19 @@ public class GameResourceCommentService {
     }
 
     @Transactional
-    public void deleteComment(Long commentId, HttpServletRequest request) {
+    public void deleteComment(Long gameId, Long resourceId, Long commentId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
         GameResourceComments comments = commentsRepository.findById(commentId);
 
-        if (!comments.getUsers().getEmail().equals(users.getEmail())) {
+        boolean matchesGame = comments.getGameResources().getGames().getId().equals(gameId);
+        boolean matchesResource = comments.getGameResources().getId().equals(resourceId);
+        boolean isAuthor = comments.getUsers().getEmail().equals(users.getEmail());
+
+        if (!matchesGame || !matchesResource || !isAuthor) {
             throw new UnAuthorizedException("잘못된 접근입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
-        if (comments.getParentId() == null && comments.getChildren() != null) {
+        if (comments.getParentId() == null && !comments.getChildren().isEmpty()) {
             comments.setDeleted(true);
             commentsRepository.update(comments);
         } else {

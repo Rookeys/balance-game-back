@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
@@ -31,14 +33,17 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             "GET", Set.of(
                     "/swagger-ui/**", "/v3/api-docs/**",
                     "/api/v1/games/{gameId}/play", "/api/v1/games/{gameId}/play/{playId}",
-                    "/api/v1/games/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
+                    "/api/v1/games/{gameId}/resources/{resourceId}/comments", "/api/v1/games/{gameId}/results",
+                    "/api/v1/games/{gameId}/results/page", "/api/v1/games/{gameId}",
+                    "/api/v1/games/{gameId}/resources/{resourceId}/comments/{parentId}",
                     "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
-                    "/api/v1/users/exists", "/api/v1/games/list"
+                    "/api/v1/games/{gameId}/resources/count", "/api/v1/games/list",
+                    "/api/v1/games/categories"
             ),
             "POST", Set.of(
                     "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
                     "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
-                    "/api/v1/games/{gameId}/play"
+                    "/api/v1/games/{gameId}/play", "/api/v1/users/exists"
             ),
             "PUT", Set.of(
                     "/api/v1/games/{gameId}/play/{playId}"
@@ -47,7 +52,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Map<String, Set<String>> REQUIRED_PATHS = Map.of(
             "POST", Set.of(
-                    "/api/v1/users/refresh", "/api/v1/users/logout"
+                    "/api/v1/users/refresh", "/api/v1/users/logout", "/api/v1/users/resign", "/api/v1/users/remove"
             )
     );
 
@@ -115,12 +120,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     private void handleRefreshToken(String refreshToken, String method, String path, FilterChain filterChain,
                                     HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException, JSONException {
-        if (jwtTokenProvider.validateToken(refreshToken) && redisRepository.isRefreshTokenValid(refreshToken)
-                && requiredPath(method, path)) {
-            filterChain.doFilter(request, response);
-        } else {
+        if (!jwtTokenProvider.validateToken(refreshToken) && !redisRepository.isRefreshTokenValid(refreshToken)
+                && !requiredPath(method, path)) {
             throw new CustomJwtException(ErrorCode.JWT_NOT_ALLOW_REQUEST, "4007");
         }
+
+        filterChain.doFilter(request, response);
     }
 
     // 에러 발생 시 Response 생성.
@@ -129,6 +134,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
+        json.put("status", errorCode.getStatus());
         json.put("code", errorCode.getCode());
         json.put("message", errorCode.getMessage());
 

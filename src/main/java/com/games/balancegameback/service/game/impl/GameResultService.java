@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.game.impl;
 
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
 import com.games.balancegameback.dto.game.GameResultResponse;
@@ -18,5 +19,10 @@ public class GameResultService {
                                                                GameResourceSearchRequest request,
                                                                Pageable pageable) {
         return gameResultRepository.findGameResultRanking(gameId, cursorId, request, pageable);
+    }
+
+    public CustomBasedPageImpl<GameResultResponse> getResultRankingUsingPage(Long gameId, Pageable pageable,
+                                                                             GameResourceSearchRequest request) {
+        return gameResultRepository.findGameResultRankingWithPaging(gameId, pageable, request);
     }
 }

@@ -1,5 +1,9 @@
 package com.games.balancegameback.service.game.impl;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameResources;
 import com.games.balancegameback.domain.game.Games;
@@ -21,6 +25,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GameResourceService {
@@ -31,7 +37,15 @@ public class GameResourceService {
     private final ImageRepository imageRepository;
     private final LinkRepository linkRepository;
 
+    public Integer getCountResourcesInGames(Long gameId) {
+        return gameResourceRepository.countByGameId(gameId);
+    }
+
     public GameResourceResponse getResource(Long gameId, Long resourceId) {
+        if (!gameResourceRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
+            throw new NotFoundException("잘못된 경로입니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+        }
+
         GameResources resources = gameResourceRepository.findById(resourceId);
         int totalNums = gameResultRepository.countByGameId(gameId);
 
@@ -56,6 +70,11 @@ public class GameResourceService {
     public CustomPageImpl<GameResourceResponse> getResources(Long gameId, Long cursorId, Pageable pageable,
                                                              GameResourceSearchRequest request) {
         return gameResourceRepository.findByGameId(gameId, cursorId, pageable, request);
+    }
+
+    public CustomBasedPageImpl<GameResourceResponse> getResourcesUsingPage(Long gameId, Pageable pageable,
+                                                                           GameResourceSearchRequest request) {
+        return gameResourceRepository.findByGameIdWithPaging(gameId, pageable, request);
     }
 
     @Transactional
@@ -136,4 +155,22 @@ public class GameResourceService {
             s3Service.deleteImageByUrl(resources.getImages().getFileUrl());
         }
     }
+
+    @Transactional
+    public void deleteSelectResources(List<Long> list) {
+        for (Long resourceId : list) {
+            GameResources resources = gameResourceRepository.findById(resourceId);
+            gameResourceRepository.deleteById(resourceId);
+
+            if (resources.getImages() != null) {
+                s3Service.deleteImageByUrl(resources.getImages().getFileUrl());
+            }
+        }
+    }
+
+//    private void validateGameIdAndResourceId(Long gameId, Long resourceId) {
+//        if (!gameResourceRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
+//            throw new NotFoundException("gameId와 resourceId가 일치하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
+//        }
+//    }
 }

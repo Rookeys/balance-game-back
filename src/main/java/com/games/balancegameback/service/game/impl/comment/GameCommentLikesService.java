@@ -1,5 +1,7 @@
 package com.games.balancegameback.service.game.impl.comment;
 
+import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.enums.CommentType;
 import com.games.balancegameback.domain.game.GameCommentLikes;
 import com.games.balancegameback.domain.game.GameResourceComments;
@@ -31,9 +33,11 @@ public class GameCommentLikesService {
      * 오버 엔지니어링이 되어 버려 설계를 변경함.
      */
     @Transactional
-    public void toggleLike(Long commentId, boolean isLiked, CommentType commentType, HttpServletRequest request) {
+    public void toggleLike(Long gameId, Long commentId, boolean isLiked, CommentType commentType, HttpServletRequest request) {
         String email = userUtils.getEmail(request);
         boolean isResourceComment = commentType.equals(CommentType.RESOURCE);
+
+        this.validateCommentExists(gameId, commentId, isResourceComment);
 
         if (isLiked) {
             saveLike(email, commentId, isResourceComment);
@@ -70,6 +74,16 @@ public class GameCommentLikesService {
             likesRepository.deleteByUsersEmailAndResourceCommentsId(email, commentId);
         } else {
             likesRepository.deleteByUsersEmailAndResultCommentsId(email, commentId);
+        }
+    }
+
+    private void validateCommentExists(Long gameId, Long commentId, boolean isResourceComment) {
+        boolean exists = isResourceComment
+                ? resourceCommentsRepository.existsByGameIdAndCommentId(gameId, commentId)
+                : resultCommentsRepository.existsByGameIdAndCommentId(gameId, commentId);
+
+        if (!exists) {
+            throw new NotFoundException("해당 댓글이 존재하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
         }
     }
 }

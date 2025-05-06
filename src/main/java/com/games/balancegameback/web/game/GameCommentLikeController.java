@@ -28,8 +28,11 @@ public class GameCommentLikeController {
             @ApiResponse(responseCode = "200", description = "처리 완료"),
             @ApiResponse(responseCode = "404", description = "일치하는 데이터가 없습니다.")
     })
-    @PostMapping(value = "/comments/{commentId}/likes")
+    @PostMapping(value = "/{gameId}/comments/{commentId}/likes")
     public ResponseEntity<Boolean> toggleLike(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
             @Parameter(name = "commentId", description = "댓글 ID", required = true)
             @PathVariable(name = "commentId") Long commentId,
 
@@ -37,7 +40,7 @@ public class GameCommentLikeController {
 
             HttpServletRequest request) {
 
-        gameService.toggleLike(commentId, likeRequest.isLiked(), likeRequest.getSortType(), request);
+        gameService.toggleLike(gameId, commentId, likeRequest.isExistsLiked(), likeRequest.getSortType(), request);
         return ResponseEntity.ok(Boolean.TRUE);
     }
 }

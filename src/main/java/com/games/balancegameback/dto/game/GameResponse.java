@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class GameResponse {
@@ -20,10 +22,10 @@ public class GameResponse {
     private String description;
 
     @Schema(description = "익명 여부")
-    private boolean isNamePrivate;
+    private boolean existsNamePrivate;
 
     @Schema(description = "썸네일 블라인드 여부")
-    private boolean isBlind;
+    private boolean existsBlind;
 
     @Schema(description = "접근 권한")
     private AccessType accessType;
@@ -31,6 +33,6 @@ public class GameResponse {
     @Schema(description = "초대 코드")
     private String inviteCode;
 
-    @Schema(description = "카테고리 설정")
-    private Category category;
+    @Schema(description = "카테고리 설정", name = "categories")
+    private List<Category> categories;
 }
