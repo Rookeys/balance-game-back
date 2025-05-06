@@ -16,9 +16,6 @@ import java.util.List;
 @AllArgsConstructor
 public class GameCommentReportRequest {
 
-    @Schema(description = "부모 ID")
-    private Long parentId;
-
     @Schema(description = "신고 타겟 ID")
     @NotNull(message = "타겟 ID는 필수입니다.")
     private Long targetId;

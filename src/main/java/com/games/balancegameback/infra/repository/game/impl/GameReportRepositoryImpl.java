@@ -59,7 +59,7 @@ public class GameReportRepositoryImpl implements GameReportRepository {
         boolean exists;
 
         switch (commentReportRequest.getTargetType()) {
-            case RESOURCE_PARENT_COMMENT, RESOURCE_CHILDREN_COMMENT -> {
+            case RESOURCE_COMMENT -> {
                 exists = queryFactory
                         .selectOne()
                         .from(resourceComments)

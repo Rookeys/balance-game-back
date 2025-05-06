@@ -14,9 +14,11 @@ import com.games.balancegameback.service.user.UserRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameReportService {
@@ -91,32 +93,6 @@ public class GameReportService {
     @Transactional
     public void submitGameCommentsReport(Long gameId, GameCommentReportRequest commentReportRequest,
                                          HttpServletRequest request) {
-
-        ReportTargetType targetType = commentReportRequest.getTargetType();
-        Long parentId = commentReportRequest.getParentId();
-
-        switch (targetType) {
-            case RESOURCE_PARENT_COMMENT -> {
-                // 부모 댓글이면 parentId가 들어오면 안 됨.
-                if (parentId != null) {
-                    throw new BadRequestException("부모 댓글 신고에는 parentId 가 없어야 합니다.", ErrorCode.NOT_EXISTS_PARENTS);
-                }
-            }
-            case RESOURCE_CHILDREN_COMMENT -> {
-                // 대댓글이면 반드시 parentId 가 있어야 함.
-                if (parentId == null) {
-                    throw new BadRequestException("대댓글 신고에는 parentId 가 필수입니다.", ErrorCode.NOT_EXISTS_PARENTS);
-                }
-            }
-            case RESULT_COMMENT -> {
-                // 결과 댓글은 parentId 가 필요 없음.
-                if (parentId != null) {
-                    throw new BadRequestException("결과 댓글 신고에는 parentId 가 없어야 합니다.", ErrorCode.NOT_EXISTS_PARENTS);
-                }
-            }
-
-            default -> throw new BadRequestException("잘못된 신고 타입입니다.", ErrorCode.INVALID_REPORT_TARGET_TYPE);
-        }
 
         if (commentReportRequest.getReasons().contains("ETC") &&
                 (commentReportRequest.getEtcReason() == null || commentReportRequest.getEtcReason().isBlank())) {
