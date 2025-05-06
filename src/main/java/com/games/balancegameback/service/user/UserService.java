@@ -61,11 +61,6 @@ public class UserService {
         userManagementService.resign(request);
     }
 
-    // 탈퇴 취소
-    public void cancelResign(String email) {
-        userManagementService.cancelResign(email);
-    }
-
     // 토큰 재발급
     public TokenResponse refresh(HttpServletRequest request) {
         return authService.refresh(request);

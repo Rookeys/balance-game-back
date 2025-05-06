@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
@@ -41,7 +43,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             "POST", Set.of(
                     "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
                     "/api/v1/users/signup", "/api/v1/media/single", "/api/v1/media/multiple",
-                    "/api/v1/games/{gameId}/play", "/api/v1/users/exists", "/api/v1/users/cancel/resign"
+                    "/api/v1/games/{gameId}/play", "/api/v1/users/exists"
             ),
             "PUT", Set.of(
                     "/api/v1/games/{gameId}/play/{playId}"

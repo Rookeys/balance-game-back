@@ -64,17 +64,5 @@ public class UserManagementService {
         userRepository.update(user);
         authService.logout(request);
     }
-
-    @Transactional
-    public void cancelResign(String email) {
-        if (userRepository.existsByEmailAndDeleted(email, true)) {
-            Users user = userRepository.findByEmail(email);
-            user.setDeleted(false);
-
-            userRepository.update(user);
-        } else {
-            throw new UnAuthorizedException("회원 탈퇴한 유저입니다.", ErrorCode.NOT_ALLOW_RESIGN_EXCEPTION);
-        }
-    }
 }
 
