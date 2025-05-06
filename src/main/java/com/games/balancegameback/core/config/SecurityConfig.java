@@ -38,6 +38,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/signup").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/refresh").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/resign").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/remove").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/single").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/media/multiple").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/games/{gameId}/play").permitAll()

@@ -64,5 +64,17 @@ public class UserManagementService {
         userRepository.update(user);
         authService.logout(request);
     }
+
+    @Transactional
+    public void remove(HttpServletRequest request) {
+        Users user = userUtils.findUserByRefreshToken(request);
+
+        if (user == null) {
+            throw new UnAuthorizedException("Empty RefreshToken", ErrorCode.EMPTY_JWT_CLAIMS);
+        }
+
+        userRepository.delete(user);
+        authService.logout(request);
+    }
 }
 

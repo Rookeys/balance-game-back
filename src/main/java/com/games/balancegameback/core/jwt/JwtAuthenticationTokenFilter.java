@@ -52,7 +52,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     private static final Map<String, Set<String>> REQUIRED_PATHS = Map.of(
             "POST", Set.of(
-                    "/api/v1/users/refresh", "/api/v1/users/logout", "/api/v1/users/resign"
+                    "/api/v1/users/refresh", "/api/v1/users/logout", "/api/v1/users/resign", "/api/v1/users/remove"
             )
     );
 

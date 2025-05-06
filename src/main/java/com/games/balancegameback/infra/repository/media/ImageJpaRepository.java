@@ -13,4 +13,6 @@ public interface ImageJpaRepository extends JpaRepository<ImagesEntity, Long> {
     ImagesEntity findByUsers(UsersEntity users);
 
     List<ImagesEntity> findByGamesId(Long id);
+
+    void deleteByUsersUid(String uid);
 }

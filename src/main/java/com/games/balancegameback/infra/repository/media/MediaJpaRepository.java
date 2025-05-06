@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MediaJpaRepository extends JpaRepository<MediaEntity, Long> {
-    
+
+    void deleteByUsersUid(String uid);
 }

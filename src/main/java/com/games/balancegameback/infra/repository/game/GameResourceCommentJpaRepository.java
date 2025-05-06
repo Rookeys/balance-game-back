@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface GameResourceCommentJpaRepository extends JpaRepository<GameResourceCommentsEntity, Long> {
 
     boolean existsById(Long commentId);
+
+    void deleteByUsersUid(String uid);
 }
