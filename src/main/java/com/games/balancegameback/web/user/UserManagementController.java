@@ -46,17 +46,6 @@ public class UserManagementController {
         return ResponseEntity.ok(Boolean.TRUE);
     }
 
-    @Operation(summary = "회원 탈퇴 API", description = "즉시 회원 탈퇴 요청을 처리합니다.")
-    @SecurityRequirement(name = "bearerAuth")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원 탈퇴 대기 전환"),
-    })
-    @PostMapping(value = "/remove")
-    public ResponseEntity<Boolean> remove(HttpServletRequest request) {
-        userService.remove(request);
-        return ResponseEntity.ok(Boolean.TRUE);
-    }
-
     @Operation(summary = "중복 이름 확인 API", description = "이름이 중복되었다면 True, 아니면 False 를 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "확인 성공"),
