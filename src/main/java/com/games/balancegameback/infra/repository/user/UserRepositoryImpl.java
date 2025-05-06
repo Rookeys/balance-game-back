@@ -3,8 +3,10 @@ package com.games.balancegameback.infra.repository.user;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.user.Users;
+import com.games.balancegameback.infra.entity.QUsersEntity;
 import com.games.balancegameback.infra.entity.UsersEntity;
 import com.games.balancegameback.service.user.UserRepository;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +17,7 @@ import java.util.Optional;
 public class UserRepositoryImpl implements UserRepository {
 
     private final UserJpaRepository userRepository;
+    private final JPAQueryFactory jpaQueryFactory;
 
     @Override
     public Users findByEmail(String email) {
@@ -46,11 +49,6 @@ public class UserRepositoryImpl implements UserRepository {
     public void update(Users users) {
         UsersEntity usersEntity = userRepository.findByEmail(users.getEmail()).orElseThrow();
         usersEntity.update(users);
-    }
-
-    @Override
-    public boolean existsByEmailAndDeleted(String email, boolean isDeleted) {
-        return userRepository.existsByEmailAndIsDeleted(email, isDeleted);
     }
 
     @Override

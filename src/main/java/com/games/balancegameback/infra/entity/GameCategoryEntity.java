@@ -15,7 +15,7 @@ public class GameCategoryEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)

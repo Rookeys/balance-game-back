@@ -37,7 +37,7 @@ public class GameCategoryService {
                     .games(games)
                     .build();
 
-            gameCategoryRepository.update(gameCategory);
+            gameCategoryRepository.save(gameCategory);
         }
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface GameListRepository {
 
-    CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable, GameSearchRequest searchRequest);
+    CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable, GameSearchRequest searchRequest, Users users);
 
     GameCategoryNumsResponse getCategoryCounts(String title);
 

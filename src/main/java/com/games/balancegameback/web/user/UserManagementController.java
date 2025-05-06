@@ -46,16 +46,6 @@ public class UserManagementController {
         return ResponseEntity.ok(Boolean.TRUE);
     }
 
-    @Operation(summary = "회원 탈퇴 취소 API", description = "회원 탈퇴 요청을 취소합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원 탈퇴 취소 성공"),
-    })
-    @PostMapping(value = "/cancel/resign")
-    public ResponseEntity<Boolean> cancelResign(@RequestBody String email) {
-        userService.cancelResign(email);
-        return ResponseEntity.ok(Boolean.TRUE);
-    }
-
     @Operation(summary = "중복 이름 확인 API", description = "이름이 중복되었다면 True, 아니면 False 를 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "확인 성공"),

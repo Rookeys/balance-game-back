@@ -2,18 +2,21 @@ package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.user.UserMainResponse;
 import com.games.balancegameback.infra.entity.*;
-import com.games.balancegameback.infra.repository.game.GameJpaRepository;
 import com.games.balancegameback.infra.repository.user.UserJpaRepository;
 import com.games.balancegameback.service.game.repository.GameListRepository;
+import com.games.balancegameback.service.game.repository.GameRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -23,10 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 public class GameListRepositoryImpl implements GameListRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final GameRepository gameRepository;
     private final UserJpaRepository userRepository;
 
     @Override
@@ -45,8 +46,9 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         Map<Category, Long> counts = new EnumMap<>(Category.class);
         BooleanBuilder builder = new BooleanBuilder();
-        // 리소스 갯수가 2개 이상인 경우만 포함.
-        builder.and(games.gameResources.size().goe(2));
+        // 리소스 갯수가 2개 이상인 경우와 공개 상태인 경우만 포함.
+        builder.and(games.gameResources.size().goe(2))
+                .and(games.accessType.eq(AccessType.PUBLIC));
 
         if (title != null) {
             builder.and(games.title.containsIgnoreCase(title)
@@ -96,13 +98,13 @@ public class GameListRepositoryImpl implements GameListRepository {
         QImagesEntity images = QImagesEntity.imagesEntity;
         QLinksEntity links = QLinksEntity.linksEntity;
 
-        boolean isMine;
-
-        if (user != null) {
-            isMine = userRepository.existsByUid(user.getUid());
-        } else {
-            isMine = false;
+        if (!this.isAccessibleByUser(gameId, user)) {
+            throw new UnAuthorizedException("접근 불가", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
+
+        Expression<Boolean> existsMineExpr = Expressions.booleanTemplate(
+                "{0} = {1}", games.users.uid, user != null ? user.getUid() : "-1"
+        );
 
         Tuple tuple = jpaQueryFactory.selectDistinct(
                         games.id,
@@ -114,7 +116,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                         games.createdDate,
                         games.updatedDate,
                         games.isBlind,
-                        Expressions.asBoolean(isMine)
+                        existsMineExpr
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
@@ -139,7 +141,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         OffsetDateTime createdAt = tuple.get(games.createdDate);
         OffsetDateTime updatedAt = tuple.get(games.updatedDate);
         Boolean isBlind = tuple.get(games.isBlind);
-        boolean existsMine = Boolean.TRUE.equals(tuple.get(Expressions.asBoolean(isMine)));
+        boolean existsMine = Boolean.TRUE.equals(tuple.get(existsMineExpr));
 
         if (isPrivate) {
             nickname = "익명";
@@ -224,9 +226,9 @@ public class GameListRepositoryImpl implements GameListRepository {
 
     @Override
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
-                                                        GameSearchRequest searchRequest) {
+                                                        GameSearchRequest searchRequest, Users users) {
         QGamesEntity games = QGamesEntity.gamesEntity;
-        QUsersEntity users = QUsersEntity.usersEntity;
+        QUsersEntity user = QUsersEntity.usersEntity;
         QGameResourcesEntity resources = QGameResourcesEntity.gameResourcesEntity;
         QGameCategoryEntity gameCategory = QGameCategoryEntity.gameCategoryEntity;
         QGameResultsEntity results = QGameResultsEntity.gameResultsEntity;
@@ -236,8 +238,12 @@ public class GameListRepositoryImpl implements GameListRepository {
         BooleanBuilder builder = new BooleanBuilder();
         BooleanBuilder totalBuilder = new BooleanBuilder();
 
-        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, users, resources, results, gameCategory);
+        this.setOptions(builder, totalBuilder, cursorId, searchRequest, games, user, resources, results, gameCategory);
         OrderSpecifier<?> orderSpecifier = this.getOrderSpecifier(searchRequest.getSortType());
+
+        Expression<Boolean> existsMineExpr = Expressions.booleanTemplate(
+                "{0} = {1}", games.users.uid, users != null ? users.getUid() : "-1"
+        );
 
         List<Tuple> resultTuples = jpaQueryFactory.selectDistinct(
                         games.id,
@@ -247,12 +253,13 @@ public class GameListRepositoryImpl implements GameListRepository {
                         images.fileUrl,
                         games.isNamePrivate,
                         games.createdDate,
-                        games.isBlind
+                        games.isBlind,
+                        existsMineExpr
                 ).from(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
                 .leftJoin(games.categories, gameCategory)
-                .leftJoin(games.users, users)
+                .leftJoin(games.users, user)
                 .leftJoin(images).on(images.users.uid.eq(games.users.uid))
                 .where(builder)
                 .groupBy(games.id)
@@ -270,6 +277,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
             Boolean isBlind = tuple.get(games.isBlind);
+            boolean existsMine = Boolean.TRUE.equals(tuple.get(existsMineExpr));
 
             if (isPrivate) {
                 nickname = "익명";
@@ -344,6 +352,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .description(description)
                     .categories(category)
                     .existsBlind(isBlind)
+                    .existsMine(existsMine)
                     .totalPlayNums(totalPlayNums != null ? totalPlayNums.intValue() : 0)
                     .weekPlayNums(weekPlayNums != null ? weekPlayNums.intValue() : 0)
                     .createdAt(createdAt)
@@ -368,7 +377,7 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
                 .leftJoin(games.categories, gameCategory)
-                .leftJoin(games.users, users)
+                .leftJoin(games.users, user)
                 .where(totalBuilder)
                 .groupBy(games.id)
                 .having(games.gameResources.size().goe(2))
@@ -413,6 +422,9 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .or(resources.title.containsIgnoreCase(request.getTitle()))
                     .or(users.nickname.containsIgnoreCase(request.getTitle()).and(games.isNamePrivate.eq(false))));
         }
+
+        builder.and(games.accessType.eq(AccessType.PUBLIC));
+        totalBuilder.and(games.accessType.eq(AccessType.PUBLIC));
     }
 
     // 정렬 방식 결정 쿼리
@@ -424,5 +436,25 @@ public class GameListRepositoryImpl implements GameListRepository {
             case WEEK, MONTH, PLAY_DESC -> games.gamePlayList.size().desc();
             default -> games.id.desc();
         };
+    }
+
+    public boolean isAccessibleByUser(Long gameId, Users user) {
+        QGamesEntity games = QGamesEntity.gamesEntity;
+
+        BooleanExpression accessCondition;
+
+        if (user != null) {
+            accessCondition = games.accessType.ne(AccessType.PRIVATE)
+                    .or(games.users.uid.eq(user.getUid()));
+        } else {
+            // 비로그인 사용자는 PUBLIC 만 접근 가능
+            accessCondition = games.accessType.ne(AccessType.PRIVATE);
+        }
+
+        return jpaQueryFactory
+                .selectOne()
+                .from(games)
+                .where(games.id.eq(gameId).and(accessCondition))
+                .fetchFirst() != null;
     }
 }

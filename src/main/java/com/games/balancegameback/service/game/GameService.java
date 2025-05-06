@@ -49,8 +49,8 @@ public class GameService {
 
     // 메인 페이지 출력
     public CustomPageImpl<GameListResponse> getMainGameList(Long cursorId, Pageable pageable,
-                                                            GameSearchRequest searchRequest) {
-        return gameListService.getMainGameList(cursorId, pageable, searchRequest);
+                                                            GameSearchRequest searchRequest, HttpServletRequest request) {
+        return gameListService.getMainGameList(cursorId, pageable, searchRequest, request);
     }
 
     // 각 카테고리 별 게임 수 출력
