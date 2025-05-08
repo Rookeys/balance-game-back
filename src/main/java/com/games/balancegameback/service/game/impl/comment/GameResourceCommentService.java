@@ -86,6 +86,10 @@ public class GameResourceCommentService {
             throw new UnAuthorizedException("잘못된 접근입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
         }
 
+        if (comments.isDeleted()) {
+            throw new BadRequestException("이미 삭제된 댓글입니다.", ErrorCode.ALREADY_DELETED_COMMENT);
+        }
+
         comments.update(commentRequest.getComment());
         commentsRepository.update(comments);
     }
@@ -101,6 +105,10 @@ public class GameResourceCommentService {
 
         if (!matchesGame || !matchesResource || !isAuthor) {
             throw new UnAuthorizedException("잘못된 접근입니다.", ErrorCode.ACCESS_DENIED_EXCEPTION);
+        }
+
+        if (comments.isDeleted()) {
+            throw new BadRequestException("이미 삭제된 댓글입니다.", ErrorCode.ALREADY_DELETED_COMMENT);
         }
 
         if (comments.getParentId() == null && !comments.getChildren().isEmpty()) {

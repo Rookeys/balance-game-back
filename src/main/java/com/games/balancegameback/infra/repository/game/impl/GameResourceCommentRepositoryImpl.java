@@ -101,7 +101,11 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 .selectDistinct(Projections.constructor(
                         GameResourceParentCommentResponse.class,
                         comments.id.as("commentId"),
-                        comments.comment.as("comment"),
+                        new CaseBuilder()
+                                .when(comments.isDeleted.isTrue())
+                                .then("삭제된 댓글입니다.")
+                                .otherwise(comments.comment)
+                                .as("comment"),
                         new CaseBuilder()
                                 .when(comments.users.uid.eq(gameUser.uid)
                                         .and(games.isNamePrivate.isTrue()))
