@@ -11,4 +11,6 @@ public interface GamePlayRepository {
     void delete(GamePlay gamePlay);
 
     GamePlay findById(Long gamePlayId);
+
+    Long findRandomGamePlayId();
 }

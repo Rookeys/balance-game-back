@@ -97,4 +97,14 @@ public class GamePlayController {
             @RequestBody @Valid GamePlayRequest gamePlayRequest) {
         return ResponseEntity.status(HttpStatus.OK).body(gameService.updatePlayRoom(gameId, playId, gamePlayRequest));
     }
+
+    @Operation(summary = "플레이룸 랜덤 ID 반환 API", description = "랜덤 ID 를 반환.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "랜덤 ID 발급 완료")
+    })
+    @GetMapping(value = "/random/play")
+    public Long getRandomPlayRoomId() {
+        return gameService.getRandomGamePlayId();
+    }
 }

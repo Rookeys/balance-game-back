@@ -153,6 +153,11 @@ public class GameService {
         return gamePlayService.getGameDetails(gameId);
     }
 
+    // 게임방 생성 및 게임 시작
+    public Long getRandomGamePlayId() {
+        return gamePlayService.getRandomGamePlayId();
+    }
+
     // 리소스를 삭제함
     public void deleteResource(Long roomId, Long resourceId, HttpServletRequest request) {
         this.validateRequest(roomId, request);
