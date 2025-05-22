@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GamePlayJpaRepository extends JpaRepository<GamePlayEntity, Long> {
 
+    void deleteByGamesId(Long gameId);
 }
