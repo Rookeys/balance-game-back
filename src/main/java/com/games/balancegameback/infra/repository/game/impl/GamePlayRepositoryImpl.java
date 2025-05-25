@@ -3,6 +3,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.game.GamePlay;
+import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.infra.entity.GamePlayEntity;
 import com.games.balancegameback.infra.entity.QGamePlayEntity;
 import com.games.balancegameback.infra.entity.QGamesEntity;
@@ -55,6 +56,9 @@ public class GamePlayRepositoryImpl implements GamePlayRepository {
         List<Long> ids = jpaQueryFactory
                 .select(games.id)
                 .from(games)
+                .where(games.accessType.eq(AccessType.PUBLIC))
+                .groupBy(games.id)
+                .having(games.gameResources.size().goe(2))
                 .fetch();
 
         if (ids.isEmpty()) {
