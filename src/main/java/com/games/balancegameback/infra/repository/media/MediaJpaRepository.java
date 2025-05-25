@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface MediaJpaRepository extends JpaRepository<MediaEntity, Long> {
 
     void deleteByUsersUid(String uid);
+
+    void deleteByGamesId(Long gameId);
 }

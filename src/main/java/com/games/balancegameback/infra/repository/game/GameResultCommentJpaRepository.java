@@ -15,4 +15,6 @@ public interface GameResultCommentJpaRepository extends JpaRepository<GameResult
     void deleteByUsersUid(String uid);
 
     void deleteByGamesIdIn(List<Long> gameIds);
+
+    void deleteByGamesId(Long gameId);
 }
