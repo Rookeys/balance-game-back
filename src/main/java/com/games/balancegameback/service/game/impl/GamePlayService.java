@@ -63,9 +63,7 @@ public class GamePlayService {
         Games games = gameRepository.findByRoomId(gameId);
 
         if (games.getAccessType().equals(AccessType.PROTECTED)) {
-            if (!Objects.equals(games.getGameInviteCode().getInviteCode(), inviteCode)) {
-                throw new UnAuthorizedException("일치하지 않는 초대 코드입니다.", ErrorCode.NOT_ALLOW_NO_ACCESS);
-            }
+            // 초대 코드 대체 필요
         }
 
         if (games.getAccessType().equals(AccessType.PRIVATE)) {

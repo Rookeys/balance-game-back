@@ -1,18 +1,12 @@
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
-import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
-import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
-import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.repository.game.*;
-import com.games.balancegameback.infra.repository.media.ImageJpaRepository;
-import com.games.balancegameback.infra.repository.media.LinkJpaRepository;
-import com.games.balancegameback.infra.repository.media.MediaJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +34,6 @@ public class GameRoomService {
     private final GameCategoryJpaRepository gameCategoryRepository;
     private final GameJpaRepository gameJpaRepository;
 
-    private final GameInviteService gameInviteService;
     private final GameCategoryService gameCategoryService;
     private final UserUtils userUtils;
     private final RestTemplate restTemplate;
@@ -92,7 +85,6 @@ public class GameRoomService {
         Games games = gameRepository.findByRoomId(gameId);
         games.update(gameRequest);
 
-        gameInviteService.updateInviteCode(gameRequest.getInviteCode(), games);
         gameCategoryService.updateCategory(gameRequest.getCategories(), games);
 
         gameRepository.update(games);
