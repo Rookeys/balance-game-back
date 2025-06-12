@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface GameReportJpaRepository extends JpaRepository<ReportEntity, Long> {
+public interface GameReportJpaRepository extends JpaRepository<ReportEntity, String> {
 
-    void deleteByReporterUid(String uid);
+    void deleteByReporterId(String reporterId);
 }

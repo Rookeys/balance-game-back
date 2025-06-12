@@ -41,7 +41,7 @@ public class GameResourceService {
         return gameResourceRepository.countByGameId(gameId);
     }
 
-    public GameResourceResponse getResource(Long gameId, Long resourceId) {
+    public GameResourceResponse getResource(String gameId, String resourceId) {
         if (!gameResourceRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
             throw new NotFoundException("잘못된 경로입니다.", ErrorCode.NOT_FOUND_EXCEPTION);
         }
@@ -167,10 +167,4 @@ public class GameResourceService {
             }
         }
     }
-
-//    private void validateGameIdAndResourceId(Long gameId, Long resourceId) {
-//        if (!gameResourceRepository.existsByGameIdAndResourceId(gameId, resourceId)) {
-//            throw new NotFoundException("gameId와 resourceId가 일치하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION);
-//        }
-//    }
 }

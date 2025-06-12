@@ -49,11 +49,7 @@ public class GameRoomService {
     private String secret;
 
     @Transactional
-    public Long saveGame(GameRequest gameRequest, HttpServletRequest request) {
-        if (gameRequest.getAccessType().equals(AccessType.PROTECTED) && gameRequest.getInviteCode() == null) {
-            throw new BadRequestException("초대 코드가 null 입니다.", ErrorCode.INVITE_CODE_NULL_EXCEPTION);
-        }
-
+    public String saveGame(GameRequest gameRequest, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
 
         // 게임방 생성
@@ -65,16 +61,6 @@ public class GameRoomService {
                 .isBlind(gameRequest.isExistsBlind())
                 .users(users)
                 .build();
-
-        // 초대 코드 생성 및 관계 설정
-        GameInviteCode gameInviteCode = GameInviteCode.builder()
-                .inviteCode(gameRequest.getInviteCode() != null ? gameRequest.getInviteCode() : "")
-                .isActive(gameRequest.getAccessType().equals(AccessType.PROTECTED))
-                .games(games)
-                .build();
-
-        // 양방향 관계 설정
-        games.setGameInviteCode(gameInviteCode);
 
         games = gameRepository.save(games);
         gameCategoryService.saveCategory(gameRequest.getCategories(), games);

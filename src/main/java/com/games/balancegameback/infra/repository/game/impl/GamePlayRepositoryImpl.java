@@ -43,17 +43,17 @@ public class GamePlayRepositoryImpl implements GamePlayRepository {
     }
 
     @Override
-    public GamePlay findById(Long gamePlayId) {
+    public GamePlay findById(String gamePlayId) {
         return gamePlayRepository.findById(gamePlayId).orElseThrow(() ->
-                new NotFoundException("없는 플레이룸입니다.", ErrorCode.NOT_FOUND_EXCEPTION))
+                        new NotFoundException("없는 플레이룸입니다.", ErrorCode.NOT_FOUND_EXCEPTION))
                 .toModel();
     }
 
     @Override
-    public Long findRandomGamePlayId() {
+    public String findRandomGamePlayId() {
         QGamesEntity games = QGamesEntity.gamesEntity;
 
-        List<Long> ids = jpaQueryFactory
+        List<String> ids = jpaQueryFactory
                 .select(games.id)
                 .from(games)
                 .where(games.accessType.eq(AccessType.PUBLIC))

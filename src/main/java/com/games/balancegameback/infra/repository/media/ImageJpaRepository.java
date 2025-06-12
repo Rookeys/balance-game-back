@@ -1,18 +1,18 @@
 package com.games.balancegameback.infra.repository.media;
 
 import com.games.balancegameback.infra.entity.ImagesEntity;
-import com.games.balancegameback.infra.entity.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface ImageJpaRepository extends JpaRepository<ImagesEntity, Long> {
+public interface ImageJpaRepository extends JpaRepository<ImagesEntity, String> {
 
-    ImagesEntity findByUsers(UsersEntity users);
+    Optional<ImagesEntity> findByUserId(String userId);
 
-    List<ImagesEntity> findByGamesId(Long id);
+    List<ImagesEntity> findByGameId(String gameId);
 
-    void deleteByUsersUid(String uid);
+    void deleteByUserId(String userId);
 }

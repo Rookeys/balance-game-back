@@ -30,10 +30,10 @@ public class GameRoomController {
             @ApiResponse(responseCode = "400", description = "초대 코드가 null 입니다.")
     })
     @PostMapping(value = "")
-    public ResponseEntity<Long> saveGame(
+    public ResponseEntity<String> saveGame(
             @RequestBody @Valid GameRequest gameRequest,
             HttpServletRequest request) {
-        Long id = gameService.saveGame(gameRequest, request);
+        String id = gameService.saveGame(gameRequest, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
@@ -47,10 +47,8 @@ public class GameRoomController {
     @PutMapping(value = "/{gameId}")
     public ResponseEntity<Boolean> updateGameStatus(
             @Parameter(name = "gameId", description = "게임방의 ID", required = true)
-            @PathVariable(name = "gameId") Long gameId,
-
+            @PathVariable(name = "gameId") String gameId,
             @RequestBody @Valid GameRequest gameRequest,
-
             HttpServletRequest request) {
         gameService.updateGameStatus(gameId, gameRequest, request);
         return ResponseEntity.ok(Boolean.TRUE);

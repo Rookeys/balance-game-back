@@ -35,29 +35,30 @@ public class SchedulerRepository {
         List<UsersEntity> targets = usersRepository.findAllByIsDeletedTrueAndCreatedDateBefore(thresholdDate);
 
         for (UsersEntity user : targets) {
-            String uid = user.getUid();
+            String uid = user.getId();
 
-            List<Long> gameIds = gameRepository.findByUsersUid(uid)
+            List<String> gameIds = gameRepository.findByUserId(uid)
                     .stream()
                     .map(GamesEntity::getId)
                     .collect(Collectors.toList());
 
-            gameCommentLikesRepository.deleteByUsersUid(uid);
-            gameResourceCommentsRepository.deleteByUsersUid(uid);
-            gameReportRepository.deleteByReporterUid(uid);
+            gameCommentLikesRepository.deleteByUserId(uid);
+            gameResourceCommentsRepository.deleteByUserId(uid);
+            gameReportRepository.deleteByReporterId(uid);
 
-            gameResultCommentsRepository.deleteByGamesIdIn(gameIds);
+            if (!gameIds.isEmpty()) {
+                gameResultCommentsRepository.deleteByGameIdIn(gameIds);
+            }
 
-            imageRepository.deleteByUsersUid(uid);
-            linkRepository.deleteByUsersUid(uid);
-            mediaRepository.deleteByUsersUid(uid);
+            imageRepository.deleteByUserId(uid);
+            linkRepository.deleteByUserId(uid);
+            mediaRepository.deleteByUserId(uid);
         }
 
         for (UsersEntity user : targets) {
-            String uid = user.getUid();
+            String uid = user.getId();
 
-            gameRepository.deleteByUsersUid(uid);
-
+            gameRepository.deleteByUserId(uid);
             usersRepository.delete(user);
         }
     }

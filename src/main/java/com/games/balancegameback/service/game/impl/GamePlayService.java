@@ -102,7 +102,7 @@ public class GamePlayService {
      * 게임방 생성 및 게임 시작
      */
     @Transactional
-    public GamePlayResponse createPlayRoom(Long gameId, GamePlayRoundRequest roundRequest, HttpServletRequest request) {
+    public GamePlayResponse createPlayRoom(String gameId, GamePlayRoundRequest roundRequest, HttpServletRequest request) {
 
         if (!gameRepository.existsGameRounds(gameId, roundRequest.getRoundNumber())) {
             throw new BadRequestException("리소스 수보다 많은 라운드는 실행할 수 없습니다.", ErrorCode.INVALID_ROUND_EXCEPTION);
@@ -110,8 +110,9 @@ public class GamePlayService {
 
         Games games = gameRepository.findByRoomId(gameId);
 
+        // PROTECTED 모드일 경우 gameId가 초대 코드 역할
         if (games.getAccessType().equals(AccessType.PROTECTED)) {
-            if (!Objects.equals(games.getGameInviteCode().getInviteCode(), roundRequest.getInviteCode())) {
+            if (!gameId.equals(roundRequest.getInviteCode())) {
                 throw new UnAuthorizedException("일치하지 않는 초대 코드입니다.", ErrorCode.NOT_ALLOW_NO_ACCESS);
             }
         }
@@ -123,8 +124,8 @@ public class GamePlayService {
             }
         }
 
-        List<Long> resourceList = gameResourceRepository.findByRandomId(gameId, roundRequest.getRoundNumber());
-        List<Long> selectedResourceIds = this.shuffle(resourceList);
+        List<String> resourceList = gameResourceRepository.findByRandomId(gameId, roundRequest.getRoundNumber());
+        List<String> selectedResourceIds = this.shuffle(resourceList);
 
         GamePlay gamePlay = GamePlay.builder()
                 .games(games)
