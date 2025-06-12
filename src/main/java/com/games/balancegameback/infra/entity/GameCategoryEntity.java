@@ -7,27 +7,33 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "game_categories")
-public class GameCategoryEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Table(name = "game_categories", indexes = {
+        @Index(name = "idx_game_categories_game_id", columnList = "game_id")
+})
+public class GameCategoryEntity extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id")
-    private GamesEntity games;
+    @Column(name = "game_id", nullable = false, length = 36)
+    private String gameId;
+
+    @Override
+    protected String getEntityPrefix() {
+        return "GCT";
+    }
+
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
 
     public static GameCategoryEntity from(GameCategory gameCategory) {
         GameCategoryEntity entity = new GameCategoryEntity();
         entity.id = gameCategory.getId();
         entity.category = gameCategory.getCategory();
-        entity.games = GamesEntity.from(gameCategory.getGames());
-
+        entity.gameId = gameCategory.getGames().getId();
         return entity;
     }
 
@@ -35,7 +41,6 @@ public class GameCategoryEntity {
         return GameCategory.builder()
                 .id(id)
                 .category(category)
-                .games(this.games.toModel())
                 .build();
     }
 }

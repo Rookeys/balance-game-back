@@ -3,56 +3,39 @@ package com.games.balancegameback.infra.entity;
 import com.games.balancegameback.domain.game.GameResourceComments;
 import jakarta.persistence.*;
 import lombok.Getter;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "game_resource_comments")
+@Table(name = "game_resource_comments", indexes = {
+        @Index(name = "idx_resource_comments_resource_id", columnList = "game_resource_id"),
+        @Index(name = "idx_resource_comments_user_id", columnList = "user_id"),
+        @Index(name = "idx_resource_comments_parent_id", columnList = "parent_id")
+})
 public class GameResourceCommentsEntity extends BaseTimeEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String comment;
 
     @Column(nullable = false)
     private boolean isDeleted = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_uid")
-    private UsersEntity users;
+    @Column(name = "user_id", nullable = false, length = 36)
+    private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_resources_id")
-    private GameResourcesEntity gameResources;
+    @Column(name = "game_resource_id", nullable = false, length = 36)
+    private String gameResourceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private GameResourceCommentsEntity parent;
-
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GameResourceCommentsEntity> children = new ArrayList<>();
-
-    @OneToMany(mappedBy = "resourceComments", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GameCommentLikesEntity> likes = new ArrayList<>();
+    @Column(name = "parent_id")
+    private Long parentId;
 
     public static GameResourceCommentsEntity from(GameResourceComments gameResourceComments) {
         GameResourceCommentsEntity entity = new GameResourceCommentsEntity();
         entity.id = gameResourceComments.getId();
         entity.comment = gameResourceComments.getComment();
         entity.isDeleted = gameResourceComments.isDeleted();
-        entity.users = UsersEntity.from(gameResourceComments.getUsers());
-        entity.gameResources = GameResourcesEntity.from(gameResourceComments.getGameResources());
-
-        if (gameResourceComments.getParentId() != null) {
-            GameResourceCommentsEntity parent = new GameResourceCommentsEntity();
-            parent.id = gameResourceComments.getParentId();
-            entity.parent = parent;
-        }
-
+        entity.userId = gameResourceComments.getUsers().getUid();
+        entity.gameResourceId = gameResourceComments.getGameResources().getId();
+        entity.parentId = gameResourceComments.getParentId();
         return entity;
     }
 
@@ -61,15 +44,9 @@ public class GameResourceCommentsEntity extends BaseTimeEntity {
                 .id(id)
                 .comment(comment)
                 .isDeleted(isDeleted)
-                .users(users.toModel())
-                .parentId(parent != null ? parent.getId() : null)
-                .gameResources(gameResources.toModel())
+                .parentId(parentId)
                 .createdDate(this.getCreatedDate())
                 .updatedDate(this.getUpdatedDate())
-                .children(children.stream()
-                        .map(GameResourceCommentsEntity::toModel)
-                        .toList())
-                .likes(likes)
                 .build();
     }
 

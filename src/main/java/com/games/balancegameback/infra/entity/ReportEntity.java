@@ -9,46 +9,48 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "reports")
-public class ReportEntity extends BaseTimeEntity {
+@Table(name = "reports", indexes = {
+        @Index(name = "idx_reports_reporter_id", columnList = "reporter_id"),
+        @Index(name = "idx_reports_target", columnList = "target_type, target_id")
+})
+public class ReportEntity extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private ReportTargetType targetType;
 
-    @Column
-    private Long targetId;
+    @Column(name = "target_id", length = 50)
+    private String targetId;
 
-    @Column
-    private String targetUid;
+    @Column(name = "reporter_id", nullable = false, length = 36)
+    private String reporterId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_uid", nullable = false, columnDefinition = "VARCHAR(255)")
-    private UsersEntity reporter;
-
-    // 신고 사유는 String 으로 통일해서 저장 (Enum.name())
     @ElementCollection
     @CollectionTable(name = "report_reasons", joinColumns = @JoinColumn(name = "report_id"))
-    @Column(name = "reason")
+    @Column(name = "reason", length = 50)
     private List<String> reasons;
 
-    @Column
+    @Column(length = 500)
     private String etcReason;
+
+    @Override
+    protected String getEntityPrefix() {
+        return "RPT";
+    }
+
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
 
     public static ReportEntity from(Report report) {
         ReportEntity entity = new ReportEntity();
         entity.id = report.getId();
         entity.targetType = report.getTargetType();
-        entity.targetId = report.getTargetId();
-        entity.targetUid = report.getTargetUid();
-        entity.reporter = UsersEntity.from(report.getReporter());
+        entity.targetId = report.getTargetId() != null ? String.valueOf(report.getTargetId()) : report.getTargetUid();
+        entity.reporterId = report.getReporter().getUid();
         entity.reasons = report.getReasons();
         entity.etcReason = report.getEtcReason();
-
         return entity;
     }
 
@@ -56,9 +58,8 @@ public class ReportEntity extends BaseTimeEntity {
         return Report.builder()
                 .id(id)
                 .targetType(targetType)
-                .targetId(targetId)
-                .targetUid(targetUid)
-                .reporter(reporter.toModel())
+                .targetId(targetId != null && targetType != ReportTargetType.USER ? Long.valueOf(targetId) : null)
+                .targetUid(targetType == ReportTargetType.USER ? targetId : null)
                 .reasons(reasons)
                 .etcReason(etcReason)
                 .build();

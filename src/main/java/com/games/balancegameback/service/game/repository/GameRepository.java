@@ -12,19 +12,19 @@ public interface GameRepository {
 
     Games save(Games games);
 
-    GameResponse findById(Long roomId);
+    GameResponse findById(String roomId);
 
-    Games findByRoomId(Long roomId);
+    Games findByRoomId(String roomId);
 
-    CustomPageImpl<GameListResponse> findGamesWithResources(Long cursorId, Users users, Pageable pageable, GameSearchRequest searchRequest);
+    CustomPageImpl<GameListResponse> findGamesWithResources(String cursorId, Users users, Pageable pageable, GameSearchRequest searchRequest);
 
-    boolean existsIdAndUsers(Long gameId, Users users);
+    boolean existsIdAndUsers(String gameId, Users users);
 
-    boolean existsGameRounds(Long gameId, int roundNumber);
+    boolean existsGameRounds(String gameId, int roundNumber);
 
     void update(Games games);
 
-    void deleteById(Long roomId);
+    void deleteById(String roomId);
 
-    void deleteImagesInS3(Long roomId);
+    void deleteImagesInS3(String roomId);
 }

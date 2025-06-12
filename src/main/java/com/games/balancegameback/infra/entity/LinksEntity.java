@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LinksEntity extends MediaEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String urls;
 
     @Column
@@ -21,11 +21,16 @@ public class LinksEntity extends MediaEntity {
     @Column
     private int endSec;
 
-    public LinksEntity(Long id, String urls, int startSec, int endSec, MediaType mediaType) {
+    public LinksEntity(String id, String urls, int startSec, int endSec, MediaType mediaType) {
         super(id, mediaType == null ? MediaType.LINK : mediaType);
         this.urls = urls;
         this.startSec = startSec;
         this.endSec = endSec;
+    }
+
+    @Override
+    protected String getEntityPrefix() {
+        return "LNK";
     }
 
     public static LinksEntity from(Links links) {
@@ -41,11 +46,11 @@ public class LinksEntity extends MediaEntity {
     @Override
     public Links toModel() {
         return Links.builder()
-                .id(super.getId())
+                .id(this.id)
                 .urls(this.urls)
                 .startSec(this.startSec)
                 .endSec(this.endSec)
-                .mediaType(super.mediaType)
+                .mediaType(this.mediaType)
                 .build();
     }
 

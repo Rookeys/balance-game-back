@@ -8,12 +8,12 @@ import lombok.Getter;
 @Getter
 public class Media {
 
-    private final Long id;
+    private final String id;
     private final Games games;
     private final Users users;
     private final MediaType mediaType;
 
-    public Media(Long id, Games games, Users users, MediaType mediaType) {
+    public Media(String id, Games games, Users users, MediaType mediaType) {
         this.id = id;
         this.games = games;
         this.users = users;

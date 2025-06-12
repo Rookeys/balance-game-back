@@ -4,66 +4,56 @@ import com.games.balancegameback.domain.game.GameResources;
 import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter
 @Entity
-@Table(name = "game_resources")
-public class GameResourcesEntity extends BaseTimeEntity {
+@Table(name = "game_resources", indexes = {
+        @Index(name = "idx_game_resources_game_id", columnList = "game_id")
+})
+public class GameResourcesEntity extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column
+    @Column(length = 100)
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id", nullable = false)
-    private GamesEntity games;
+    @Column(name = "game_id", nullable = false, length = 36)
+    private String gameId;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "images_id")
-    private ImagesEntity images;
+    @Column(name = "image_id", length = 36)
+    private String imageId;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "links_id")
-    private LinksEntity links;
+    @Column(name = "link_id", length = 36)
+    private String linkId;
 
-    @OneToMany(mappedBy = "gameResources", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GameResultsEntity> winningLists = new ArrayList<>();
+    @Override
+    protected String getEntityPrefix() {
+        return "GRS";
+    }
 
-    @OneToMany(mappedBy = "gameResources", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GameResourceCommentsEntity> comments = new ArrayList<>();
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
 
     public static GameResourcesEntity from(GameResources gameResources) {
-        GameResourcesEntity gameResourcesEntity = new GameResourcesEntity();
-        gameResourcesEntity.id = gameResources.getId();
-        gameResourcesEntity.title = gameResources.getTitle() != null ? gameResources.getTitle() : "";
-        gameResourcesEntity.games = GamesEntity.from(gameResources.getGames());
+        GameResourcesEntity entity = new GameResourcesEntity();
+        entity.id = gameResources.getId();
+        entity.title = gameResources.getTitle() != null ? gameResources.getTitle() : "";
+        entity.gameId = gameResources.getGames().getId();
 
         if (gameResources.getImages() != null) {
-            gameResourcesEntity.images = ImagesEntity.from(gameResources.getImages());
+            entity.imageId = gameResources.getImages().getId();
         }
 
         if (gameResources.getLinks() != null) {
-            gameResourcesEntity.links = LinksEntity.from((gameResources.getLinks()));
+            entity.linkId = gameResources.getLinks().getId();
         }
 
-        return gameResourcesEntity;
+        return entity;
     }
 
     public GameResources toModel() {
         return GameResources.builder()
                 .id(id)
                 .title(title != null ? title : "")
-                .games(games.toModel())
-                .images(images != null ? images.toModel() : null)
-                .links(links != null ? links.toModel() : null)
-                .winningLists(winningLists.stream()
-                        .map(GameResultsEntity::toModel)
-                        .toList())
                 .build();
     }
 

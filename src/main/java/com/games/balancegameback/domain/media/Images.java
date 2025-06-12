@@ -13,7 +13,7 @@ public class Images extends Media {
     private final MediaType mediaType;
 
     @Builder
-    public Images(Long id, Games games, Users users, MediaType mediaType, String fileUrl) {
+    public Images(String id, Games games, Users users, MediaType mediaType, String fileUrl) {
         super(id, games, users, mediaType);
         this.fileUrl = fileUrl;
         this.mediaType = mediaType;

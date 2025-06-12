@@ -14,16 +14,16 @@ import java.util.List;
 @Data
 public class GamePlay {
 
-    private Long id;
+    private String id;
     private Games games;
     private int roundNumber;
-    private List<Long> allResources;
-    private List<Long> selectedResources;
+    private List<String> allResources;
+    private List<String> selectedResources;
     private boolean gameEnded;
 
     @Builder
-    public GamePlay(Long id, Games games, int roundNumber, List<Long> allResources,
-                    List<Long> selectedResources, boolean gameEnded) {
+    public GamePlay(String id, Games games, int roundNumber, List<String> allResources,
+                    List<String> selectedResources, boolean gameEnded) {
         this.id = id;
         this.games = games;
         this.roundNumber = roundNumber;
@@ -36,25 +36,28 @@ public class GamePlay {
      * 선택된 리소스를 업데이트
      */
     public void updateSelectedResource(GamePlayRequest gamePlayRequest) {
-        if (!allResources.contains(gamePlayRequest.getWinResourceId()) && !allResources.contains(gamePlayRequest.getLoseResourceId())) {
+        String winResourceId = String.valueOf(gamePlayRequest.getWinResourceId());
+        String loseResourceId = String.valueOf(gamePlayRequest.getLoseResourceId());
+
+        if (!allResources.contains(winResourceId) && !allResources.contains(loseResourceId)) {
             throw new NotFoundException("Resource ID not found", ErrorCode.NOT_FOUND_EXCEPTION);
         }
 
-        if (selectedResources.contains(gamePlayRequest.getWinResourceId()) || selectedResources.contains(gamePlayRequest.getLoseResourceId())) {
+        if (selectedResources.contains(winResourceId) || selectedResources.contains(loseResourceId)) {
             throw new BadRequestException("Resource ID not found", ErrorCode.RUNTIME_EXCEPTION);
         }
 
-        this.allResources.remove(gamePlayRequest.getWinResourceId());
-        this.allResources.remove(gamePlayRequest.getLoseResourceId());
+        this.allResources.remove(winResourceId);
+        this.allResources.remove(loseResourceId);
 
-        this.selectedResources.add(gamePlayRequest.getWinResourceId());
+        this.selectedResources.add(winResourceId);
     }
 
-    public List<Long> getAllResources() {
+    public List<String> getAllResources() {
         return Collections.unmodifiableList(allResources);
     }
 
-    public List<Long> getSelectedResources() {
+    public List<String> getSelectedResources() {
         return Collections.unmodifiableList(selectedResources);
     }
 }

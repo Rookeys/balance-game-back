@@ -10,16 +10,16 @@ import java.util.List;
 @Data
 public class Report {
 
-    private Long id;
+    private String id;
     private ReportTargetType targetType;
-    private Long targetId;
-    private String targetUid;
+    private Long targetId;  // 댓글용 (Long ID 유지)
+    private String targetUid;  // 유저, 게임, 리소스용 (String UUID)
     private Users reporter;
     private List<String> reasons;
     private String etcReason;
 
     @Builder
-    public Report(Long id, ReportTargetType targetType, Long targetId, String targetUid, Users reporter,
+    public Report(String id, ReportTargetType targetType, Long targetId, String targetUid, Users reporter,
                   List<String> reasons, String etcReason) {
         this.id = id;
         this.targetType = targetType;

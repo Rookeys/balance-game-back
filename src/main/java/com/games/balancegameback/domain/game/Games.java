@@ -6,26 +6,20 @@ import com.games.balancegameback.dto.game.GameRequest;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class Games {
 
-    private final Long id;
+    private final String id;
     private String title;
     private String description;
     private Boolean isNamePrivate;
     private Boolean isBlind;
     private AccessType accessType;
     private final Users users;
-    private GameInviteCode gameInviteCode;
-    private List<GameResources> gameResources;
-    private List<GameCategory> categories;
 
     @Builder
-    public Games(Long id, String title, String description, Boolean isNamePrivate, Boolean isBlind,
-                 AccessType accessType, Users users, GameInviteCode gameInviteCode,
-                 List<GameResources> gameResources, List<GameCategory> categories) {
+    public Games(String id, String title, String description, Boolean isNamePrivate, Boolean isBlind,
+                 AccessType accessType, Users users) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -33,9 +27,6 @@ public class Games {
         this.isBlind = isBlind;
         this.accessType = accessType;
         this.users = users;
-        this.gameInviteCode = gameInviteCode;
-        this.gameResources = gameResources;
-        this.categories = categories;
     }
 
     public void update(GameRequest gameRequest) {

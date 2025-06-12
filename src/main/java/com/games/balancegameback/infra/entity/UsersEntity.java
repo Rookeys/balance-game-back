@@ -8,46 +8,55 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "users")
-public class UsersEntity extends BaseTimeEntity {
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_email", columnList = "email"),
+        @Index(name = "idx_users_nickname", columnList = "nickname")
+})
+public class UsersEntity extends BaseEntity {
 
-    @Id
-    private String uid;
-
-    @Column(unique = true, nullable = false)
-    private String nickname;
-
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false, length = 50)
+    private String nickname;
+
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private LoginType loginType;
 
-    @Column
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
-    @Column
+    @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    public static UsersEntity from(Users user) {
-        UsersEntity userEntity = new UsersEntity();
-        userEntity.uid = user.getUid();
-        userEntity.nickname = user.getNickname();
-        userEntity.email = user.getEmail();
-        userEntity.loginType = user.getLoginType();
-        userEntity.userRole = user.getUserRole();
-        userEntity.isDeleted = user.isDeleted();
+    @Override
+    protected String getEntityPrefix() {
+        return "USR";
+    }
 
-        return userEntity;
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
+
+    public static UsersEntity from(Users user) {
+        UsersEntity entity = new UsersEntity();
+        entity.id = user.getUid();
+        entity.email = user.getEmail();
+        entity.nickname = user.getNickname();
+        entity.loginType = user.getLoginType();
+        entity.userRole = user.getUserRole();
+        entity.isDeleted = user.isDeleted();
+        return entity;
     }
 
     public Users toModel() {
         return Users.builder()
-                .uid(uid)
-                .nickname(nickname)
+                .uid(id)
                 .email(email)
+                .nickname(nickname)
                 .loginType(loginType)
                 .userRole(userRole)
                 .isDeleted(isDeleted)

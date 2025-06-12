@@ -6,28 +6,34 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "game_results")
-public class GameResultsEntity extends BaseTimeEntity {
+@Table(name = "game_results", indexes = {
+        @Index(name = "idx_game_results_resource_id", columnList = "game_resource_id")
+})
+public class GameResultsEntity extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "game_resource_id", nullable = false, length = 36)
+    private String gameResourceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_resources_id")
-    private GameResourcesEntity gameResources;
+    @Override
+    protected String getEntityPrefix() {
+        return "GRT";
+    }
+
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
 
     public static GameResultsEntity from(GameResults gameResults) {
-        GameResultsEntity gameResultsEntity = new GameResultsEntity();
-        gameResultsEntity.gameResources = GameResourcesEntity.from(gameResults.gameResources());
-
-        return gameResultsEntity;
+        GameResultsEntity entity = new GameResultsEntity();
+        entity.id = gameResults.id();
+        entity.gameResourceId = gameResults.gameResources().getId();
+        return entity;
     }
 
     public GameResults toModel() {
         return GameResults.builder()
                 .id(id)
-                .gameResources(null)
                 .build();
     }
 }

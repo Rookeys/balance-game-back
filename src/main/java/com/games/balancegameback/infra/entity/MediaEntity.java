@@ -11,26 +11,31 @@ import lombok.NoArgsConstructor;
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor
 @Table(name = "media")
-public abstract class MediaEntity extends BaseTimeEntity {
+public abstract class MediaEntity extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     protected MediaType mediaType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_uid")
-    protected UsersEntity users;
+    @Column(name = "user_id", length = 36)
+    protected String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id")
-    protected GamesEntity games;
+    @Column(name = "game_id", length = 36)
+    protected String gameId;
 
-    public MediaEntity(Long id, MediaType mediaType) {
+    public MediaEntity(String id, MediaType mediaType) {
         this.id = id;
         this.mediaType = mediaType;
+    }
+
+    @Override
+    protected String getEntityPrefix() {
+        return "MED";
+    }
+
+    @PrePersist
+    public void prePersist() {
+        generateId();
     }
 
     public abstract Media toModel();

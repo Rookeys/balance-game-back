@@ -7,12 +7,12 @@ import lombok.Data;
 @Data
 public class GameCategory {
 
-    private Long id;
+    private String id;
     private Category category;
     private Games games;
 
     @Builder
-    public GameCategory(Long id, Category category, Games games) {
+    public GameCategory(String id, Category category, Games games) {
         this.id = id;
         this.category = category;
         this.games = games;

@@ -8,49 +8,54 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "games_play")
-public class GamePlayEntity extends BaseTimeEntity {
+@Table(name = "games_play", indexes = {
+        @Index(name = "idx_games_play_game_id", columnList = "game_id")
+})
+public class GamePlayEntity extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "games_id", nullable = false)
-    private GamesEntity games;
+    @Column(name = "game_id", nullable = false, length = 36)
+    private String gameId;
 
     @Column(nullable = false)
-    private int roundNumber;  // n강 선택
+    private int roundNumber;
 
     @ElementCollection
     @CollectionTable(name = "round_resources", joinColumns = @JoinColumn(name = "games_play_id"))
     @Column(name = "resources_id")
-    private List<Long> allResources; // 현재 게임에서 사용된 모든 리소스 ID
+    private List<String> allResources;
 
     @ElementCollection
     @CollectionTable(name = "selected_resources", joinColumns = @JoinColumn(name = "games_play_id"))
     @Column(name = "selected_resource_id")
-    private List<Long> selectedResources; // 살아남은 리소스 ID
+    private List<String> selectedResources;
 
     @Column
     private boolean gameEnded = false;
 
-    public static GamePlayEntity from(GamePlay gamePlay) {
-        GamePlayEntity gamePlayEntity = new GamePlayEntity();
-        gamePlayEntity.id = gamePlay.getId();
-        gamePlayEntity.games = GamesEntity.from(gamePlay.getGames());
-        gamePlayEntity.roundNumber = gamePlay.getRoundNumber();
-        gamePlayEntity.allResources = gamePlay.getAllResources();
-        gamePlayEntity.selectedResources = gamePlay.getSelectedResources();
-        gamePlayEntity.gameEnded = gamePlay.isGameEnded();
+    @Override
+    protected String getEntityPrefix() {
+        return "GPL";
+    }
 
-        return gamePlayEntity;
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
+
+    public static GamePlayEntity from(GamePlay gamePlay) {
+        GamePlayEntity entity = new GamePlayEntity();
+        entity.id = gamePlay.getId();
+        entity.gameId = gamePlay.getGames().getId();
+        entity.roundNumber = gamePlay.getRoundNumber();
+        entity.allResources = gamePlay.getAllResources();
+        entity.selectedResources = gamePlay.getSelectedResources();
+        entity.gameEnded = gamePlay.isGameEnded();
+        return entity;
     }
 
     public GamePlay toModel() {
         return GamePlay.builder()
                 .id(id)
-                .games(games.toModel())
                 .roundNumber(roundNumber)
                 .allResources(allResources)
                 .selectedResources(selectedResources)

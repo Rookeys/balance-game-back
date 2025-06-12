@@ -1,7 +1,6 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
 import com.games.balancegameback.domain.game.GameInviteCode;
-import com.games.balancegameback.infra.entity.GameInviteCodeEntity;
 import com.games.balancegameback.infra.repository.game.GameInviteJpaRepository;
 import com.games.balancegameback.service.game.repository.GameInviteRepository;
 import lombok.RequiredArgsConstructor;

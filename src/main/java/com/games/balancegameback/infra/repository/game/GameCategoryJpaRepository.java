@@ -4,8 +4,12 @@ import com.games.balancegameback.infra.entity.GameCategoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface GameCategoryJpaRepository extends JpaRepository<GameCategoryEntity, Long> {
+import java.util.List;
 
-    void deleteByGamesId(Long gamesId);
+@Repository
+public interface GameCategoryJpaRepository extends JpaRepository<GameCategoryEntity, String> {
+
+    void deleteByGameId(String gameId);
+
+    List<GameCategoryEntity> findByGameId(String gameId);
 }

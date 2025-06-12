@@ -12,14 +12,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ImagesEntity extends MediaEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String fileUrl;
 
-    public ImagesEntity(Long id, String fileUrl, MediaType mediaType, GamesEntity games, UsersEntity users) {
+    public ImagesEntity(String id, String fileUrl, MediaType mediaType, String gameId, String userId) {
         super(id, mediaType);
         this.fileUrl = fileUrl;
-        this.games = games;
-        this.users = users;
+        this.gameId = gameId;
+        this.userId = userId;
+    }
+
+    @Override
+    protected String getEntityPrefix() {
+        return "IMG";
     }
 
     public static ImagesEntity from(Images images) {
@@ -27,20 +32,18 @@ public class ImagesEntity extends MediaEntity {
                 images.getId(),
                 images.getFileUrl(),
                 images.getMediaType(),
-                images.getGames() != null ? GamesEntity.from(images.getGames()) : null,
-                images.getUsers() != null ? UsersEntity.from(images.getUsers()) : null
+                images.getGames() != null ? images.getGames().getId() : null,
+                images.getUsers() != null ? images.getUsers().getUid() : null
         );
     }
 
     @Override
     public Images toModel() {
-        return new Images(
-                super.getId(),
-                super.games != null ? super.games.toModel() : null,
-                super.users != null ? super.users.toModel() : null,
-                super.getMediaType(),
-                this.fileUrl
-        );
+        return Images.builder()
+                .id(this.id)
+                .fileUrl(this.fileUrl)
+                .mediaType(this.mediaType)
+                .build();
     }
 
     public void update(Images images) {

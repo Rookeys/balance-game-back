@@ -6,39 +6,39 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "game_comment_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"users_uid", "game_resource_comments_id"}),
-        @UniqueConstraint(columnNames = {"users_uid", "game_result_comments_id"})
-})
+@Table(name = "game_comment_likes",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "resource_comment_id"}),
+                @UniqueConstraint(columnNames = {"user_id", "result_comment_id"})
+        },
+        indexes = {
+                @Index(name = "idx_comment_likes_user_id", columnList = "user_id"),
+                @Index(name = "idx_comment_likes_resource_comment_id", columnList = "resource_comment_id"),
+                @Index(name = "idx_comment_likes_result_comment_id", columnList = "result_comment_id")
+        }
+)
 public class GameCommentLikesEntity extends BaseTimeEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id", nullable = false, length = 36)
+    private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_uid", nullable = false)
-    private UsersEntity users;
+    @Column(name = "resource_comment_id")
+    private Long resourceCommentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_resource_comments_id")
-    private GameResourceCommentsEntity resourceComments;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_result_comments_id")
-    private GameResultCommentsEntity resultComments;
+    @Column(name = "result_comment_id")
+    private Long resultCommentId;
 
     public static GameCommentLikesEntity from(GameCommentLikes gameCommentLikes) {
         GameCommentLikesEntity entity = new GameCommentLikesEntity();
         entity.id = gameCommentLikes.getId();
-        entity.users = UsersEntity.from(gameCommentLikes.getUsers());
+        entity.userId = gameCommentLikes.getUsers().getUid();
 
         if (gameCommentLikes.getResourceComments() != null) {
-            entity.resourceComments = GameResourceCommentsEntity.from(gameCommentLikes.getResourceComments());
+            entity.resourceCommentId = gameCommentLikes.getResourceComments().getId();
         }
 
         if (gameCommentLikes.getResultComments() != null) {
-            entity.resultComments = GameResultCommentsEntity.from(gameCommentLikes.getResultComments());
+            entity.resultCommentId = gameCommentLikes.getResultComments().getId();
         }
 
         return entity;
@@ -47,9 +47,6 @@ public class GameCommentLikesEntity extends BaseTimeEntity {
     public GameCommentLikes toModel() {
         return GameCommentLikes.builder()
                 .id(id)
-                .users(users.toModel())
-                .resourceComments(resourceComments != null ? resourceComments.toModel() : null)
-                .resultComments(resultComments != null ? resultComments.toModel() : null)
                 .build();
     }
 }

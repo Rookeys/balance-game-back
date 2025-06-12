@@ -15,7 +15,7 @@ public class Links extends Media {
     private final MediaType mediaType;
 
     @Builder
-    public Links(Long id, Games games, Users users, MediaType mediaType, String urls, int startSec, int endSec) {
+    public Links(String id, Games games, Users users, MediaType mediaType, String urls, int startSec, int endSec) {
         super(id, games, users, mediaType);
         this.urls = urls;
         this.startSec = startSec;

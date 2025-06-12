@@ -1,24 +1,19 @@
 package com.games.balancegameback.infra.entity;
 
-import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import jakarta.persistence.*;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter
 @Entity
-@Table(name = "games")
-public class GamesEntity extends BaseTimeEntity {
+@Table(name = "games", indexes = {
+        @Index(name = "idx_games_user_id", columnList = "user_id"),
+        @Index(name = "idx_games_access_type", columnList = "access_type")
+})
+public class GamesEntity extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -30,48 +25,36 @@ public class GamesEntity extends BaseTimeEntity {
     @Column(nullable = false)
     private Boolean isBlind;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private AccessType accessType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_uid")
-    private UsersEntity users;
+    @Column(name = "user_id", nullable = false, length = 36)
+    private String userId;
 
-    @OneToOne(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
-    private GameInviteCodeEntity gameInviteCode;
+    @Override
+    protected String getEntityPrefix() {
+        return "GAM";
+    }
 
-    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GameResourcesEntity> gameResources = new ArrayList<>();
-
-    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GamePlayEntity> gamePlayList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "games", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GameCategoryEntity> categories = new ArrayList<>();
+    @PrePersist
+    public void prePersist() {
+        generateId();
+    }
 
     public static GamesEntity from(Games games) {
         if (games == null) return null;
 
-        GamesEntity gamesEntity = new GamesEntity();
-        gamesEntity.id = games.getId() == null ? null : games.getId();
-        gamesEntity.title = games.getTitle();
-        gamesEntity.description = games.getDescription();
-        gamesEntity.isNamePrivate = games.getIsNamePrivate();
-        gamesEntity.accessType = games.getAccessType();
-        gamesEntity.users = UsersEntity.from(games.getUsers());
-        gamesEntity.isBlind = games.getIsBlind();
+        GamesEntity entity = new GamesEntity();
+        entity.id = games.getId();
+        entity.title = games.getTitle();
+        entity.description = games.getDescription();
+        entity.isNamePrivate = games.getIsNamePrivate();
+        entity.isBlind = games.getIsBlind();
+        entity.accessType = games.getAccessType();
+        entity.userId = games.getUsers().getUid();
 
-        // GameInviteCodeEntity 설정
-        if (games.getGameInviteCode() != null) {
-            GameInviteCodeEntity inviteCodeEntity = GameInviteCodeEntity.from(games.getGameInviteCode());
-            gamesEntity.gameInviteCode = inviteCodeEntity;
-
-            // 순환 참조 방지: gamesEntity 만 설정
-            inviteCodeEntity.setGames(gamesEntity);
-        }
-
-        return gamesEntity;
+        return entity;
     }
 
     public Games toModel() {
@@ -82,14 +65,6 @@ public class GamesEntity extends BaseTimeEntity {
                 .isNamePrivate(isNamePrivate)
                 .isBlind(isBlind)
                 .accessType(accessType)
-                .users(users.toModel())
-                .gameInviteCode(this.gameInviteCode != null
-                        ? GameInviteCode.builder()
-                            .id(this.gameInviteCode.getId())
-                            .inviteCode(this.gameInviteCode.getInviteCode())
-                            .isActive(this.gameInviteCode.getIsActive())
-                            .build()
-                        : null)
                 .build();
     }
 
@@ -101,4 +76,3 @@ public class GamesEntity extends BaseTimeEntity {
         this.accessType = games.getAccessType();
     }
 }
-
