@@ -131,7 +131,7 @@ public class GameRoomService {
         }
     }
 
-    private void revalidate(String path) {
+    public void revalidate(String path) {
         // JSON payload 구성
         Map<String, String> body = new HashMap<>();
         body.put("path", path);
