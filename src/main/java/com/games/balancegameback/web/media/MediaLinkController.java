@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.media;
 
+import com.games.balancegameback.dto.media.AutoLinkRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.media.MediaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,6 +38,22 @@ public class MediaLinkController {
             @RequestBody @Valid LinkRequest linkRequest,
             HttpServletRequest request) {
         mediaService.saveLink(gameId, linkRequest, request);
+        return ResponseEntity.status(201).body(Boolean.TRUE);
+    }
+
+    @Operation(summary = "유튜브 링크 자동 저장 API", description = "자동으로 유튜브 URL과 시작, 끝 초를 저장함.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "저장 성공")
+    })
+    @PostMapping(value = "/games/{gameId}/media/links/auto")
+    public ResponseEntity<Boolean> autoSaveLink(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
+            @RequestBody @Valid List<AutoLinkRequest> autoLinkRequest,
+            HttpServletRequest request) {
+        mediaService.autoSaveLink(gameId, autoLinkRequest, request);
         return ResponseEntity.status(201).body(Boolean.TRUE);
     }
 }

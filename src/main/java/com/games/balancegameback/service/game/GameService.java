@@ -15,6 +15,7 @@ import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
 import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
 import com.games.balancegameback.dto.game.report.GameReportRequest;
+import com.games.balancegameback.dto.media.AutoLinkRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.dto.user.UserReportRequest;
@@ -98,6 +99,11 @@ public class GameService {
     // 게임 리소스에 유튜브 링크 추가
     public void saveLinkResource(Games games, LinkRequest linkRequest) {
         gameResourceService.saveLinkResource(games, linkRequest);
+    }
+
+    // 게임 리소스에 유튜브 링크 자동 추가
+    public void saveAutoLinkResource(Games games, List<AutoLinkRequest> autoLinkRequest) {
+        gameResourceService.saveAutoLinkResource(games, autoLinkRequest);
     }
 
     // 게임 리소스에 이미지 추가
