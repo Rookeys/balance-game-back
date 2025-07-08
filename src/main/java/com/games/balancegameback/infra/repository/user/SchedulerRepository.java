@@ -1,32 +1,29 @@
 package com.games.balancegameback.infra.repository.user;
 
-import com.games.balancegameback.infra.entity.GamesEntity;
-import com.games.balancegameback.infra.entity.UsersEntity;
+import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.*;
-import com.games.balancegameback.infra.repository.media.ImageJpaRepository;
 import com.games.balancegameback.infra.repository.media.LinkJpaRepository;
 import com.games.balancegameback.infra.repository.media.MediaJpaRepository;
+import com.games.balancegameback.service.media.impl.UserMediaCleanupService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Log4j2
 public class SchedulerRepository {
 
     private final UserJpaRepository usersRepository;
-    private final GameCommentLikesJpaRepository gameCommentLikesRepository;
-    private final GameReportJpaRepository gameReportRepository;
-    private final ImageJpaRepository imageRepository;
     private final LinkJpaRepository linkRepository;
     private final MediaJpaRepository mediaRepository;
     private final GameJpaRepository gameRepository;
+
+    private final UserMediaCleanupService mediaCleanupService;
 
     @Transactional
     public void deleteOldDeletedUsers() {
@@ -63,29 +60,46 @@ public class SchedulerRepository {
                 .map(GamesEntity::getId)
                 .toList();
 
-        gameCommentLikesRepository.deleteByUsersUid(uid);
-        gameReportRepository.deleteByReporterUid(uid);
+        log.debug("사용자 {}가 생성한 게임 {}개 발견", uid, userCreatedGameIds.size());
 
-        imageRepository.deleteByUsersUid(uid);
+        if (!userCreatedGameIds.isEmpty()) {
+            for (Long gameId : userCreatedGameIds) {
+                mediaCleanupService.cleanupGameMediaFiles(gameId);
+            }
+        }
+
+        mediaCleanupService.cleanupUserMediaFiles(uid);
+
         linkRepository.deleteByUsersUid(uid);
         mediaRepository.deleteByUsersUid(uid);
 
         if (!userCreatedGameIds.isEmpty()) {
             gameRepository.deleteByUsersUid(uid);
+            log.debug("사용자 {}가 생성한 {}개 게임 삭제 완료", uid, userCreatedGameIds.size());
         }
 
-        // 사용자 정보 익명화
         anonymizeUserInfo(user);
+
+        log.debug("사용자 {} 개인정보 익명화 완료", uid);
     }
 
     /**
      * 사용자 개인정보 익명화
-     * 개인을 식별할 수 있는 정보들 익명화
+     * UID는 유지하되, 개인을 식별할 수 있는 정보(닉네임, 이메일)를 익명화
      */
     private void anonymizeUserInfo(UsersEntity user) {
+        String anonymousNickname = UsersEntity.createAnonymousNickname(user.getUid());
+        String anonymousEmail = UsersEntity.createAnonymousEmail(user.getEmail());
+
         usersRepository.anonymizeUserPersonalInfo(
-                user.getUid(),
-                "DELETED_USER_" + user.getUid().substring(user.getUid().length() - 15) // UID 뒷 15자리로 구분
+            user.getUid(),
+            anonymousNickname,
+            anonymousEmail
         );
+
+        log.debug("사용자 {} 익명화: {} -> {}, {} -> {}",
+                 user.getUid(),
+                 user.getNickname(), anonymousNickname,
+                 user.getEmail(), anonymousEmail);
     }
 }
