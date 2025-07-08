@@ -13,6 +13,7 @@ import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.dto.game.GameResourceRequest;
 import com.games.balancegameback.dto.game.GameResourceResponse;
 import com.games.balancegameback.dto.game.GameResourceSearchRequest;
+import com.games.balancegameback.dto.media.AutoLinkRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.service.game.repository.GameResourceRepository;
@@ -130,6 +131,33 @@ public class GameResourceService {
                 .build();
 
         gameResourceRepository.save(gameResources); // 한 번에 저장
+
+        Integer afterCount = gameResourceRepository.countByGameId(games.getId());
+        checkResourceCountChangeAndRevalidate(games.getId(), beforeCount, afterCount);
+    }
+
+    @Transactional
+    public void saveAutoLinkResource(Games games, List<AutoLinkRequest> autoLinkRequest) {
+        Integer beforeCount = gameResourceRepository.countByGameId(games.getId());
+
+        for (AutoLinkRequest request : autoLinkRequest) {
+            Links links = Links.builder()
+                    .users(null)
+                    .games(games)
+                    .mediaType(MediaType.LINK)
+                    .urls(request.getUrl())
+                    .startSec(request.getStartSec())
+                    .endSec(request.getEndSec())
+                    .build();
+
+            GameResources gameResources = GameResources.builder()
+                    .title(request.getTitle())
+                    .links(links)
+                    .games(games)
+                    .build();
+
+            gameResourceRepository.save(gameResources); // 한 번에 저장
+        }
 
         Integer afterCount = gameResourceRepository.countByGameId(games.getId());
         checkResourceCountChangeAndRevalidate(games.getId(), beforeCount, afterCount);
