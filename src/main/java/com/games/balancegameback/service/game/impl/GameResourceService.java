@@ -1,7 +1,6 @@
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
-import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;

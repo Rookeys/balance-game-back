@@ -4,7 +4,6 @@ import com.games.balancegameback.dto.user.KakaoRequest;
 import com.games.balancegameback.dto.user.LoginRequest;
 import com.games.balancegameback.dto.user.LoginResponse;
 import com.games.balancegameback.dto.user.TokenResponse;
-import com.games.balancegameback.infra.repository.user.SchedulerRepository;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
