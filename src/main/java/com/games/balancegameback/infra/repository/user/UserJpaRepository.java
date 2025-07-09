@@ -20,7 +20,7 @@ public interface UserJpaRepository extends JpaRepository<UsersEntity, String> {
 
     boolean existsByNickname(String nickname);
 
-    List<UsersEntity> findAllByIsDeletedTrueAndCreatedDateBefore(OffsetDateTime dateTime);
+    List<UsersEntity> findAllByIsDeletedTrueAndUpdatedDateBefore(OffsetDateTime dateTime);
 
     void delete(UsersEntity users);
 

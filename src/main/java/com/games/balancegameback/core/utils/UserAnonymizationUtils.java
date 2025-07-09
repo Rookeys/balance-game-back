@@ -4,33 +4,33 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.regex.Pattern;
 
-/**
- * 사용자 데이터 익명화 유틸리티
- */
 @Slf4j
 @UtilityClass
 public class UserAnonymizationUtils {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final Pattern DELETED_EMAIL_PATTERN = Pattern.compile("^DELETED_USER_\\d{6}_(.+)$");
-    private static final Pattern DELETED_NICKNAME_PATTERN = Pattern.compile("^탈퇴한 사용자_(.+)$");
+    private static final Pattern DELETED_EMAIL_PATTERN = Pattern.compile("^DELETED_USER_(\\d{17})_(.+)$");
+    private static final Pattern DELETED_NICKNAME_PATTERN = Pattern.compile("^탈퇴한 사용자_(\\d{17})$");
 
     /**
-     * 안전한 6자리 난수 생성
+     * 타임스탬프 + 랜덤 조합
      */
-    public static String generateSecureRandomNumber() {
-        return String.format("%06d", SECURE_RANDOM.nextInt(900000) + 100000);
+    public static String generateTimestampBasedId() {
+        long timestamp = Instant.now().toEpochMilli();
+        int random = SECURE_RANDOM.nextInt(10000);
+        return String.format("%d%04d", timestamp, random);
     }
 
     /**
      * 이메일 익명화
-     * 형태: DELETED_USER_123456_원본이메일
+     * 형태: DELETED_USER_16917234567891234_unknown@deleted.user
      */
     public static String anonymizeEmail(String originalEmail) {
         if (originalEmail == null || originalEmail.trim().isEmpty()) {
-            return "DELETED_USER_" + generateSecureRandomNumber() + "_unknown@deleted.user";
+            return "DELETED_USER_" + generateTimestampBasedId() + "_unknown@deleted.user";
         }
 
         // 이미 익명화된 이메일인지 확인
@@ -39,22 +39,15 @@ public class UserAnonymizationUtils {
             return originalEmail;
         }
 
-        return "DELETED_USER_" + generateSecureRandomNumber() + "_" + originalEmail;
+        return "DELETED_USER_" + generateTimestampBasedId() + "_" + originalEmail;
     }
 
     /**
      * 닉네임 익명화
+     * 형태: 탈퇴한 사용자_16917234567891234
      */
     public static String anonymizeNickname(String uid) {
-        if (uid == null || uid.trim().isEmpty()) {
-            return "탈퇴한 사용자_UNKNOWN";
-        }
-
-        String suffix = uid.length() >= 8 ?
-            uid.substring(uid.length() - 8) :
-            uid + "_" + generateSecureRandomNumber().substring(0, 4);
-
-        return "탈퇴한 사용자_" + suffix;
+        return "탈퇴한 사용자_" + generateTimestampBasedId();
     }
 
     /**
@@ -67,10 +60,35 @@ public class UserAnonymizationUtils {
 
         var matcher = DELETED_EMAIL_PATTERN.matcher(anonymizedEmail);
         if (matcher.matches()) {
-            return matcher.group(1);
+            return matcher.group(2);
         }
 
-        return anonymizedEmail; // 익명화되지 않은 경우 그대로 반환
+        return anonymizedEmail;
+    }
+
+    /**
+     * 타임스탬프 추출
+     */
+    public static Long extractDeletionTimestamp(String anonymizedData) {
+        if (anonymizedData == null) {
+            return null;
+        }
+
+        // 이메일에서 타임스탬프 추출
+        var emailMatcher = DELETED_EMAIL_PATTERN.matcher(anonymizedData);
+        if (emailMatcher.matches()) {
+            String timestampStr = emailMatcher.group(1).substring(0, 13);
+            return Long.parseLong(timestampStr);
+        }
+
+        // 닉네임에서 타임스탬프 추출
+        var nicknameMatcher = DELETED_NICKNAME_PATTERN.matcher(anonymizedData);
+        if (nicknameMatcher.matches()) {
+            String timestampStr = nicknameMatcher.group(1).substring(0, 13);
+            return Long.parseLong(timestampStr);
+        }
+
+        return null;
     }
 
     /**
@@ -92,31 +110,5 @@ public class UserAnonymizationUtils {
      */
     public static boolean isUserAnonymized(String nickname, String email) {
         return isAnonymizedNickname(nickname) || isAnonymizedEmail(email);
-    }
-
-    /**
-     * 익명화 정보 통계
-     */
-    public static AnonymizationInfo analyzeAnonymization(String nickname, String email) {
-        return AnonymizationInfo.builder()
-                .isNicknameAnonymized(isAnonymizedNickname(nickname))
-                .isEmailAnonymized(isAnonymizedEmail(email))
-                .originalEmail(extractOriginalEmail(email))
-                .build();
-    }
-
-    /**
-     * 익명화 정보 DTO
-     */
-    @lombok.Builder
-    @lombok.Data
-    public static class AnonymizationInfo {
-        private boolean isNicknameAnonymized;
-        private boolean isEmailAnonymized;
-        private String originalEmail;
-
-        public boolean isFullyAnonymized() {
-            return isNicknameAnonymized && isEmailAnonymized;
-        }
     }
 }

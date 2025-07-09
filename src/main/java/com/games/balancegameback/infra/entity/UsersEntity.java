@@ -1,6 +1,5 @@
 package com.games.balancegameback.infra.entity;
 
-import com.games.balancegameback.core.utils.UserAnonymizationUtils;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.LoginType;
 import com.games.balancegameback.domain.user.enums.UserRole;
@@ -66,28 +65,6 @@ public class UsersEntity extends BaseTimeEntity {
     public boolean isAnonymized() {
         return (this.nickname != null && this.nickname.startsWith("탈퇴한 사용자_")) ||
                (this.email != null && this.email.startsWith("DELETED_USER_"));
-    }
-
-    /**
-     * 익명화된 닉네임 생성
-     */
-    public static String createAnonymousNickname(String uid) {
-        return "탈퇴한 사용자_" + uid.substring(Math.max(0, uid.length() - 8));
-    }
-
-    /**
-     * 익명화된 이메일 생성
-     * EX) DELETED_USER_123456_원본이메일
-     */
-    public static String createAnonymousEmail(String originalEmail) {
-        return UserAnonymizationUtils.anonymizeEmail(originalEmail);
-    }
-
-    /**
-     * 익명화된 이메일에서 원본 이메일 추출
-     */
-    public String getOriginalEmail() {
-        return UserAnonymizationUtils.extractOriginalEmail(this.email);
     }
 }
 
