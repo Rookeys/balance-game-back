@@ -10,10 +10,8 @@ import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.repository.game.*;
-import com.games.balancegameback.infra.repository.media.ImageJpaRepository;
-import com.games.balancegameback.infra.repository.media.LinkJpaRepository;
-import com.games.balancegameback.infra.repository.media.MediaJpaRepository;
 import com.games.balancegameback.service.game.repository.GameRepository;
+import com.games.balancegameback.service.media.impl.UserMediaCleanupService;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +40,7 @@ public class GameRoomService {
 
     private final GameInviteService gameInviteService;
     private final GameCategoryService gameCategoryService;
+    private final UserMediaCleanupService mediaCleanupService;
     private final UserUtils userUtils;
     private final RestTemplate restTemplate;
 
@@ -154,6 +153,9 @@ public class GameRoomService {
     private void deleteGameData(Long gameId) {
         gameCategoryRepository.deleteByGamesId(gameId);
         gamePlayRepository.deleteByGamesId(gameId);
+
+        mediaCleanupService.cleanupGameMediaFiles(gameId);
+
         gameResourcesRepository.deleteByGamesId(gameId);
         gameResultCommentsRepository.deleteByGamesId(gameId);
 

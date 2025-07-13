@@ -2,6 +2,9 @@ package com.games.balancegameback.infra.repository.user;
 
 import com.games.balancegameback.infra.entity.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
@@ -17,7 +20,13 @@ public interface UserJpaRepository extends JpaRepository<UsersEntity, String> {
 
     boolean existsByNickname(String nickname);
 
-    List<UsersEntity> findAllByIsDeletedTrueAndCreatedDateBefore(OffsetDateTime dateTime);
+    List<UsersEntity> findAllByIsDeletedTrueAndUpdatedDateBefore(OffsetDateTime dateTime);
 
     void delete(UsersEntity users);
+
+    @Modifying
+    @Query("UPDATE UsersEntity u SET u.nickname = :anonymousNickname, u.email = :anonymousEmail WHERE u.uid = :uid")
+    void anonymizeUserPersonalInfo(@Param("uid") String uid,
+                                     @Param("anonymousNickname") String anonymousNickname,
+                                     @Param("anonymousEmail") String anonymousEmail);
 }
