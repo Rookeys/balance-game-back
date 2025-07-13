@@ -12,9 +12,5 @@ public interface GameResultCommentJpaRepository extends JpaRepository<GameResult
 
     Optional<GameResultCommentsEntity> findById(Long id);
 
-    void deleteByUsersUid(String uid);
-
-    void deleteByGamesIdIn(List<Long> gameIds);
-
     void deleteByGamesId(Long gameId);
 }

@@ -22,6 +22,7 @@ public class SchedulerRepository {
     private final UserJpaRepository usersRepository;
     private final GameResultCommentJpaRepository gameResultCommentsRepository;
     private final GameResourceCommentJpaRepository gameResourceCommentsRepository;
+    private final GameCommentLikesJpaRepository gameCommentLikesRepository;
     private final LinkJpaRepository linkRepository;
     private final MediaJpaRepository mediaRepository;
     private final GameJpaRepository gameRepository;
@@ -76,21 +77,21 @@ public class SchedulerRepository {
         log.debug("사용자 {}가 생성한 게임 {}개 발견", uid, userCreatedGameIds.size());
 
         if (!userCreatedGameIds.isEmpty()) {
+            gameCommentLikesRepository.deleteByGameIds(userCreatedGameIds);
+
             for (Long gameId : userCreatedGameIds) {
                 mediaCleanupService.cleanupGameMediaFiles(gameId);
             }
+
+            deleteGameRelatedComments(userCreatedGameIds);
+            gameRepository.deleteByUsersUid(uid);
+            log.debug("사용자 {}가 생성한 {}개 게임 삭제 완료", uid, userCreatedGameIds.size());
         }
 
         mediaCleanupService.cleanupUserMediaFiles(uid);
 
         linkRepository.deleteByUsersUid(uid);
         mediaRepository.deleteByUsersUid(uid);
-
-        if (!userCreatedGameIds.isEmpty()) {
-            deleteGameRelatedComments(userCreatedGameIds);
-            gameRepository.deleteByUsersUid(uid);
-            log.debug("사용자 {}가 생성한 {}개 게임 삭제 완료", uid, userCreatedGameIds.size());
-        }
 
         anonymizeUserInfo(user);
 
