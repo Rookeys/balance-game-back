@@ -136,7 +136,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         String title = tuple.get(games.title);
         String description = tuple.get(games.description);
         String nickname = tuple.get(games.users.nickname);
-        String profileImageUrl = tuple.get(images.fileUrl);
+        String profileImageUrl = tuple.get(images.fileUrl.max());
         boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
         OffsetDateTime createdAt = tuple.get(games.createdDate);
         OffsetDateTime updatedAt = tuple.get(games.updatedDate);
@@ -273,7 +273,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             String title = tuple.get(games.title);
             String description = tuple.get(games.description);
             String nickname = tuple.get(games.users.nickname);
-            String profileImageUrl = tuple.get(images.fileUrl);
+            String profileImageUrl = tuple.get(images.fileUrl.max());
             boolean isPrivate = Boolean.TRUE.equals(tuple.get(games.isNamePrivate));
             OffsetDateTime createdAt = tuple.get(games.createdDate);
             Boolean isBlind = tuple.get(games.isBlind);
