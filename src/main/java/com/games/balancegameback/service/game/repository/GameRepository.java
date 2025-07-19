@@ -23,8 +23,4 @@ public interface GameRepository {
     boolean existsGameRounds(Long gameId, int roundNumber);
 
     void update(Games games);
-
-    void deleteById(Long roomId);
-
-    void deleteImagesInS3(Long roomId);
 }

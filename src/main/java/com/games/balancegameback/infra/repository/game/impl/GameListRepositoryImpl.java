@@ -371,9 +371,8 @@ public class GameListRepositoryImpl implements GameListRepository {
             resultList.removeLast(); // 안전한 마지막 요소 제거
         }
 
-        Long totalElements = jpaQueryFactory
-                .select(games.id.countDistinct())
-                .from(games)
+        Long totalElements = (long) jpaQueryFactory
+                .selectFrom(games)
                 .leftJoin(results).on(results.gameResources.games.eq(games))
                 .leftJoin(games.gameResources, resources)
                 .leftJoin(games.categories, gameCategory)
@@ -381,9 +380,10 @@ public class GameListRepositoryImpl implements GameListRepository {
                 .where(totalBuilder)
                 .groupBy(games.id)
                 .having(games.gameResources.size().goe(2))
-                .fetchOne();
+                .fetch()
+                .size();
 
-        return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
+        return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
     }
 
     private void setOptions(BooleanBuilder builder, BooleanBuilder totalBuilder, Long cursorId,

@@ -201,15 +201,16 @@ public class GameRepositoryImpl implements GameRepository {
             resultList.removeLast(); // 안전한 마지막 요소 제거
         }
 
-        Long totalElements = jpaQueryFactory
-                .select(games.id.countDistinct())
+        Long totalElements = (long) jpaQueryFactory
+                .selectFrom(games)
                 .from(games)
                 .leftJoin(games.gameResources, resources)
                 .leftJoin(games.categories, gameCategory)
                 .where(games.users.uid.eq(users.getUid()))
-                .fetchOne();
+                .fetch()
+                .size();
 
-        return new CustomPageImpl<>(resultList, pageable, totalElements != null ? totalElements : 0L, cursorId, hasNext);
+        return new CustomPageImpl<>(resultList, pageable, totalElements, cursorId, hasNext);
     }
 
     @Override
@@ -240,24 +241,6 @@ public class GameRepositoryImpl implements GameRepository {
     public void update(Games games) {
         GamesEntity gamesEntity = gameRepository.findById(games.getId()).orElseThrow();
         gamesEntity.update(games);
-    }
-
-    @Override
-    public void deleteById(Long roomId) {
-        gameRepository.deleteById(roomId);
-    }
-
-    @Override
-    public void deleteImagesInS3(Long roomId) {
-        GamesEntity entity = gameRepository.findById(roomId).orElseThrow(()
-                -> new NotFoundException("해당 게임방은 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
-
-        List<String> imageUrls = entity.getGameResources().stream()
-                .filter(resources -> resources.getImages() != null)
-                .map(resources -> resources.getImages().getFileUrl())
-                .toList();
-
-        s3Service.deleteImagesAsync(imageUrls);
     }
 
     private void setOptions(BooleanBuilder builder, Long cursorId, GameSearchRequest request,
