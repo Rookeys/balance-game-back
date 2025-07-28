@@ -42,9 +42,7 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                                                                     GameResourceSearchRequest request,
                                                                     Pageable pageable) {
         try {
-            Long totalElements = calculateTotalElements(gameId, request);
-
-            List<GameResultResponse> allResponses = executeGameResultQuery(gameId, request);
+            List<GameResultResponse> allResponses = getAllGameResults(gameId, request);
             List<GameResultResponse> sortedResponses = applySorting(allResponses, request.getSortType());
             List<GameResultResponse> pagedResponses = applyCursorPaging(sortedResponses, cursorId, pageable);
 
@@ -53,7 +51,7 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 pagedResponses.removeLast();
             }
 
-            return new CustomPageImpl<>(pagedResponses, pageable, totalElements, cursorId, hasNext);
+            return new CustomPageImpl<>(pagedResponses, pageable, (long) allResponses.size(), cursorId, hasNext);
         } catch (Exception e) {
             log.error("Error fetching game result ranking for gameId: {}", gameId, e);
             return new CustomPageImpl<>(Collections.emptyList(), pageable, 0L, cursorId, false);
@@ -63,22 +61,20 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     @Override
     public CustomBasedPageImpl<GameResultResponse> findGameResultRankingWithPaging(Long gameId, Pageable pageable,
                                                                                    GameResourceSearchRequest request) {
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(QEntities.gameResources.games.id.eq(gameId));
+        try {
+            List<GameResultResponse> allResponses = getAllGameResults(gameId, request);
+            List<GameResultResponse> sortedResponses = applySorting(allResponses, request.getSortType());
 
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
+            // 오프셋 페이징
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), sortedResponses.size());
+            List<GameResultResponse> pagedResults = sortedResponses.subList(start, end);
+
+            return new CustomBasedPageImpl<>(pagedResults, pageable, (long) sortedResponses.size());
+        } catch (Exception e) {
+            log.error("Error fetching game result ranking with paging for gameId: {}", gameId, e);
+            return new CustomBasedPageImpl<>(Collections.emptyList(), pageable, 0L);
         }
-
-        List<GameResultResponse> results = executeGameResultQueryWithPaging(gameId, request, pageable);
-
-        Long totalCount = jpaQueryFactory
-                .select(QEntities.gameResources.count())
-                .from(QEntities.gameResources)
-                .where(builder)
-                .fetchOne();
-
-        return new CustomBasedPageImpl<>(results, pageable, totalCount != null ? totalCount : 0L);
     }
 
     @Override
@@ -104,38 +100,18 @@ public class GameResultRepositoryImpl implements GameResultRepository {
         gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
     }
 
-    // =========================== 메인 쿼리 실행 메서드 ===========================
+    // =========================== 핵심 메서드들 ===========================
 
-    private List<GameResultResponse> executeGameResultQuery(Long gameId, GameResourceSearchRequest request) {
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(QEntities.gameResources.games.id.eq(gameId));
-
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
-        }
-
-        List<Tuple> tuples = jpaQueryFactory
-                .select(QEntities.gameResources.id,                           // 0
-                        QEntities.gameResources.title,                        // 1
-                        QEntities.images.mediaType.coalesce(MediaType.LINK),  // 2
-                        QEntities.images.fileUrl.coalesce(QEntities.links.urls), // 3
-                        QEntities.links.startSec,                             // 4
-                        QEntities.links.endSec)                               // 5
-                .from(QEntities.gameResources)
-                .leftJoin(QEntities.gameResources.images, QEntities.images)
-                .leftJoin(QEntities.gameResources.links, QEntities.links)
-                .where(builder)
-                .fetch();
-
+    /**
+     * 게임 결과 전체 조회
+     */
+    private List<GameResultResponse> getAllGameResults(Long gameId, GameResourceSearchRequest request) {
+        List<Tuple> tuples = fetchBasicGameResourceData(gameId, request);
         if (tuples.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<Long> resourceIds = tuples.stream()
-                .map(tuple -> tuple.get(QEntities.gameResources.id))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
+        List<Long> resourceIds = extractResourceIds(tuples);
         Map<Long, Integer> winningCountsMap = getWinningCountsBatch(resourceIds);
         int totalPlayNums = getTotalPlayNums(gameId);
 
@@ -145,15 +121,13 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .collect(Collectors.toList());
     }
 
-    private List<GameResultResponse> executeGameResultQueryWithPaging(Long gameId, GameResourceSearchRequest request, Pageable pageable) {
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(QEntities.gameResources.games.id.eq(gameId));
+    /**
+     * 기본 게임 리소스 데이터 조회
+     */
+    private List<Tuple> fetchBasicGameResourceData(Long gameId, GameResourceSearchRequest request) {
+        BooleanBuilder builder = createSearchCondition(gameId, request);
 
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
-        }
-
-        List<Tuple> tuples = jpaQueryFactory
+        return jpaQueryFactory
                 .select(QEntities.gameResources.id,
                         QEntities.gameResources.title,
                         QEntities.images.mediaType.coalesce(MediaType.LINK),
@@ -164,89 +138,98 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .leftJoin(QEntities.gameResources.images, QEntities.images)
                 .leftJoin(QEntities.gameResources.links, QEntities.links)
                 .where(builder)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
                 .fetch();
+    }
 
-        if (tuples.isEmpty()) {
-            return Collections.emptyList();
+    /**
+     * 검색 조건 생성
+     */
+    private BooleanBuilder createSearchCondition(Long gameId, GameResourceSearchRequest request) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QEntities.gameResources.games.id.eq(gameId));
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
         }
 
-        List<Long> resourceIds = tuples.stream()
+        return builder;
+    }
+
+    /**
+     * Tuple에서 resourceId 추출
+     */
+    private List<Long> extractResourceIds(List<Tuple> tuples) {
+        return tuples.stream()
                 .map(tuple -> tuple.get(QEntities.gameResources.id))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-
-        Map<Long, Integer> winningCountsMap = getWinningCountsBatch(resourceIds);
-        int totalPlayNums = getTotalPlayNums(gameId);
-
-        List<GameResultResponse> responses = tuples.stream()
-                .map(tuple -> buildGameResultResponse(tuple, winningCountsMap, totalPlayNums))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        return applySorting(responses, request.getSortType());
     }
 
-    // =========================== 배치 조회 메서드 ===========================
-
+    /**
+     * 승리 횟수 배치 조회
+     */
     private Map<Long, Integer> getWinningCountsBatch(List<Long> resourceIds) {
         if (resourceIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        List<Tuple> winningCounts = jpaQueryFactory
+        return jpaQueryFactory
                 .select(QEntities.gameResources.id, QEntities.gameResources.winningLists.size())
                 .from(QEntities.gameResources)
                 .where(QEntities.gameResources.id.in(resourceIds))
-                .fetch();
-
-        return winningCounts.stream()
+                .fetch()
+                .stream()
                 .filter(tuple -> tuple.get(QEntities.gameResources.id) != null)
                 .collect(Collectors.toMap(
                         tuple -> tuple.get(QEntities.gameResources.id),
-                        tuple -> Optional.ofNullable(tuple.get(QEntities.gameResources.winningLists.size()))
-                                .orElse(0)
+                        tuple -> Optional.ofNullable(tuple.get(QEntities.gameResources.winningLists.size())).orElse(0)
                 ));
     }
 
-    // =========================== 정렬 및 페이징 메서드 ===========================
+    /**
+     * 전체 플레이 수 조회
+     */
+    private int getTotalPlayNums(Long gameId) {
+        Long count = jpaQueryFactory
+                .select(QEntities.gameResults.count())
+                .from(QEntities.gameResults)
+                .where(QEntities.gameResults.gameResources.games.id.eq(gameId))
+                .fetchOne();
 
-    private List<GameResultResponse> applySorting(List<GameResultResponse> responses, GameResourceSortType sortType) {
-        return switch (sortType) {
-            case OLD -> responses.stream()
-                    .sorted(Comparator.comparing(GameResultResponse::getResourceId))
-                    .collect(Collectors.toList());
-            case RESENT -> responses.stream()
-                    .sorted(Comparator.comparing(GameResultResponse::getResourceId).reversed())
-                    .collect(Collectors.toList());
-            case WIN_RATE_DESC -> responses.stream()
-                    .sorted(Comparator.comparingInt(GameResultResponse::getWinningNums).reversed()
-                            .thenComparing(Comparator.comparing(GameResultResponse::getResourceId).reversed()))
-                    .collect(Collectors.toList());
-            case WIN_RATE_ASC -> responses.stream()
-                    .sorted(Comparator.comparingInt(GameResultResponse::getWinningNums)
-                            .thenComparing(GameResultResponse::getResourceId))
-                    .collect(Collectors.toList());
-        };
+        return count != null ? Math.toIntExact(count) : 0;
     }
 
-    private List<GameResultResponse> applyCursorPaging(List<GameResultResponse> sortedResponses, Long cursorId,
-                                                       Pageable pageable) {
+    /**
+     * 정렬 적용
+     */
+    private List<GameResultResponse> applySorting(List<GameResultResponse> responses, GameResourceSortType sortType) {
+        Comparator<GameResultResponse> comparator = switch (sortType) {
+            case OLD -> Comparator.comparing(GameResultResponse::getResourceId);
+            case RESENT -> Comparator.comparing(GameResultResponse::getResourceId).reversed();
+            case WIN_RATE_DESC -> Comparator
+                    .comparingInt(GameResultResponse::getWinningNums).reversed()
+                    .thenComparing(GameResultResponse::getResourceId);
+            case WIN_RATE_ASC -> Comparator
+                    .comparingInt(GameResultResponse::getWinningNums)
+                    .thenComparing(GameResultResponse::getResourceId);
+        };
+
+        return responses.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 커서 페이징 적용
+     */
+    private List<GameResultResponse> applyCursorPaging(List<GameResultResponse> sortedResponses, Long cursorId, Pageable pageable) {
         if (cursorId == null) {
             return sortedResponses.stream()
                     .limit(pageable.getPageSize() + 1)
                     .collect(Collectors.toList());
         }
 
-        int cursorIndex = -1;
-        for (int i = 0; i < sortedResponses.size(); i++) {
-            if (sortedResponses.get(i).getResourceId().equals(cursorId)) {
-                cursorIndex = i;
-                break;
-            }
-        }
-
+        int cursorIndex = findCursorIndex(sortedResponses, cursorId);
         if (cursorIndex == -1) {
             log.warn("Cursor resource not found: {}", cursorId);
             return Collections.emptyList();
@@ -258,8 +241,21 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .collect(Collectors.toList());
     }
 
-    // =========================== 헬퍼 메서드 ===========================
+    /**
+     * 커서 인덱스 찾기
+     */
+    private int findCursorIndex(List<GameResultResponse> responses, Long cursorId) {
+        for (int i = 0; i < responses.size(); i++) {
+            if (responses.get(i).getResourceId().equals(cursorId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
+    /**
+     * 게임 결과 응답 객체 생성
+     */
     private GameResultResponse buildGameResultResponse(Tuple tuple, Map<Long, Integer> winningCountsMap, int totalPlayNums) {
         Long resourceId = tuple.get(QEntities.gameResources.id);
         if (resourceId == null) return null;
@@ -274,30 +270,5 @@ public class GameResultRepositoryImpl implements GameResultRepository {
                 .winningNums(winningCountsMap.getOrDefault(resourceId, 0))
                 .totalPlayNums(totalPlayNums)
                 .build();
-    }
-
-    private Long calculateTotalElements(Long gameId, GameResourceSearchRequest request) {
-        BooleanBuilder builder = new BooleanBuilder();
-        builder.and(QEntities.gameResources.games.id.eq(gameId));
-
-        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
-        }
-
-        return jpaQueryFactory
-                .select(QEntities.gameResources.count())
-                .from(QEntities.gameResources)
-                .where(builder)
-                .fetchOne();
-    }
-
-    private int getTotalPlayNums(Long gameId) {
-        Long count = jpaQueryFactory
-                .select(QEntities.gameResults.count())
-                .from(QEntities.gameResults)
-                .where(QEntities.gameResults.gameResources.games.id.eq(gameId))
-                .fetchOne();
-
-        return count != null ? Math.toIntExact(count) : 0;
     }
 }
