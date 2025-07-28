@@ -41,6 +41,9 @@ public class GameListResponse {
     @Schema(description = "HOT 태그를 위한 플레이 횟수")
     private int weekPlayNums;
 
+    @Schema(description = "월간 플레이 횟수")
+    private int monthPlayNums;
+
     @Schema(description = "제작일")
     private OffsetDateTime createdAt;
 
