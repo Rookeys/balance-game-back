@@ -9,7 +9,9 @@ import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
+import com.games.balancegameback.infra.repository.game.*;
 import com.games.balancegameback.service.game.repository.GameRepository;
+import com.games.balancegameback.service.media.impl.UserMediaCleanupService;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +32,15 @@ import java.util.Map;
 public class GameRoomService {
 
     private final GameRepository gameRepository;
+    private final GameResultCommentJpaRepository gameResultCommentsRepository;
+    private final GameResourceJpaRepository gameResourcesRepository;
+    private final GamePlayJpaRepository gamePlayRepository;
+    private final GameCategoryJpaRepository gameCategoryRepository;
+    private final GameJpaRepository gameJpaRepository;
+
     private final GameInviteService gameInviteService;
     private final GameCategoryService gameCategoryService;
+    private final UserMediaCleanupService mediaCleanupService;
     private final UserUtils userUtils;
     private final RestTemplate restTemplate;
 
@@ -109,8 +118,8 @@ public class GameRoomService {
         Users users = userUtils.findUserByToken(request);
         this.existsHost(gameId, users);
 
-        gameRepository.deleteImagesInS3(gameId);    // 연관 관계가 끊어진 S3 내 사진 데이터를 삭제함.
-        gameRepository.deleteById(gameId);
+        // 해당 게임과 관련된 데이터 일괄 삭제
+        this.deleteGameData(gameId);
 
         this.revalidate("/game/" + gameId);
     }
@@ -121,7 +130,7 @@ public class GameRoomService {
         }
     }
 
-    private void revalidate(String path) {
+    public void revalidate(String path) {
         // JSON payload 구성
         Map<String, String> body = new HashMap<>();
         body.put("path", path);
@@ -139,5 +148,17 @@ public class GameRoomService {
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
         log.info(response.getBody());
+    }
+
+    private void deleteGameData(Long gameId) {
+        gameCategoryRepository.deleteByGamesId(gameId);
+        gamePlayRepository.deleteByGamesId(gameId);
+
+        mediaCleanupService.cleanupGameMediaFiles(gameId);
+
+        gameResourcesRepository.deleteByGamesId(gameId);
+        gameResultCommentsRepository.deleteByGamesId(gameId);
+
+        gameJpaRepository.deleteById(gameId);
     }
 }

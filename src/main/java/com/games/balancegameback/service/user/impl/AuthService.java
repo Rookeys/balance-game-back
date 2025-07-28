@@ -87,7 +87,7 @@ public class AuthService {
     }
 
     public LoginResponse testLogin() {
-        Users users = userRepository.findByEmail("test@test.com");
+        Users users = userRepository.findByEmail("admin@zznpk.com");
         return userUtils.createToken(users, null);
     }
 

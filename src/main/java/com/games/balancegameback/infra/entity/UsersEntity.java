@@ -58,5 +58,13 @@ public class UsersEntity extends BaseTimeEntity {
         this.nickname = user.getNickname();
         this.isDeleted = user.isDeleted();
     }
+
+    /**
+     * 탈퇴한 사용자인지 확인
+     */
+    public boolean isAnonymized() {
+        return (this.nickname != null && this.nickname.startsWith("탈퇴한 사용자_")) ||
+               (this.email != null && this.email.startsWith("DELETED_USER_"));
+    }
 }
 

@@ -17,6 +17,7 @@ public enum ErrorCode {
     INVALID_REPORT_TARGET_TYPE(400, "400_7", "Invalid Report Target Type"),
     MANDATORY_ETC_REASON(400, "400_8", "Mandatory Etc Reason"),
     DUPLICATE_REPORT_EXCEPTION(400, "400_9","Duplicate Report Exception"),
+    ALREADY_DELETED_COMMENT(400, "400_10", "Already Deleted Comment"),
     ACCESS_DENIED_EXCEPTION(401, "401", "401 UnAuthorized"),
     NOT_ALLOW_WRITE_EXCEPTION(401, "401_1", "Not Allow"),
     NOT_ALLOW_RESIGN_EXCEPTION(401, "401_2", "Already resigned user."),

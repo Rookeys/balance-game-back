@@ -35,6 +35,13 @@ public class GamePlayService {
     private final UserUtils userUtils;
 
     /**
+     * 랜덤 게임 id 출력
+     */
+    public Long getRandomGamePlayId() {
+        return gamePlayRepository.findRandomGamePlayId();
+    }
+
+    /**
      * 게임의 전반적인 명세 데이터 출력하기
      */
     public GameInfoResponse getGameDetails(Long gameId) {

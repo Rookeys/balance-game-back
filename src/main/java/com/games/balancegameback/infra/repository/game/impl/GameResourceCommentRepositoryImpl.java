@@ -101,11 +101,17 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                 .selectDistinct(Projections.constructor(
                         GameResourceParentCommentResponse.class,
                         comments.id.as("commentId"),
-                        comments.comment.as("comment"),
+                        new CaseBuilder()
+                                .when(comments.isDeleted.isTrue())
+                                .then("삭제된 댓글입니다.")
+                                .otherwise(comments.comment)
+                                .as("comment"),
                         new CaseBuilder()
                                 .when(comments.users.uid.eq(gameUser.uid)
                                         .and(games.isNamePrivate.isTrue()))
                                 .then("익명")
+                                .when(user.nickname.startsWith("DELETED_USER_"))
+                                .then("회원 탈퇴한 사용자")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
                         new CaseBuilder()
@@ -198,6 +204,8 @@ public class GameResourceCommentRepositoryImpl implements GameResourceCommentRep
                                 .when(comments.users.uid.eq(gameUser.uid)
                                         .and(games.isNamePrivate.isTrue()))
                                 .then("익명")
+                                .when(user.nickname.startsWith("DELETED_USER_"))
+                                .then("회원 탈퇴한 사용자")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
                         new CaseBuilder()

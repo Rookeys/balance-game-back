@@ -81,6 +81,8 @@ public class GameResultCommentRepositoryImpl implements GameResultCommentReposit
                                 .when(comments.users.uid.eq(gameUser.uid)
                                         .and(games.isNamePrivate.isTrue()))
                                 .then("익명")
+                                .when(user.nickname.startsWith("DELETED_USER_"))
+                                .then("회원 탈퇴한 사용자")
                                 .otherwise(user.nickname)
                                 .as("nickname"),
                         new CaseBuilder()

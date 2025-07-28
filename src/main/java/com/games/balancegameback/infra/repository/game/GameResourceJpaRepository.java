@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface GameResourceJpaRepository extends JpaRepository<GameResourcesEntity, Long> {
 
     Integer countByGamesId(Long gameId);
+
+    void deleteByGamesId(Long gameId);
 }

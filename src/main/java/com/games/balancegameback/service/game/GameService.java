@@ -15,6 +15,7 @@ import com.games.balancegameback.dto.game.gameplay.GamePlayResponse;
 import com.games.balancegameback.dto.game.gameplay.GamePlayRoundRequest;
 import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
 import com.games.balancegameback.dto.game.report.GameReportRequest;
+import com.games.balancegameback.dto.media.AutoLinkRequest;
 import com.games.balancegameback.dto.media.ImageRequest;
 import com.games.balancegameback.dto.media.LinkRequest;
 import com.games.balancegameback.dto.user.UserReportRequest;
@@ -100,6 +101,11 @@ public class GameService {
         gameResourceService.saveLinkResource(games, linkRequest);
     }
 
+    // 게임 리소스에 유튜브 링크 자동 추가
+    public void saveAutoLinkResource(Games games, List<AutoLinkRequest> autoLinkRequest) {
+        gameResourceService.saveAutoLinkResource(games, autoLinkRequest);
+    }
+
     // 게임 리소스에 이미지 추가
     public void saveImageResource(Games games, ImageRequest imageRequest) {
         gameResourceService.saveImageResource(games, imageRequest);
@@ -151,6 +157,11 @@ public class GameService {
     // 게임의 전반적인 명세 데이터 출력하기
     public GameInfoResponse getGameDetails(Long gameId) {
         return gamePlayService.getGameDetails(gameId);
+    }
+
+    // 게임방 생성 및 게임 시작
+    public Long getRandomGamePlayId() {
+        return gamePlayService.getRandomGamePlayId();
     }
 
     // 리소스를 삭제함
