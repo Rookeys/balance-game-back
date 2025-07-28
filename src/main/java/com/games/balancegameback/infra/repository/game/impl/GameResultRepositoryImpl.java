@@ -11,128 +11,70 @@ import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameResultJpaRepository;
 import com.games.balancegameback.service.game.repository.GameResultRepository;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Projections;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class GameResultRepositoryImpl implements GameResultRepository {
 
     private final GameResultJpaRepository gameResultJpaRepository;
-    private final GameResourceRepositoryImpl gameResourceRepository;
     private final JPAQueryFactory jpaQueryFactory;
+
+    // Q클래스 홀더
+    private static class QEntities {
+        static final QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
+        static final QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
+        static final QImagesEntity images = QImagesEntity.imagesEntity;
+        static final QLinksEntity links = QLinksEntity.linksEntity;
+    }
 
     @Override
     public CustomPageImpl<GameResultResponse> findGameResultRanking(Long gameId, Long cursorId,
-                                                          GameResourceSearchRequest request,
-                                                          Pageable pageable) {
-        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
-        QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
-        QImagesEntity images = QImagesEntity.imagesEntity;
-        QLinksEntity links = QLinksEntity.linksEntity;
+                                                                    GameResourceSearchRequest request,
+                                                                    Pageable pageable) {
+        try {
+            Long totalElements = calculateTotalElements(gameId, request);
 
-        // 동적 필터 적용
-        BooleanBuilder builder = new BooleanBuilder();
-        BooleanBuilder totalCountBuilder = new BooleanBuilder();
+            List<GameResultResponse> allResponses = executeGameResultQuery(gameId, request);
+            List<GameResultResponse> sortedResponses = applySorting(allResponses, request.getSortType());
+            List<GameResultResponse> pagedResponses = applyCursorPaging(sortedResponses, cursorId, pageable);
 
-        builder.and(gameResources.games.id.eq(gameId));
-        totalCountBuilder.and(gameResources.games.id.eq(gameId));
+            boolean hasNext = pagedResponses.size() > pageable.getPageSize();
+            if (hasNext) {
+                pagedResponses.removeLast();
+            }
 
-        this.setOptions(builder, totalCountBuilder, cursorId, request);
-        // resource repository 로직 재사용
-        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType());
-
-        List<GameResultResponse> list = jpaQueryFactory
-                .select(Projections.constructor(
-                        GameResultResponse.class,
-                        gameResources.id.as("resourceId"),
-                        gameResources.title,
-                        images.mediaType.coalesce(MediaType.LINK).as("type"),  // 기본값 Images
-                        images.fileUrl.coalesce(links.urls).as("content"), // 이미지가 있으면 fileUrl, 없으면 링크 URL
-                        links.startSec,
-                        links.endSec,
-                        gameResources.winningLists.size().as("winningLists"),
-                        gameResourceRepository.getTotalPlayNumsSubQuery(gameId)
-                ))
-                .from(gameResources)
-                .leftJoin(gameResults).on(gameResults.gameResources.eq(gameResources))
-                .leftJoin(gameResources.images, images)
-                .leftJoin(gameResources.links, links)
-                .where(builder)
-                .groupBy(gameResources.id)
-                .orderBy(orderSpecifier)
-                .limit(pageable.getPageSize() + 1)
-                .fetch();
-
-        boolean hasNext = list.size() > pageable.getPageSize();
-
-        if (hasNext) {
-            list.removeLast(); // 안전한 마지막 요소 제거
+            return new CustomPageImpl<>(pagedResponses, pageable, totalElements, cursorId, hasNext);
+        } catch (Exception e) {
+            log.error("Error fetching game result ranking for gameId: {}", gameId, e);
+            return new CustomPageImpl<>(Collections.emptyList(), pageable, 0L, cursorId, false);
         }
-
-        Long totalElements = jpaQueryFactory
-                .select(gameResources.count())
-                .from(gameResources)
-                .where(totalCountBuilder)
-                .fetchOne();
-
-        return new CustomPageImpl<>(list, pageable, totalElements, cursorId, hasNext);
     }
 
     @Override
     public CustomBasedPageImpl<GameResultResponse> findGameResultRankingWithPaging(Long gameId, Pageable pageable,
                                                                                    GameResourceSearchRequest request) {
-        QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
-        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
-        QImagesEntity images = QImagesEntity.imagesEntity;
-        QLinksEntity links = QLinksEntity.linksEntity;
-
         BooleanBuilder builder = new BooleanBuilder();
-        builder.and(gameResources.games.id.eq(gameId));
+        builder.and(QEntities.gameResources.games.id.eq(gameId));
 
-        // 검색어 필터
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
         }
 
-        // 정렬 기준
-        OrderSpecifier<?> orderSpecifier = gameResourceRepository.getOrderSpecifier(request.getSortType());
+        List<GameResultResponse> results = executeGameResultQueryWithPaging(gameId, request, pageable);
 
-        // 본문 조회
-        List<GameResultResponse> results = jpaQueryFactory
-                .select(Projections.constructor(
-                        GameResultResponse.class,
-                        gameResources.id.as("resourceId"),
-                        gameResources.title,
-                        images.mediaType.coalesce(MediaType.LINK).as("type"),
-                        images.fileUrl.coalesce(links.urls).as("content"),
-                        links.startSec,
-                        links.endSec,
-                        gameResources.winningLists.size().as("winningLists"),
-                        gameResourceRepository.getTotalPlayNumsSubQuery(gameId)
-                ))
-                .from(gameResources)
-                .leftJoin(gameResults).on(gameResults.gameResources.eq(gameResources))
-                .leftJoin(gameResources.images, images)
-                .leftJoin(gameResources.links, links)
-                .where(builder)
-                .groupBy(gameResources.id)
-                .orderBy(orderSpecifier)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-        // 전체 개수
         Long totalCount = jpaQueryFactory
-                .select(gameResources.count())
-                .from(gameResources)
+                .select(QEntities.gameResources.count())
+                .from(QEntities.gameResources)
                 .where(builder)
                 .fetchOne();
 
@@ -141,23 +83,19 @@ public class GameResultRepositoryImpl implements GameResultRepository {
 
     @Override
     public int countByGameId(Long roomId) {
-        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
-
         return Objects.requireNonNull(jpaQueryFactory
-                .select(gameResults.id.count())
-                .from(gameResults)
-                .where(gameResults.gameResources.games.id.eq(roomId))
+                .select(QEntities.gameResults.id.count())
+                .from(QEntities.gameResults)
+                .where(QEntities.gameResults.gameResources.games.id.eq(roomId))
                 .fetchOne()).intValue();
     }
 
     @Override
     public int countByGameResourcesId(Long resourcesId) {
-        QGameResultsEntity gameResults = QGameResultsEntity.gameResultsEntity;
-
         return Objects.requireNonNull(jpaQueryFactory
-                .select(gameResults.id.count())
-                .from(gameResults)
-                .where(gameResults.gameResources.id.eq(resourcesId))
+                .select(QEntities.gameResults.id.count())
+                .from(QEntities.gameResults)
+                .where(QEntities.gameResults.gameResources.id.eq(resourcesId))
                 .fetchOne()).intValue();
     }
 
@@ -166,26 +104,200 @@ public class GameResultRepositoryImpl implements GameResultRepository {
         gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
     }
 
-    private void setOptions(BooleanBuilder builder, BooleanBuilder totalCountBuilder, Long cursorId,
-                            GameResourceSearchRequest request) {
-        QGameResourcesEntity gameResources = QGameResourcesEntity.gameResourcesEntity;
+    // =========================== 메인 쿼리 실행 메서드 ===========================
 
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.OLD)) {
-            builder.and(gameResources.id.gt(cursorId));
-        }
-
-        if (cursorId != null && request.getSortType().equals(GameResourceSortType.RESENT)) {
-            builder.and(gameResources.id.lt(cursorId));
-        }
-
-        if (request.getSortType().equals(GameResourceSortType.WIN_RATE_DESC) ||
-                request.getSortType().equals(GameResourceSortType.WIN_RATE_ASC)) {    // resource repository 로직 재사용
-            gameResourceRepository.applyOtherSortOptions(builder, cursorId, request, gameResources);
-        }
+    private List<GameResultResponse> executeGameResultQuery(Long gameId, GameResourceSearchRequest request) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QEntities.gameResources.games.id.eq(gameId));
 
         if (request.getTitle() != null && !request.getTitle().isEmpty()) {
-            builder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
-            totalCountBuilder.and(gameResources.title.containsIgnoreCase(request.getTitle()));
+            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
         }
+
+        List<Tuple> tuples = jpaQueryFactory
+                .select(QEntities.gameResources.id,                           // 0
+                        QEntities.gameResources.title,                        // 1
+                        QEntities.images.mediaType.coalesce(MediaType.LINK),  // 2
+                        QEntities.images.fileUrl.coalesce(QEntities.links.urls), // 3
+                        QEntities.links.startSec,                             // 4
+                        QEntities.links.endSec)                               // 5
+                .from(QEntities.gameResources)
+                .leftJoin(QEntities.gameResources.images, QEntities.images)
+                .leftJoin(QEntities.gameResources.links, QEntities.links)
+                .where(builder)
+                .fetch();
+
+        if (tuples.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> resourceIds = tuples.stream()
+                .map(tuple -> tuple.get(QEntities.gameResources.id))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> winningCountsMap = getWinningCountsBatch(resourceIds);
+        int totalPlayNums = getTotalPlayNums(gameId);
+
+        return tuples.stream()
+                .map(tuple -> buildGameResultResponse(tuple, winningCountsMap, totalPlayNums))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private List<GameResultResponse> executeGameResultQueryWithPaging(Long gameId, GameResourceSearchRequest request, Pageable pageable) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QEntities.gameResources.games.id.eq(gameId));
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
+        }
+
+        List<Tuple> tuples = jpaQueryFactory
+                .select(QEntities.gameResources.id,
+                        QEntities.gameResources.title,
+                        QEntities.images.mediaType.coalesce(MediaType.LINK),
+                        QEntities.images.fileUrl.coalesce(QEntities.links.urls),
+                        QEntities.links.startSec,
+                        QEntities.links.endSec)
+                .from(QEntities.gameResources)
+                .leftJoin(QEntities.gameResources.images, QEntities.images)
+                .leftJoin(QEntities.gameResources.links, QEntities.links)
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        if (tuples.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> resourceIds = tuples.stream()
+                .map(tuple -> tuple.get(QEntities.gameResources.id))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> winningCountsMap = getWinningCountsBatch(resourceIds);
+        int totalPlayNums = getTotalPlayNums(gameId);
+
+        List<GameResultResponse> responses = tuples.stream()
+                .map(tuple -> buildGameResultResponse(tuple, winningCountsMap, totalPlayNums))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return applySorting(responses, request.getSortType());
+    }
+
+    // =========================== 배치 조회 메서드 ===========================
+
+    private Map<Long, Integer> getWinningCountsBatch(List<Long> resourceIds) {
+        if (resourceIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Tuple> winningCounts = jpaQueryFactory
+                .select(QEntities.gameResources.id, QEntities.gameResources.winningLists.size())
+                .from(QEntities.gameResources)
+                .where(QEntities.gameResources.id.in(resourceIds))
+                .fetch();
+
+        return winningCounts.stream()
+                .filter(tuple -> tuple.get(QEntities.gameResources.id) != null)
+                .collect(Collectors.toMap(
+                        tuple -> tuple.get(QEntities.gameResources.id),
+                        tuple -> Optional.ofNullable(tuple.get(QEntities.gameResources.winningLists.size()))
+                                .orElse(0)
+                ));
+    }
+
+    // =========================== 정렬 및 페이징 메서드 ===========================
+
+    private List<GameResultResponse> applySorting(List<GameResultResponse> responses, GameResourceSortType sortType) {
+        return switch (sortType) {
+            case OLD -> responses.stream()
+                    .sorted(Comparator.comparing(GameResultResponse::getResourceId))
+                    .collect(Collectors.toList());
+            case RESENT -> responses.stream()
+                    .sorted(Comparator.comparing(GameResultResponse::getResourceId).reversed())
+                    .collect(Collectors.toList());
+            case WIN_RATE_DESC -> responses.stream()
+                    .sorted(Comparator.comparingInt(GameResultResponse::getWinningNums).reversed()
+                            .thenComparing(Comparator.comparing(GameResultResponse::getResourceId).reversed()))
+                    .collect(Collectors.toList());
+            case WIN_RATE_ASC -> responses.stream()
+                    .sorted(Comparator.comparingInt(GameResultResponse::getWinningNums)
+                            .thenComparing(GameResultResponse::getResourceId))
+                    .collect(Collectors.toList());
+        };
+    }
+
+    private List<GameResultResponse> applyCursorPaging(List<GameResultResponse> sortedResponses, Long cursorId,
+                                                       Pageable pageable) {
+        if (cursorId == null) {
+            return sortedResponses.stream()
+                    .limit(pageable.getPageSize() + 1)
+                    .collect(Collectors.toList());
+        }
+
+        int cursorIndex = -1;
+        for (int i = 0; i < sortedResponses.size(); i++) {
+            if (sortedResponses.get(i).getResourceId().equals(cursorId)) {
+                cursorIndex = i;
+                break;
+            }
+        }
+
+        if (cursorIndex == -1) {
+            log.warn("Cursor resource not found: {}", cursorId);
+            return Collections.emptyList();
+        }
+
+        return sortedResponses.stream()
+                .skip(cursorIndex + 1)
+                .limit(pageable.getPageSize() + 1)
+                .collect(Collectors.toList());
+    }
+
+    // =========================== 헬퍼 메서드 ===========================
+
+    private GameResultResponse buildGameResultResponse(Tuple tuple, Map<Long, Integer> winningCountsMap, int totalPlayNums) {
+        Long resourceId = tuple.get(QEntities.gameResources.id);
+        if (resourceId == null) return null;
+
+        return GameResultResponse.builder()
+                .resourceId(resourceId)
+                .title(tuple.get(QEntities.gameResources.title))
+                .type(tuple.get(QEntities.images.mediaType.coalesce(MediaType.LINK)))
+                .content(tuple.get(QEntities.images.fileUrl.coalesce(QEntities.links.urls)))
+                .startSec(tuple.get(QEntities.links.startSec))
+                .endSec(tuple.get(QEntities.links.endSec))
+                .winningNums(winningCountsMap.getOrDefault(resourceId, 0))
+                .totalPlayNums(totalPlayNums)
+                .build();
+    }
+
+    private Long calculateTotalElements(Long gameId, GameResourceSearchRequest request) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(QEntities.gameResources.games.id.eq(gameId));
+
+        if (request.getTitle() != null && !request.getTitle().isEmpty()) {
+            builder.and(QEntities.gameResources.title.containsIgnoreCase(request.getTitle()));
+        }
+
+        return jpaQueryFactory
+                .select(QEntities.gameResources.count())
+                .from(QEntities.gameResources)
+                .where(builder)
+                .fetchOne();
+    }
+
+    private int getTotalPlayNums(Long gameId) {
+        Long count = jpaQueryFactory
+                .select(QEntities.gameResults.count())
+                .from(QEntities.gameResults)
+                .where(QEntities.gameResults.gameResources.games.id.eq(gameId))
+                .fetchOne();
+
+        return count != null ? Math.toIntExact(count) : 0;
     }
 }

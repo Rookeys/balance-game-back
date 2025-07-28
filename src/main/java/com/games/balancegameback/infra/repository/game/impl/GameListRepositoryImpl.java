@@ -93,7 +93,7 @@ public class GameListRepositoryImpl implements GameListRepository {
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
                                                         GameSearchRequest searchRequest, Users users) {
         try {
-            Long totalElements = calculateTotalElementsIndependent(searchRequest, users);
+            Long totalElements = calculateTotalElementsIndependent(searchRequest);
 
             GameListQueryContext context = new GameListQueryContext(cursorId, searchRequest, users);
             List<GameListResponse> gameResponses = executeGameListQuery(context, pageable);
@@ -259,7 +259,6 @@ public class GameListRepositoryImpl implements GameListRepository {
     private List<GameListResponse> executeGameListQuery(GameListQueryContext context, Pageable pageable) {
         BooleanBuilder conditions = buildGameListConditions(context);
 
-        // 기본 쿼리 (정렬 없이)
         List<Tuple> allTuples = jpaQueryFactory
                 .select(QEntities.games.id,                                     // 0
                         QEntities.games.title,                                  // 1
@@ -300,12 +299,10 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .collect(Collectors.toList());
             case WEEK -> responses.stream()
                     .sorted((r1, r2) -> {
-                        // 주간 플레이 횟수로 내림차순 정렬
                         int weekCompare = Integer.compare(r2.getWeekPlayNums(), r1.getWeekPlayNums());
                         if (weekCompare != 0) {
                             return weekCompare;
                         }
-                        // 동일하면 ID로 내림차순
                         return Long.compare(r2.getRoomId(), r1.getRoomId());
                     })
                     .collect(Collectors.toList());
@@ -317,7 +314,6 @@ public class GameListRepositoryImpl implements GameListRepository {
                     .sorted(Comparator.comparingInt(GameListResponse::getTotalPlayNums).reversed()
                             .thenComparing(Comparator.comparing(GameListResponse::getRoomId).reversed()))
                     .collect(Collectors.toList());
-            default -> responses;
         };
     }
 
@@ -325,7 +321,6 @@ public class GameListRepositoryImpl implements GameListRepository {
                                                      GameSortType sortType, Pageable pageable) {
 
         if (cursorId == null) {
-            // 첫 페이지
             return sortedResponses.stream()
                     .limit(pageable.getPageSize() + 1)
                     .collect(Collectors.toList());
@@ -345,7 +340,6 @@ public class GameListRepositoryImpl implements GameListRepository {
             return Collections.emptyList();
         }
 
-        // 커서 다음부터 페이지 크기만큼 반환
         return sortedResponses.stream()
                 .skip(cursorIndex + 1)
                 .limit(pageable.getPageSize() + 1)
@@ -497,7 +491,6 @@ public class GameListRepositoryImpl implements GameListRepository {
                 ));
     }
 
-    // 수정사항 2: sortType에 따라 필요한 플레이 카운트만 조회하도록 개선
     private Map<Long, GamePlayCounts> getPlayCountsBatch(List<Long> gameIds, GameSortType sortType) {
         if (gameIds.isEmpty()) {
             return Collections.emptyMap();
@@ -505,22 +498,21 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         Map<Long, GamePlayCounts> playCountsMap = new HashMap<>();
 
-        // 총 플레이 횟수는 항상 조회 (모든 sortType에서 필요)
+        // 총 플레이 횟수 : 항상 조회
         Map<Long, Integer> totalCountMap = getTotalPlayCounts(gameIds);
 
-        // 주간 플레이 횟수는 WEEK, MONTH일 때만 조회
+        // 주간 플레이 횟수 : WEEK, MONTH 일 때만 조회
         Map<Long, Integer> weekCountMap = new HashMap<>();
         if (sortType == GameSortType.WEEK || sortType == GameSortType.MONTH) {
             weekCountMap = getWeekPlayCounts(gameIds);
         }
 
-        // 월간 플레이 횟수는 MONTH일 때만 조회
+        // 월간 플레이 횟수 : MONTH 일 때만 조회
         Map<Long, Integer> monthCountMap = new HashMap<>();
         if (sortType == GameSortType.MONTH) {
             monthCountMap = getMonthPlayCounts(gameIds);
         }
 
-        // 최종 결과 생성
         for (Long gameId : gameIds) {
             int totalCount = totalCountMap.getOrDefault(gameId, 0);
             int weekCount = weekCountMap.getOrDefault(gameId, 0);
@@ -614,7 +606,7 @@ public class GameListRepositoryImpl implements GameListRepository {
         return value != null ? Math.toIntExact(value) : 0;
     }
 
-    private Long calculateTotalElementsIndependent(GameSearchRequest searchRequest, Users users) {
+    private Long calculateTotalElementsIndependent(GameSearchRequest searchRequest) {
         BooleanBuilder totalBuilder = new BooleanBuilder();
 
         // 기본 조건
@@ -622,31 +614,37 @@ public class GameListRepositoryImpl implements GameListRepository {
 
         // 카테고리 필터
         if (searchRequest.getCategory() != null) {
-            totalBuilder.and(QEntities.category.category.eq(searchRequest.getCategory()));
+            totalBuilder.and(QEntities.category.category.in(searchRequest.getCategory()));
         }
 
-        // 제목 검색
-        if (StringUtils.hasText(searchRequest.getTitle())) {
-            String searchTitle = searchRequest.getTitle().trim();
-            BooleanExpression searchCondition = QEntities.games.title.containsIgnoreCase(searchTitle)
-                    .or(QEntities.resources.title.containsIgnoreCase(searchTitle))
-                    .or(QEntities.users.nickname.containsIgnoreCase(searchTitle)
-                            .and(QEntities.games.isNamePrivate.eq(false)));
-            totalBuilder.and(searchCondition);
+        if (searchRequest.getSortType().equals(GameSortType.WEEK)) {
+            totalBuilder.and(QEntities.results.createdDate.isNull()
+                    .or(QEntities.results.createdDate.after(OffsetDateTime.now().minusWeeks(1))));
         }
 
-        Long count = jpaQueryFactory
-                .select(QEntities.games.id.countDistinct())
-                .from(QEntities.games)
-                .leftJoin(QEntities.games.users, QEntities.users)
+        if (searchRequest.getSortType().equals(GameSortType.MONTH)) {
+            totalBuilder.and(QEntities.results.createdDate.isNull()
+                    .or(QEntities.results.createdDate.after(OffsetDateTime.now().minusMonths(1))));
+        }
+
+        if (searchRequest.getTitle() != null && !searchRequest.getTitle().isEmpty()) {
+            totalBuilder.and(QEntities.games.title.containsIgnoreCase(searchRequest.getTitle())
+                    .or(QEntities.resources.title.containsIgnoreCase(searchRequest.getTitle()))
+                    .or(QEntities.users.nickname.containsIgnoreCase(searchRequest.getTitle())
+                            .and(QEntities.games.isNamePrivate.eq(false))));
+        }
+
+        return (long) jpaQueryFactory
+                .selectFrom(QEntities.games)
+                .leftJoin(QEntities.results).on(QEntities.results.gameResources.games.eq(QEntities.games))
                 .leftJoin(QEntities.games.gameResources, QEntities.resources)
                 .leftJoin(QEntities.games.categories, QEntities.category)
+                .leftJoin(QEntities.games.users, QEntities.users)
                 .where(totalBuilder)
                 .groupBy(QEntities.games.id)
-                .having(QEntities.resources.count().goe(Constants.MIN_RESOURCE_COUNT))
-                .fetchOne();
-
-        return count != null ? count : 0L;
+                .having(QEntities.games.gameResources.size().goe(2))
+                .fetch()
+                .size();
     }
 
     private boolean isAccessibleByUser(Long gameId, Users user) {
