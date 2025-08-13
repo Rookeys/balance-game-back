@@ -52,15 +52,12 @@ public interface CommonGameRepository {
     // =========================== 페이징 메서드들 ===========================
 
     /**
-     * CursorIdentifiable 객체들에 대한 커서 페이징
-     */
-    <T extends CursorIdentifiable> List<T> applyCursorPaging(List<T> sortedResponses, Long cursorId, Pageable pageable);
-
-    /**
      * 커스텀 커서 추출 함수를 사용한 커서 페이징
      */
     <T> List<T> applyCursorPagingWithCustomCursor(List<T> sortedResponses, Long cursorId,
                                                   Function<T, Long> cursorExtractor, Pageable pageable);
+
+    <T extends CursorIdentifiable> List<T> applyCursorPaging(List<T> sortedResponses, Long cursorId, Pageable pageable);
 
     // =========================== 응답 생성 메서드들 ===========================
 

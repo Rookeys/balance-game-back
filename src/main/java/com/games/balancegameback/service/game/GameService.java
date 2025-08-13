@@ -45,6 +45,7 @@ public class GameService {
     private final GameResourceCommentService gameResourceCommentService;
     private final GameResultCommentService gameResultCommentService;
     private final GameCommentLikesService gameCommentLikesService;
+    private final RecentPlayService recentPlayService;
     private final GameRepository gameRepository;
     private final UserUtils userUtils;
 
@@ -271,6 +272,16 @@ public class GameService {
     public void submitGameCommentsReport(Long gameId, GameCommentReportRequest commentReportRequest,
                                          HttpServletRequest request) {
         gameReportService.submitGameCommentsReport(gameId, commentReportRequest, request);
+    }
+
+    // 최근 플레이 목록 추가 서비스
+    public Long addRecentPlay(Long gameId, HttpServletRequest request) {
+        return recentPlayService.addRecentPlay(gameId, request);
+    }
+
+    // 최근 플레이 목록 출력 서비스
+    public CustomPageImpl<GameListResponse> getRecentPlays(Long cursorId, Pageable pageable, HttpServletRequest request) {
+        return recentPlayService.getRecentPlays(cursorId, pageable, request);
     }
 
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.

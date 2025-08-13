@@ -22,7 +22,7 @@ public final class GameQClasses {
     //public static final QFollowEntity follow = QFollowEntity.followEntity;
 
     // 최근 플레이 관련
-    //public static final QRecentPlayEntity recentPlay = QRecentPlayEntity.recentPlayEntity;
+    public static final QRecentPlayEntity recentPlay = QRecentPlayEntity.recentPlayEntity;
 
     private GameQClasses() {
         throw new AssertionError("Q-Classes holder class should not be instantiated");

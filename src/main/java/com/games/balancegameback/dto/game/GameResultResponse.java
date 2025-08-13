@@ -1,6 +1,7 @@
 package com.games.balancegameback.dto.game;
 
 import com.games.balancegameback.domain.media.enums.MediaType;
+import com.games.balancegameback.infra.repository.game.common.CursorIdentifiable;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameResultResponse {
+public class GameResultResponse implements CursorIdentifiable {
 
     @Schema(description = "리소스 ID")
     private Long resourceId;
@@ -36,4 +37,9 @@ public class GameResultResponse {
 
     @Schema(description = "게임 진행 횟수")
     private int totalPlayNums;
+
+    @Override
+    public Long getCursorValue() {
+        return resourceId;
+    }
 }

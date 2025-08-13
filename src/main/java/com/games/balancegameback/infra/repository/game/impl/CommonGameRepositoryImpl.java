@@ -1,9 +1,9 @@
 package com.games.balancegameback.infra.repository.game.impl;
 
+import com.games.balancegameback.infra.repository.game.common.CursorIdentifiable;
 import com.games.balancegameback.infra.repository.game.common.GameConstants;
 import com.games.balancegameback.infra.repository.game.common.GameBatchData;
 import com.games.balancegameback.infra.repository.game.common.GamePlayCounts;
-import com.games.balancegameback.infra.repository.game.common.CursorIdentifiable;
 import com.games.balancegameback.infra.repository.game.common.GameQClasses;
 import com.games.balancegameback.infra.repository.game.common.CommonGameRepository;
 import com.games.balancegameback.domain.game.enums.AccessType;
@@ -97,7 +97,7 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
 
         Map<Long, GamePlayCounts> playCountsMap = new HashMap<>();
 
-        // 총 플레이 횟수 : 항상 조회
+        // 총 플레이 횟수
         Map<Long, Integer> totalCountMap = getTotalPlayCounts(gameIds);
 
         // 주간 플레이 횟수 : WEEK, MONTH 일 때만 조회
@@ -148,11 +148,6 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
     // =========================== 페이징 메서드들 ===========================
 
     @Override
-    public <T extends CursorIdentifiable> List<T> applyCursorPaging(List<T> sortedResponses, Long cursorId, Pageable pageable) {
-        return applyCursorPagingWithCustomCursor(sortedResponses, cursorId, T::getCursorValue, pageable);
-    }
-
-    @Override
     public <T> List<T> applyCursorPagingWithCustomCursor(List<T> sortedResponses, Long cursorId,
                                                          Function<T, Long> cursorExtractor, Pageable pageable) {
         if (cursorId == null) {
@@ -171,6 +166,11 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
                 .skip(cursorIndex + 1)
                 .limit(pageable.getPageSize() + 1)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public <T extends CursorIdentifiable> List<T> applyCursorPaging(List<T> sortedResponses, Long cursorId, Pageable pageable) {
+        return applyCursorPagingWithCustomCursor(sortedResponses, cursorId, T::getCursorValue, pageable);
     }
 
     // =========================== 응답 생성 메서드들 ===========================

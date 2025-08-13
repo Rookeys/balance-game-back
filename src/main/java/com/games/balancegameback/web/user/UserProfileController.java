@@ -6,7 +6,6 @@ import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
-import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
 import com.games.balancegameback.dto.user.UserReportRequest;
 import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
@@ -128,6 +127,42 @@ public class UserProfileController {
 
         gameService.submitUserReport(userReportRequest, request);
         return ResponseEntity.status(HttpStatus.OK).body(true);
+    }
+
+    @Operation(summary = "최근 플레이 등록 API", description = "최근 플레이한 게임을 기록함.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "플레이한 게임 기록 완료"),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "401", description = "해당 게임방을 찾을 수 없습니다.")
+    })
+    @PostMapping(value = "/games/{gameId}")
+    public ResponseEntity<Long> saveGame(
+            @Parameter(name = "gameId", description = "게임방의 ID", required = true)
+            @PathVariable(name = "gameId") Long gameId,
+
+            HttpServletRequest request) {
+        Long id = gameService.addRecentPlay(gameId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
+    }
+
+    @Operation(summary = "최근 플레이 목록 확인 API", description = "내가 플레이한 게임 목록을 출력함.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "최근 플레이 목록 발급 성공")
+    })
+    @GetMapping(value = "/games/recent")
+    public CustomPageImpl<GameListResponse> getRecentPlays(
+            @Parameter(name = "cursorId", description = "커서 ID")
+            @RequestParam(name = "cursorId", required = false) Long cursorId,
+
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+
+            HttpServletRequest request) {
+
+        Pageable pageable = PageRequest.of(0, size);
+        return gameService.getRecentPlays(cursorId, pageable, request);
     }
 }
 
