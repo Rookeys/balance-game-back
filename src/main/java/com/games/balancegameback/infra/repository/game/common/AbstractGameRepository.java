@@ -11,7 +11,6 @@ import com.games.balancegameback.dto.user.UserMainResponse;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -366,14 +364,5 @@ public abstract class AbstractGameRepository {
             .having(GameQClasses.games.gameResources.size().goe(2))
             .fetch()
             .size();
-    }
-
-    // =========================== 정렬 및 커서 유틸리티 ===========================
-
-    protected OrderSpecifier<?> getOrderSpecifier(GameSortType sortType) {
-        return switch (sortType) {
-            case OLD -> GameQClasses.games.id.asc();
-            default -> GameQClasses.games.id.desc();
-        };
     }
 }
