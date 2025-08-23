@@ -164,5 +164,20 @@ public class UserProfileController {
         Pageable pageable = PageRequest.of(0, size);
         return gameService.getRecentPlays(cursorId, pageable, request);
     }
+
+    @Operation(summary = "최근 플레이 목록 삭제 API", description = "최근 플레이 목록을 삭제함.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "최근 플레이 목록 삭제 성공")
+    })
+    @DeleteMapping(value = "/games/recent/{roomId}")
+    public ResponseEntity<Boolean> deleteRecentPlay(
+            @Parameter(name = "roomId", description = "게임방 ID")
+            @PathVariable(name = "roomId") Long roomId,
+
+            HttpServletRequest request) {
+        gameService.deleteRecentPlay(roomId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(true);
+    }
 }
 

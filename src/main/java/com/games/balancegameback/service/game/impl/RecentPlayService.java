@@ -61,5 +61,16 @@ public class RecentPlayService {
 
         return recentPlayRepository.getRecentPlayList(cursorId, pageable, users);
     }
+
+    public void deleteRecentPlay(Long roomId, HttpServletRequest request) {
+        Users users = userUtils.findUserByToken(request);
+        if (users == null) {
+            throw new UnAuthorizedException("토큰값이 유효하지 않습니다.", ErrorCode.INVALID_TOKEN_EXCEPTION);
+        }
+
+        Optional<RecentPlay> recentPlay = recentPlayRepository.findByUserUidAndGameId(users.getUid(), roomId);
+
+        recentPlay.ifPresent(recentPlayRepository::delete);
+    }
 }
 

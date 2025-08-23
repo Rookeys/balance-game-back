@@ -284,6 +284,11 @@ public class GameService {
         return recentPlayService.getRecentPlays(cursorId, pageable, request);
     }
 
+    // 최근 플레이 목록 삭제 서비스
+    public void deleteRecentPlay(Long roomId, HttpServletRequest request) {
+        recentPlayService.deleteRecentPlay(roomId, request);
+    }
+
     // api 요청한 유저가 해당 게임방 주인이 맞는지 확인.
     private void validateRequest(Long roomId, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
