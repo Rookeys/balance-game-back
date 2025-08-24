@@ -5,7 +5,6 @@ import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.RecentPlay;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.RecentPlayListResponse;
 import com.games.balancegameback.service.game.repository.RecentPlayRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
