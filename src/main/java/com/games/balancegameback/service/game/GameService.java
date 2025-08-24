@@ -275,12 +275,12 @@ public class GameService {
     }
 
     // 최근 플레이 목록 추가 서비스
-    public Long addRecentPlay(Long gameId, HttpServletRequest request) {
-        return recentPlayService.addRecentPlay(gameId, request);
+    public Long addRecentPlay(Long gameId, Long resourceId, HttpServletRequest request) {
+        return recentPlayService.addRecentPlay(gameId, resourceId, request);
     }
 
     // 최근 플레이 목록 출력 서비스
-    public CustomPageImpl<GameListResponse> getRecentPlays(Long cursorId, Pageable pageable, HttpServletRequest request) {
+    public CustomPageImpl<RecentPlayListResponse> getRecentPlays(Long cursorId, Pageable pageable, HttpServletRequest request) {
         return recentPlayService.getRecentPlays(cursorId, pageable, request);
     }
 

@@ -36,8 +36,16 @@ public abstract class AbstractGameRepository {
             Long cursorId, Pageable pageable, GameSearchRequest searchRequest, Users user, GameListType listType) {
 
         try {
-            Long totalElements = calculateTotalElements(searchRequest, user, listType);
-            List<Tuple> baseTuples = fetchBaseTuples(searchRequest, user, listType);
+            Long totalElements;
+            List<Tuple> baseTuples;
+
+            if (listType.equals(GameListType.MY_GAMES)) {
+                baseTuples = fetchBaseTuplesFromMyGames(searchRequest, user, listType);
+                totalElements = calculateTotalElementsFromMyGames(searchRequest, user, listType);
+            } else {
+                baseTuples = fetchBaseTuples(searchRequest, user, listType);
+                totalElements = calculateTotalElements(searchRequest, user, listType);
+            }
 
             if (baseTuples.isEmpty()) {
                 return new CustomPageImpl<>(Collections.emptyList(), pageable, totalElements, cursorId, false);
@@ -130,6 +138,30 @@ public abstract class AbstractGameRepository {
                 .where(conditions)
                 .groupBy(GameQClasses.games.id)
                 .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
+                .fetch();
+    }
+
+    private List<Tuple> fetchBaseTuplesFromMyGames(GameSearchRequest searchRequest, Users user, GameListType listType) {
+        BooleanBuilder conditions = buildGameListConditions(searchRequest, user, listType);
+        Expression<Boolean> existsMineExpr = buildExistsMineExpression(user);
+
+        return jpaQueryFactory
+                .select(GameQClasses.games.id,                      // 0
+                        GameQClasses.games.title,                   // 1
+                        GameQClasses.games.description,             // 2
+                        GameQClasses.games.users.nickname,          // 3
+                        GameQClasses.images.fileUrl.max(),          // 4
+                        GameQClasses.games.isNamePrivate,           // 5
+                        GameQClasses.games.createdDate,             // 6
+                        GameQClasses.games.isBlind,                 // 7
+                        existsMineExpr)                             // 8
+                .from(GameQClasses.games)
+                .leftJoin(GameQClasses.games.users, GameQClasses.users)
+                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid))
+                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
+                .leftJoin(GameQClasses.games.categories, GameQClasses.category)
+                .groupBy(GameQClasses.games.id)
+                .where(conditions)
                 .fetch();
     }
 
@@ -364,5 +396,20 @@ public abstract class AbstractGameRepository {
             .having(GameQClasses.games.gameResources.size().goe(2))
             .fetch()
             .size();
+    }
+
+    private Long calculateTotalElementsFromMyGames(GameSearchRequest searchRequest, Users user, GameListType listType) {
+        BooleanBuilder totalBuilder = buildGameListConditions(searchRequest, user, listType);
+
+        return (long) jpaQueryFactory
+                .selectFrom(GameQClasses.games)
+                .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.games.eq(GameQClasses.games))
+                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
+                .leftJoin(GameQClasses.games.categories, GameQClasses.category)
+                .leftJoin(GameQClasses.games.users, GameQClasses.users)
+                .where(totalBuilder)
+                .groupBy(GameQClasses.games.id)
+                .fetch()
+                .size();
     }
 }

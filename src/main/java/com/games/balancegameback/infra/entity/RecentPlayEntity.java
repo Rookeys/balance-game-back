@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "recent_plays",
         indexes = {
                 @Index(name = "idx_recent_plays_user_time", columnList = "user_uid, created_date DESC"),
-                @Index(name = "idx_recent_plays_user_game", columnList = "user_uid, game_id", unique = true)
+                @Index(name = "idx_recent_plays_user_game", columnList = "user_uid, game_id, game_resources_id", unique = true)
         })
 public class RecentPlayEntity extends BaseTimeEntity {
 
@@ -25,11 +25,15 @@ public class RecentPlayEntity extends BaseTimeEntity {
     @Column(name = "game_id", nullable = false)
     private Long gameId;
 
+    @Column(name = "game_resources_id", nullable = false)
+    private Long resourceId;
+
     public static RecentPlayEntity from(RecentPlay recentPlay) {
         RecentPlayEntity playEntity = new RecentPlayEntity();
         playEntity.id = recentPlay.getId();
         playEntity.userUid = recentPlay.getUserUid();
         playEntity.gameId = recentPlay.getGameId();
+        playEntity.resourceId = recentPlay.getResourceId();
 
         return playEntity;
     }
@@ -39,6 +43,7 @@ public class RecentPlayEntity extends BaseTimeEntity {
                 .id(id)
                 .userUid(userUid)
                 .gameId(gameId)
+                .resourceId(resourceId)
                 .build();
     }
 }

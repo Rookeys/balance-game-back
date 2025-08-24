@@ -5,14 +5,11 @@ import com.games.balancegameback.domain.game.RecentPlay;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.dto.game.GameListResponse;
-import com.games.balancegameback.dto.game.GameListSelectionResponse;
-import com.games.balancegameback.dto.user.UserMainResponse;
+import com.games.balancegameback.dto.game.RecentPlayListResponse;
 import com.games.balancegameback.infra.entity.RecentPlayEntity;
 import com.games.balancegameback.infra.repository.game.RecentPlayJpaRepository;
 import com.games.balancegameback.infra.repository.game.common.CommonGameRepository;
 import com.games.balancegameback.infra.repository.game.common.GameBatchData;
-import com.games.balancegameback.infra.repository.game.common.GameConstants;
 import com.games.balancegameback.infra.repository.game.common.GameQClasses;
 import com.games.balancegameback.service.game.repository.RecentPlayRepository;
 import com.querydsl.core.BooleanBuilder;
@@ -22,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,7 +68,7 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
     }
 
     @Override
-    public CustomPageImpl<GameListResponse> getRecentPlayList(Long cursorId, Pageable pageable, Users user) {
+    public CustomPageImpl<RecentPlayListResponse> getRecentPlayList(Long cursorId, Pageable pageable, Users user) {
         try {
             if (user == null) {
                 return new CustomPageImpl<>(Collections.emptyList(), pageable, 0L, cursorId, false);
@@ -85,7 +83,7 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
                 return new CustomPageImpl<>(Collections.emptyList(), pageable, totalElements, cursorId, false);
             }
 
-            List<GameListResponse> responses = buildRecentPlayResponses(recentPlayTuples);
+            List<RecentPlayListResponse> responses = buildRecentPlayResponses(recentPlayTuples);
 
             boolean hasNext = responses.size() > pageable.getPageSize();
             if (hasNext) {
@@ -113,8 +111,6 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
                 .join(GameQClasses.games).on(GameQClasses.recentPlay.gameId.eq(GameQClasses.games.id))
                 .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
                 .where(conditions)
-                .groupBy(GameQClasses.games.id)
-                .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
                 .fetch()
                 .size();
 
@@ -135,25 +131,24 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
         }
 
         return jpaQueryFactory
-                .select(GameQClasses.games.id,                          // 0
-                        GameQClasses.games.title,                       // 1
-                        GameQClasses.games.description,                 // 2
-                        GameQClasses.games.users.nickname,              // 3
-                        GameQClasses.images.fileUrl.max(),              // 4
-                        GameQClasses.games.isNamePrivate,               // 5
-                        GameQClasses.games.createdDate,                 // 6
-                        GameQClasses.games.isBlind,                     // 7
-                        GameQClasses.games.users.uid.eq(user.getUid()), // 8 (existsMine)
-                        GameQClasses.recentPlay.createdDate,            // 9 (최근 플레이 시간)
-                        GameQClasses.recentPlay.id)                     // 10 (커서용 ID)
+                .select(GameQClasses.games.id,                        // 0
+                        GameQClasses.games.title,                            // 1
+                        GameQClasses.games.description,                      // 2
+                        GameQClasses.resources.title,                        // 3
+                        GameQClasses.games.isBlind,                          // 4
+                        GameQClasses.recentPlay.id,                          // 5 (커서용 ID)
+                        GameQClasses.recentPlay.resourceId,                  // 6 (resourceId)
+                        GameQClasses.images.fileUrl,                         // 7 (리소스 이미지 URL)
+                        GameQClasses.links.urls,                             // 8 (리소스 유튜브 URL)
+                        GameQClasses.images.mediaType,                       // 9 (이미지 미디어 타입)
+                        GameQClasses.links.mediaType                         // 10 (링크 미디어 타입)
+                )
                 .from(GameQClasses.recentPlay)
                 .join(GameQClasses.games).on(GameQClasses.recentPlay.gameId.eq(GameQClasses.games.id))
-                .leftJoin(GameQClasses.games.users, GameQClasses.users)
-                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid))
-                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
+                .leftJoin(GameQClasses.resources).on(GameQClasses.resources.id.eq(GameQClasses.recentPlay.resourceId))
+                .leftJoin(GameQClasses.resources.images, GameQClasses.images)
+                .leftJoin(GameQClasses.resources.links, GameQClasses.links)
                 .where(conditions)
-                .groupBy(GameQClasses.recentPlay.id, GameQClasses.games.id)
-                .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
                 .orderBy(GameQClasses.recentPlay.updatedDate.desc(), GameQClasses.recentPlay.id.desc())
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -162,7 +157,7 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
     /**
      * 최근 플레이 응답 리스트 생성
      */
-    private List<GameListResponse> buildRecentPlayResponses(List<Tuple> tuples) {
+    private List<RecentPlayListResponse> buildRecentPlayResponses(List<Tuple> tuples) {
         List<Long> gameIds = tuples.stream()
                 .map(tuple -> tuple.get(GameQClasses.games.id))
                 .filter(Objects::nonNull)
@@ -180,45 +175,47 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
     /**
      * 개별 최근 플레이 응답 생성
      */
-    private GameListResponse buildRecentPlayResponse(Tuple tuple, GameBatchData batchData) {
+    private RecentPlayListResponse buildRecentPlayResponse(Tuple tuple, GameBatchData batchData) {
         Long roomId = tuple.get(GameQClasses.games.id);
-        if (roomId == null) return null;
-
-        String nickname = tuple.get(GameQClasses.games.users.nickname);
-        String profileImageUrl = tuple.get(4, String.class);
-        boolean isPrivate = Boolean.TRUE.equals(tuple.get(GameQClasses.games.isNamePrivate));
-
-        // 익명 처리
-        if (isPrivate) {
-            nickname = GameConstants.ANONYMOUS_NICKNAME;
-            profileImageUrl = null;
+        if (roomId == null) {
+            return null;
         }
 
         // 배치 데이터에서 가져오기
         List<Category> categories = batchData.getCategoriesMap().getOrDefault(roomId, Collections.emptyList());
-        List<GameListSelectionResponse> selections = batchData.getSelectionsMap().getOrDefault(roomId, Collections.emptyList());
-        Integer totalPlayCount = batchData.getTotalPlayCountsMap().getOrDefault(roomId, 0);
 
-        Boolean existsMineResult = tuple.get(8, Boolean.class);
-        boolean existsMine = Boolean.TRUE.equals(existsMineResult);
+        // 썸네일 정보 처리
+        String thumbnailImageUrl = tuple.get(7, String.class);  // 리소스 이미지 URL
+        String thumbnailLinkUrl = tuple.get(8, String.class);  // 리소스 유튜브 URL
 
-        return GameListResponse.builder()
+        if (!StringUtils.hasText(thumbnailImageUrl)) {
+            thumbnailImageUrl = null;
+        }
+        if (!StringUtils.hasText(thumbnailLinkUrl)) {
+            thumbnailLinkUrl = null;
+        }
+
+        // 썸네일 타입 결정
+        Object imageMediaType = tuple.get(9, Objects.class);    // 이미지 미디어 타입
+        Object linkMediaType = tuple.get(10, Objects.class);    // 링크 미디어 타입
+
+        String thumbnailType = null;
+        if (StringUtils.hasText(thumbnailImageUrl) && imageMediaType != null) {
+            thumbnailType = imageMediaType.toString();
+        } else if (StringUtils.hasText(thumbnailLinkUrl) && linkMediaType != null) {
+            thumbnailType = linkMediaType.toString();
+        }
+
+        return RecentPlayListResponse.builder()
                 .roomId(roomId)
                 .title(tuple.get(GameQClasses.games.title))
+                .resourceTitle(tuple.get(GameQClasses.resources.title))
                 .description(tuple.get(GameQClasses.games.description))
                 .categories(categories)
                 .existsBlind(tuple.get(GameQClasses.games.isBlind))
-                .existsMine(existsMine)
-                .totalPlayNums(totalPlayCount)
-                .weekPlayNums(0)  // 최근 플레이에서는 주간/월간 카운트 불필요
-                .monthPlayNums(0)
-                .createdAt(tuple.get(GameQClasses.games.createdDate))
-                .userResponse(UserMainResponse.builder()
-                        .nickname(nickname)
-                        .profileImageUrl(profileImageUrl)
-                        .build())
-                .leftSelection(!selections.isEmpty() ? selections.get(0) : null)
-                .rightSelection(selections.size() > 1 ? selections.get(1) : null)
+                .thumbnailImageUrl(thumbnailImageUrl)
+                .thumbnailLinkUrl(thumbnailLinkUrl)
+                .thumbnailType(thumbnailType)
                 .build();
     }
 
