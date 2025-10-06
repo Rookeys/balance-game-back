@@ -1,14 +1,17 @@
 package com.games.balancegameback.service.user;
 
+import com.games.balancegameback.domain.user.Follow;
 import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.infra.repository.user.SchedulerRepository;
 import com.games.balancegameback.service.user.impl.AuthService;
-import com.games.balancegameback.service.user.impl.UserFollowService;
+import com.games.balancegameback.service.user.impl.FollowService;
 import com.games.balancegameback.service.user.impl.UserProfileService;
 import com.games.balancegameback.service.user.impl.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +20,10 @@ public class UserService {
     private final AuthService authService;
     private final UserManagementService userManagementService;
     private final UserProfileService userProfileService;
-    private final UserFollowService userFollowService;
+    private final FollowService followService;
     private final SchedulerRepository schedulerRepository;
+
+    // ==================== 인증 관련 ====================
 
     // 카카오 로그인(서버 처리)
     public LoginResponse kakaoLogin(KakaoRequest kakaoRequest, HttpServletRequest request) {
@@ -40,14 +45,16 @@ public class UserService {
         return authService.testLogin();
     }
 
-    // 이름 중복 확인
-    public boolean existsByNickname(String nickname) {
-        return userManagementService.existsByNickname(nickname);
-    }
-
     // 로그 아웃
     public void logout(HttpServletRequest request) {
         authService.logout(request);
+    }
+
+    // ==================== 프로필 관련 ====================
+
+    // 이름 중복 확인
+    public boolean existsByNickname(String nickname) {
+        return userManagementService.existsByNickname(nickname);
     }
 
     // 프로필 조회
@@ -59,6 +66,8 @@ public class UserService {
     public void updateProfile(UserRequest userRequest, HttpServletRequest request) {
         userProfileService.updateProfile(userRequest, request);
     }
+
+    // ==================== 회원 탈퇴 관련 ====================
 
     // 회원 탈퇴
     public void resign(HttpServletRequest request) {
@@ -78,6 +87,48 @@ public class UserService {
     // 토큰 재발급
     public TokenResponse refresh(HttpServletRequest request) {
         return authService.refresh(request);
+    }
+
+    // ==================== 팔로우 관련 ====================
+
+    // 팔로워 등록
+    public void addFollow(String followingEmail, HttpServletRequest request) {
+        followService.addFollow(followingEmail, request);
+    }
+
+    // 팔로워 목록 조회
+    public List<Follow> getFollowers(String email) {
+        return followService.getFollowers(email);
+    }
+
+    // 팔로잉 목록 조회
+    public List<Follow> getFollowings(String email) {
+        return followService.getFollowings(email);
+    }
+
+    // 팔로워 취소
+    public void removeFollower(String followerEmail, HttpServletRequest request) {
+        followService.removeFollower(followerEmail, request);
+    }
+
+    // 팔로잉 취소
+    public void removeFollowing(String followingEmail, HttpServletRequest request) {
+        followService.removeFollowing(followingEmail, request);
+    }
+
+    // 팔로우 여부 확인
+    public boolean isFollowing(String followingEmail, HttpServletRequest request) {
+        return followService.isFollowing(followingEmail, request);
+    }
+
+    // 팔로워 수 조회
+    public long getFollowerCount(String email) {
+        return followService.getFollowerCount(email);
+    }
+
+    // 팔로잉 수 조회
+    public long getFollowingCount(String email) {
+        return followService.getFollowingCount(email);
     }
 }
 

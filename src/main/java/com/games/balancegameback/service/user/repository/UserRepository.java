@@ -1,4 +1,4 @@
-package com.games.balancegameback.service.user;
+package com.games.balancegameback.service.user.repository;
 
 import com.games.balancegameback.domain.user.Users;
 

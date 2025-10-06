@@ -7,7 +7,7 @@ import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
 import com.games.balancegameback.service.media.impl.S3Service;
 import com.games.balancegameback.service.media.repository.ImageRepository;
-import com.games.balancegameback.service.user.UserRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

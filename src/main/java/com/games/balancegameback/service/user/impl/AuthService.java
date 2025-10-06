@@ -11,7 +11,7 @@ import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
 import com.games.balancegameback.service.jwt.JwtTokenProvider;
 import com.games.balancegameback.service.media.repository.ImageRepository;
-import com.games.balancegameback.service.user.UserRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import com.games.balancegameback.service.user.impl.oauth.KakaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

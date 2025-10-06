@@ -37,7 +37,10 @@ public enum ErrorCode {
     JWT_SIGNATURE_MISMATCH(401, "4005", "JWT signature does not match"),
     JWT_COMPLEX_ERROR(401, "4006", "JWT Complex error"),
     JWT_NOT_ALLOW_REQUEST(401, "4007", "JWT not allow request"),
-    JWT_BLACKLIST(401, "4008", "This token is already blacklisted or is not present.");
+    JWT_BLACKLIST(401, "4008", "This token is already blacklisted or is not present."),
+    NOT_FOLLOW_MYSELF(400, "400_11", "Can't follow myself"),
+    ALREADY_FOLLOWING(400, "400_12", "Already Following"),
+    NOT_FOUND_FOLLOWING(404, "404_1", "Not Found Following");
 
     private final int status;
     private final String code;

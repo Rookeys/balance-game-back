@@ -1,6 +1,6 @@
 package com.games.balancegameback.infra.entity;
 
-import com.games.balancegameback.domain.game.Follow;
+import com.games.balancegameback.domain.user.Follow;
 import jakarta.persistence.*;
 import lombok.Getter;
 

@@ -1,11 +1,11 @@
-package com.games.balancegameback.infra.repository.user;
+package com.games.balancegameback.infra.repository.user.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.domain.user.Users;
-import com.games.balancegameback.infra.entity.QUsersEntity;
 import com.games.balancegameback.infra.entity.UsersEntity;
-import com.games.balancegameback.service.user.UserRepository;
+import com.games.balancegameback.infra.repository.user.UserJpaRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
