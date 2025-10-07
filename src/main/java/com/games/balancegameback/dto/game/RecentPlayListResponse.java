@@ -1,6 +1,7 @@
 package com.games.balancegameback.dto.game;
 
 import com.games.balancegameback.domain.game.enums.Category;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,9 @@ public class RecentPlayListResponse {
     @Schema(description = "게임 타이틀")
     private String title;
 
+    @Schema(description = "내가 선택한 리소스 ID")
+    private Long resourceId;
+
     @Schema(description = "내가 선택한 리소스 타이틀")
     private String resourceTitle;
 
@@ -40,5 +44,5 @@ public class RecentPlayListResponse {
     private String thumbnailLinkUrl;
 
     @Schema(description = "썸네일 타입 (IMAGE, LINK)")
-    private String thumbnailType;
+    private MediaType thumbnailType;
 }

@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
+import com.games.balancegameback.core.exception.impl.NotFoundException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.RecentPlay;
@@ -35,7 +36,8 @@ public class RecentPlayService {
         Optional<RecentPlay> existingPlay = recentPlayRepository.findByUserUidAndGameId(users.getUid(), gameId);
 
         if (existingPlay.isPresent()) {
-            // 존재한다면 updated_date 만 갱신
+            // 존재한다면 최근 선택한 리소스와 updated_date 업데이트
+            existingPlay.get().setResourceId(resourceId);
             return recentPlayRepository.updateRecentPlay(existingPlay.get());
         } else {
             RecentPlay recentPlay = RecentPlay.create(users.getUid(), gameId, resourceId);
@@ -69,9 +71,10 @@ public class RecentPlayService {
             throw new UnAuthorizedException("토큰값이 유효하지 않습니다.", ErrorCode.INVALID_TOKEN_EXCEPTION);
         }
 
-        Optional<RecentPlay> recentPlay = recentPlayRepository.findByUserUidAndGameId(users.getUid(), roomId);
+        RecentPlay recentPlay = recentPlayRepository.findByUserUidAndGameId(users.getUid(), roomId)
+                .orElseThrow(() -> new NotFoundException("해당 게임의 최근 플레이 기록이 존재하지 않습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
 
-        recentPlay.ifPresent(recentPlayRepository::delete);
+        recentPlayRepository.delete(recentPlay);
     }
 }
 

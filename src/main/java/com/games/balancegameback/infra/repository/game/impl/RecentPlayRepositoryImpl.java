@@ -4,6 +4,7 @@ import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.RecentPlay;
 import com.games.balancegameback.domain.game.enums.AccessType;
 import com.games.balancegameback.domain.game.enums.Category;
+import com.games.balancegameback.domain.media.enums.MediaType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.RecentPlayListResponse;
 import com.games.balancegameback.infra.entity.RecentPlayEntity;
@@ -199,16 +200,17 @@ public class RecentPlayRepositoryImpl implements RecentPlayRepository {
         Object imageMediaType = tuple.get(9, Objects.class);    // 이미지 미디어 타입
         Object linkMediaType = tuple.get(10, Objects.class);    // 링크 미디어 타입
 
-        String thumbnailType = null;
+        MediaType thumbnailType = null;
         if (StringUtils.hasText(thumbnailImageUrl) && imageMediaType != null) {
-            thumbnailType = imageMediaType.toString();
+            thumbnailType = MediaType.from(imageMediaType.toString());
         } else if (StringUtils.hasText(thumbnailLinkUrl) && linkMediaType != null) {
-            thumbnailType = linkMediaType.toString();
+            thumbnailType = MediaType.from(linkMediaType.toString());
         }
 
         return RecentPlayListResponse.builder()
                 .roomId(roomId)
                 .title(tuple.get(GameQClasses.games.title))
+                .resourceId(tuple.get(GameQClasses.recentPlay.resourceId))
                 .resourceTitle(tuple.get(GameQClasses.resources.title))
                 .description(tuple.get(GameQClasses.games.description))
                 .categories(categories)

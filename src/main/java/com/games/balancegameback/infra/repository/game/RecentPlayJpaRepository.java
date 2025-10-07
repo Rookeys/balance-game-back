@@ -16,8 +16,6 @@ public interface RecentPlayJpaRepository extends JpaRepository<RecentPlayEntity,
 
     long countByUserUid(String userUid);
 
-    List<RecentPlayEntity> findByUserUidOrderByUpdatedDateDesc(String userUid);
-
     @Query("SELECT rp FROM RecentPlayEntity rp WHERE rp.userUid = :userUid ORDER BY rp.updatedDate ASC LIMIT 1")
     Optional<RecentPlayEntity> findOldestByUserUid(@Param("userUid") String userUid);
 }
