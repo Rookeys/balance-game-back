@@ -67,6 +67,3 @@
 
 ### [Figma](https://www.figma.com/design/K7KQT0CDKhgNoqZ9eYpmuy/%EC%A7%B1%ED%94%BD?node-id=0-1&p=f)
 
-
-## Disquiet
-
