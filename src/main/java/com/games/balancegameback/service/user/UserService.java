@@ -3,6 +3,7 @@ package com.games.balancegameback.service.user;
 import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.infra.repository.user.SchedulerRepository;
 import com.games.balancegameback.service.user.impl.AuthService;
+import com.games.balancegameback.service.user.impl.UserFollowService;
 import com.games.balancegameback.service.user.impl.UserProfileService;
 import com.games.balancegameback.service.user.impl.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,7 @@ public class UserService {
     private final AuthService authService;
     private final UserManagementService userManagementService;
     private final UserProfileService userProfileService;
+    private final UserFollowService userFollowService;
     private final SchedulerRepository schedulerRepository;
 
     // 카카오 로그인(서버 처리)
