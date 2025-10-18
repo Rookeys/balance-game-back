@@ -26,7 +26,6 @@ public class UserAnonymizationUtils {
 
     /**
      * 이메일 익명화
-     * 형태: DELETED_USER_16917234567891234_unknown@deleted.user
      */
     public static String anonymizeEmail(String originalEmail) {
         if (originalEmail == null || originalEmail.trim().isEmpty()) {
