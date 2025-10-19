@@ -54,6 +54,11 @@ public class FollowRepositoryImpl implements FollowRepository {
     }
 
     @Override
+    public List<String> findFollowingUidsByFollowerUid(String followerUid) {
+        return followJpaRepository.findFollowingUidsByFollowerUid(followerUid);
+    }
+
+    @Override
     public long countByFollowerUid(String followerUid) {
         return followJpaRepository.countByFollowerUid(followerUid);
     }

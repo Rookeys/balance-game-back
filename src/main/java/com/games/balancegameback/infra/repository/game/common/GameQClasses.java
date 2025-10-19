@@ -19,7 +19,7 @@ public final class GameQClasses {
     public static final QLinksEntity links = QLinksEntity.linksEntity;
 
     // 팔로우 관련
-    //public static final QFollowEntity follow = QFollowEntity.followEntity;
+    public static final QFollowEntity follow = QFollowEntity.followEntity;
 
     // 최근 플레이 관련
     public static final QRecentPlayEntity recentPlay = QRecentPlayEntity.recentPlayEntity;

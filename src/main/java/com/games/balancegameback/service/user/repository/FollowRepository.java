@@ -19,4 +19,9 @@ public interface FollowRepository {
     long countByFollowerUid(String followerUid);
 
     long countByFollowingUid(String followingUid);
+
+    /**
+     * 특정 사용자가 팔로우하는 사용자들의 UID 목록 조회
+     */
+    List<String> findFollowingUidsByFollowerUid(String followerUid);
 }
