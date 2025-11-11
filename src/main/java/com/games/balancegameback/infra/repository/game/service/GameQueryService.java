@@ -82,21 +82,24 @@ public class GameQueryService {
      */
     public Tuple fetchGameDetailData(Long gameId, Users user) {
         Expression<Boolean> existsMineExpr = buildExistsMineExpression(user);
+        Expression<Boolean> isFollowingExpr = buildIsFollowingExpression(user);
         
         Tuple result = jpaQueryFactory
                 .select(
-                    GameQClasses.games.id,
-                    GameQClasses.games.title,
-                    GameQClasses.games.description,
-                    GameQClasses.games.users.nickname,
-                    GameQClasses.games.isNamePrivate,
-                    GameQClasses.games.createdDate,
-                    GameQClasses.games.updatedDate,
-                    GameQClasses.games.isBlind,
-                    GameQClasses.images.fileUrl.max(),
-                    existsMineExpr,
-                    GameQClasses.results.count().coalesce(GameConstants.DEFAULT_COUNT).as("totalPlays"),
-                    GameQClasses.resources.count().coalesce(GameConstants.DEFAULT_COUNT).as("totalResources")
+                    GameQClasses.games.id,                                                              // 0
+                    GameQClasses.games.title,                                                           // 1
+                    GameQClasses.games.description,                                                     // 2
+                    GameQClasses.games.users.nickname,                                                  // 3
+                    GameQClasses.games.isNamePrivate,                                                   // 4
+                    GameQClasses.games.createdDate,                                                     // 5
+                    GameQClasses.games.updatedDate,                                                     // 6
+                    GameQClasses.games.isBlind,                                                         // 7
+                    GameQClasses.images.fileUrl.max(),                                                  // 8
+                    existsMineExpr,                                                                     // 9
+                    GameQClasses.results.count().coalesce(GameConstants.DEFAULT_COUNT).as("totalPlays"), // 10
+                    GameQClasses.resources.count().coalesce(GameConstants.DEFAULT_COUNT).as("totalResources"), // 11
+                    GameQClasses.games.users.uid,                                                       // 12 - 제작자 UID
+                    isFollowingExpr                                                                     // 13 - 팔로우 여부
                 )
                 .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
@@ -151,10 +154,13 @@ public class GameQueryService {
         String nickname = gameData.get(GameQClasses.games.users.nickname);
         String profileImageUrl = gameData.get(8, String.class);
         boolean isPrivate = Boolean.TRUE.equals(gameData.get(GameQClasses.games.isNamePrivate));
+        Boolean isFollowing = gameData.get(13, Boolean.class);
         
+        // 익명 처리
         if (isPrivate) {
             nickname = GameConstants.ANONYMOUS_NICKNAME;
             profileImageUrl = null;
+            isFollowing = null; // 익명 사용자는 팔로우 불가
         }
         
         return GameDetailResponse.builder()
@@ -170,6 +176,7 @@ public class GameQueryService {
                 .userResponse(UserMainResponse.builder()
                         .nickname(nickname)
                         .profileImageUrl(profileImageUrl)
+                        .isFollowing(isFollowing)
                         .build())
                 .leftSelection(!selections.isEmpty() ? selections.get(0) : null)
                 .rightSelection(selections.size() > 1 ? selections.get(1) : null)
@@ -243,5 +250,26 @@ public class GameQueryService {
         return user != null ?
                 GameQClasses.games.users.uid.eq(user.getUid()) :
                 Expressions.FALSE;
+    }
+    
+    /**
+     * isFollowing 표현식 생성
+     * 현재 사용자가 게임 제작자를 팔로우하고 있는지 확인
+     */
+    private Expression<Boolean> buildIsFollowingExpression(Users user) {
+        if (user == null) {
+            return Expressions.FALSE;
+        }
+        
+        return Expressions.asBoolean(
+            jpaQueryFactory
+                .selectOne()
+                .from(GameQClasses.follow)
+                .where(
+                    GameQClasses.follow.followerUid.eq(user.getUid())
+                        .and(GameQClasses.follow.followingUid.eq(GameQClasses.games.users.uid))
+                )
+                .exists()
+        );
     }
 }

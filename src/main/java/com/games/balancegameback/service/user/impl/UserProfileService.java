@@ -37,6 +37,23 @@ public class UserProfileService {
                 .build();
     }
 
+    /**
+     * 이메일로 다른 사용자 프로필 조회
+     * 
+     * @param email 조회할 사용자 이메일
+     * @return 사용자 프로필 정보
+     */
+    public UserResponse getProfileByEmail(String email) {
+        Users users = userRepository.findByEmail(email);
+        Images images = imageRepository.findByUsers(users);
+        
+        return UserResponse.builder()
+                .nickname(users.getNickname())
+                .email(users.getEmail())
+                .fileUrl(images == null ? null : images.getFileUrl())
+                .build();
+    }
+
     @Transactional
     public void updateProfile(UserRequest userRequest, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);

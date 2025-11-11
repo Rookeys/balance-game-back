@@ -47,6 +47,18 @@ public class UserProfileController {
         return userService.getProfile(request);
     }
 
+    @Operation(summary = "다른 사용자 프로필 조회 API", description = "이메일로 다른 사용자의 프로필 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @GetMapping(value = "/profile/user")
+    public UserResponse getProfileByEmail(
+            @Parameter(name = "email", description = "조회할 사용자 이메일", required = true)
+            @RequestParam(name = "email") String email) {
+        return userService.getProfileByEmail(email);
+    }
+
     @Operation(summary = "프로필 정보 수정 API", description = "프로필 정보를 수정합니다.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
@@ -95,6 +107,43 @@ public class UserProfileController {
                 .build();
 
         return gameService.getMyGameList(pageable, cursorId, searchRequest, request);
+    }
+
+    @Operation(summary = "특정 사용자가 만든 게임 리스트 확인 API", description = "이메일로 특정 사용자가 만든 게임들을 무한 스크롤 형식으로 확인 가능.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "사용자 게임 리스트 발급 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @GetMapping(value = "/games/user")
+    public CustomPageImpl<GameListResponse> getUserGameListByEmail(
+            @Parameter(name = "email", description = "조회할 사용자 이메일", required = true)
+            @RequestParam(name = "email") String email,
+
+            @Parameter(name = "cursorId", description = "커서 ID")
+            @RequestParam(name = "cursorId", required = false) Long cursorId,
+
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
+            @RequestParam(name = "size", required = false, defaultValue = "10") int size,
+
+            @Parameter(name = "title", description = "검색할 내용")
+            @RequestParam(name = "title", required = false) String title,
+
+            @Parameter(name = "category", description = "카테고리",
+                    schema = @Schema(implementation = Category.class))
+            @RequestParam(name = "category", required = false) Category category,
+
+            @Parameter(name = "sortType", description = "정렬 방식",
+                    schema = @Schema(implementation = GameSortType.class))
+            @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameSortType sortType) {
+
+        Pageable pageable = PageRequest.of(0, size);
+        GameSearchRequest searchRequest = GameSearchRequest.builder()
+                .title(title)
+                .sortType(sortType)
+                .category(category)
+                .build();
+
+        return gameService.getUserGameListByEmail(email, pageable, cursorId, searchRequest);
     }
 
     @Operation(summary = "내가 만든 게임방 정보 확인 API", description = "내 게임방의 설정을 확인함.")

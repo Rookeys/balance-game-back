@@ -62,6 +62,11 @@ public class UserService {
         return userProfileService.getProfile(request);
     }
 
+    // 이메일로 다른 사용자 프로필 조회
+    public UserResponse getProfileByEmail(String email) {
+        return userProfileService.getProfileByEmail(email);
+    }
+
     // 프로필 업데이트
     public void updateProfile(UserRequest userRequest, HttpServletRequest request) {
         userProfileService.updateProfile(userRequest, request);

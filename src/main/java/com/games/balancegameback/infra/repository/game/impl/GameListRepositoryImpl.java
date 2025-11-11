@@ -7,12 +7,15 @@ import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.repository.game.common.CommonGameRepository;
 import com.games.balancegameback.infra.repository.game.common.GameBatchData;
+import com.games.balancegameback.infra.repository.game.common.GameConstants;
+import com.games.balancegameback.infra.repository.game.common.GameQClasses;
 import com.games.balancegameback.infra.repository.game.service.GameQueryService;
 import com.games.balancegameback.infra.repository.game.strategy.GameListStrategy;
 import com.games.balancegameback.infra.repository.game.strategy.GameListStrategyFactory;
 import com.games.balancegameback.service.game.repository.GameListRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +35,7 @@ public class GameListRepositoryImpl implements GameListRepository {
     private final GameListStrategyFactory strategyFactory;
     private final GameQueryService gameQueryService;
     private final CommonGameRepository commonGameRepository;
+    private final JPAQueryFactory jpaQueryFactory;
     
     @Override
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
@@ -157,11 +161,40 @@ public class GameListRepositoryImpl implements GameListRepository {
     
     /**
      * 카테고리별 게임 개수 조회
+     * conditions에 따라 필터링된 게임들의 카테고리별 개수를 반환
+     * 
+     * @param conditions 필터 조건
+     * @return 카테고리별 게임 개수 맵
      */
     private Map<Category, Long> fetchCategoryCounts(BooleanBuilder conditions) {
+        // 모든 카테고리를 0으로 초기화
         Map<Category, Long> counts = new EnumMap<>(Category.class);
         Arrays.stream(Category.values()).forEach(cat -> counts.put(cat, 0L));
         
+        // 실제 카테고리별 게임 개수 조회
+        List<Tuple> result = jpaQueryFactory
+                .select(
+                    GameQClasses.category.category,
+                    GameQClasses.games.id.countDistinct()
+                )
+                .from(GameQClasses.games)
+                .join(GameQClasses.games.categories, GameQClasses.category)
+                .join(GameQClasses.games.users, GameQClasses.users)
+                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
+                .where(conditions)  // 전략에서 생성된 조건 적용 (제목 검색 등)
+                .groupBy(GameQClasses.category.category)
+                .having(GameQClasses.games.gameResources.size().goe(GameConstants.MIN_RESOURCE_COUNT))
+                .fetch();
+
+        result.forEach(tuple -> {
+            Category cat = tuple.get(GameQClasses.category.category);
+            Long count = Optional.ofNullable(tuple.get(GameQClasses.games.id.countDistinct()))
+                    .orElse(0L);
+            if (cat != null) {
+                counts.put(cat, count);
+            }
+        });
+
         return counts;
     }
     

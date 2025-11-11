@@ -43,6 +43,10 @@ public class UserUtils {
         return token == null ? null : userRepository.findByEmail(jwtTokenProvider.extractEmail(token));
     }
 
+    public Users findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
     public Users findUserByRefreshToken(HttpServletRequest request) {
         String token = jwtTokenProvider.resolveRefreshToken(request);
         return token == null ? null : userRepository.findByEmail(jwtTokenProvider.extractEmail(token));
