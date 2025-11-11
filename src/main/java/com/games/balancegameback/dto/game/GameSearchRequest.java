@@ -22,4 +22,7 @@ public class GameSearchRequest {
 
     @Schema(description = "카테고리", implementation = Category.class, name = "Category")
     private Category category;
+
+    @Schema(description = "팔로잉한 유저의 게임만 조회 (true: 팔로잉 게임만, false/null: 전체)")
+    private Boolean followingOnly;
 }
