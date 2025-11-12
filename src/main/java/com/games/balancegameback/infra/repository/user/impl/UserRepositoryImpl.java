@@ -10,6 +10,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -69,5 +71,34 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean existsByNickname(String nickname) {
         return userRepository.existsByNickname(nickname);
+    }
+    
+    @Override
+    public List<Users> findRandomUsersExcludingUids(String userUid, List<String> excludeUids, int limit) {
+        List<String> allExcludeUids = new ArrayList<>();
+        
+        // 자신의 UID 제외
+        if (userUid != null) {
+            allExcludeUids.add(userUid);
+        }
+        
+        // 팔로우 중인 사용자들 제외
+        if (excludeUids != null && !excludeUids.isEmpty()) {
+            allExcludeUids.addAll(excludeUids);
+        }
+        
+        // 모든 사용자 조회
+        List<UsersEntity> allUsers = userRepository.findAll().stream()
+                .filter(user -> !user.getIsDeleted())
+                .filter(user -> !allExcludeUids.contains(user.getUid()))
+                .collect(Collectors.toList());
+        
+        // 랜덤으로 섞기
+        Collections.shuffle(allUsers);
+
+        return allUsers.stream()
+                .limit(limit)
+                .map(UsersEntity::toModel)
+                .collect(Collectors.toList());
     }
 }

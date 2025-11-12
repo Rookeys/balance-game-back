@@ -152,4 +152,17 @@ public class FollowController {
         FollowCountResponse response = userService.getFollowCounts(email);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 추천 프로필 목록 조회
+     */
+    @Operation(summary = "추천 프로필 목록 조회 API", description = "랜덤으로 팔로우하지 않은 6명의 사용자를 추천합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "추천 프로필 목록 조회 성공")
+    })
+    @GetMapping(value = "/recommended")
+    public ResponseEntity<List<FollowUserResponse>> getRecommendedProfiles(HttpServletRequest request) {
+        List<FollowUserResponse> recommendedProfiles = userService.getRecommendedProfiles(request);
+        return ResponseEntity.ok(recommendedProfiles);
+    }
 }

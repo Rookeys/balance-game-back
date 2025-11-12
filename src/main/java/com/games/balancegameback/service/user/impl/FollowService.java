@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -228,5 +229,49 @@ public class FollowService {
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .build();
+    }
+
+    /**
+     * 추천 프로필 목록 조회
+     * 랜덤으로 팔로우하지 않은 사용자를 반환
+     */
+    @Transactional(readOnly = true)
+    public List<FollowUserResponse> getRecommendedProfiles(HttpServletRequest request) {
+        // 현재 로그인한 사용자 확인
+        Users currentUser = null;
+        List<String> followingUids = new ArrayList<>();
+        
+        try {
+            currentUser = userUtils.findUserByToken(request);
+            // 팔로우 중인 사용자들의 UID 목록 조회
+            followingUids = followRepository.findFollowingUidsByFollowerUid(currentUser.getUid());
+        } catch (Exception e) {
+            // 로그인하지 않은 경우
+        }
+
+        String currentUserUid = currentUser != null ? currentUser.getUid() : null;
+        List<Users> recommendedUsers = userRepository.findRandomUsersExcludingUids(
+                currentUserUid, 
+                followingUids, 
+                6
+        );
+
+        Users finalCurrentUser = currentUser;
+        return recommendedUsers.stream()
+                .map(user -> {
+                    Images images = imageRepository.findByUsers(user);
+                    
+                    // 팔로우 버튼 표시 여부
+                    boolean showFollowButton = finalCurrentUser != null;
+                    
+                    return FollowUserResponse.builder()
+                            .nickname(user.getNickname())
+                            .email(user.getEmail())
+                            .fileUrl(images == null ? null : images.getFileUrl())
+                            .isFollowing(false)
+                            .showFollowButton(showFollowButton)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

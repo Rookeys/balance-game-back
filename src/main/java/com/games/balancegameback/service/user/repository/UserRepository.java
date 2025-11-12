@@ -22,4 +22,6 @@ public interface UserRepository {
     void delete(Users users);
 
     boolean existsByNickname(String nickname);
+
+    List<Users> findRandomUsersExcludingUids(String userUid, List<String> excludeUids, int limit);
 }

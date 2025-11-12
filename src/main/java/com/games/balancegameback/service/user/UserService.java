@@ -129,5 +129,10 @@ public class UserService {
     public FollowCountResponse getFollowCounts(String email) {
         return followService.getFollowCounts(email);
     }
+
+    // 추천 프로필 목록 조회
+    public List<FollowUserResponse> getRecommendedProfiles(HttpServletRequest request) {
+        return followService.getRecommendedProfiles(request);
+    }
 }
 
