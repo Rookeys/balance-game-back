@@ -1,6 +1,5 @@
 package com.games.balancegameback.service.user;
 
-import com.games.balancegameback.domain.user.Follow;
 import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.infra.repository.user.SchedulerRepository;
 import com.games.balancegameback.service.user.impl.AuthService;
@@ -63,8 +62,8 @@ public class UserService {
     }
 
     // 이메일로 다른 사용자 프로필 조회
-    public UserResponse getProfileByEmail(String email) {
-        return userProfileService.getProfileByEmail(email);
+    public UserResponse getProfileByEmail(String email, HttpServletRequest request) {
+        return userProfileService.getProfileByEmail(email, request);
     }
 
     // 프로필 업데이트
@@ -102,13 +101,13 @@ public class UserService {
     }
 
     // 팔로워 목록 조회
-    public List<Follow> getFollowers(String email) {
-        return followService.getFollowers(email);
+    public List<FollowUserResponse> getFollowers(String email, HttpServletRequest request) {
+        return followService.getFollowers(email, request);
     }
 
     // 팔로잉 목록 조회
-    public List<Follow> getFollowings(String email) {
-        return followService.getFollowings(email);
+    public List<FollowUserResponse> getFollowings(String email, HttpServletRequest request) {
+        return followService.getFollowings(email, request);
     }
 
     // 팔로워 취소
@@ -126,14 +125,9 @@ public class UserService {
         return followService.isFollowing(followingEmail, request);
     }
 
-    // 팔로워 수 조회
-    public long getFollowerCount(String email) {
-        return followService.getFollowerCount(email);
-    }
-
-    // 팔로잉 수 조회
-    public long getFollowingCount(String email) {
-        return followService.getFollowingCount(email);
+    // 팔로워 / 팔로잉 수 조회
+    public FollowCountResponse getFollowCounts(String email) {
+        return followService.getFollowCounts(email);
     }
 }
 

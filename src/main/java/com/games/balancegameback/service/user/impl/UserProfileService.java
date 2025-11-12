@@ -7,6 +7,7 @@ import com.games.balancegameback.dto.user.UserRequest;
 import com.games.balancegameback.dto.user.UserResponse;
 import com.games.balancegameback.service.media.impl.S3Service;
 import com.games.balancegameback.service.media.repository.ImageRepository;
+import com.games.balancegameback.service.user.repository.FollowRepository;
 import com.games.balancegameback.service.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class UserProfileService {
     private final S3Service s3Service;
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
+    private final FollowRepository followRepository;
     private final UserUtils userUtils;
 
     public UserResponse getProfile(HttpServletRequest request) {
@@ -43,14 +45,30 @@ public class UserProfileService {
      * @param email 조회할 사용자 이메일
      * @return 사용자 프로필 정보
      */
-    public UserResponse getProfileByEmail(String email) {
-        Users users = userRepository.findByEmail(email);
-        Images images = imageRepository.findByUsers(users);
+    public UserResponse getProfileByEmail(String email, HttpServletRequest request) {
+        Users targetUser = userRepository.findByEmail(email);
+        Images images = imageRepository.findByUsers(targetUser);
+        
+        // 팔로우 여부 확인
+        boolean isFollowing = false;
+        try {
+            Users currentUser = userUtils.findUserByToken(request);
+            if (currentUser != null && !currentUser.getUid().equals(targetUser.getUid())) {
+                isFollowing = followRepository.existsByFollowerUidAndFollowingUid(
+                    currentUser.getUid(), 
+                    targetUser.getUid()
+                );
+            }
+        } catch (Exception e) {
+            // 로그인하지 않은 경우
+            log.debug("Failed to get current user from token", e);
+        }
         
         return UserResponse.builder()
-                .nickname(users.getNickname())
-                .email(users.getEmail())
+                .nickname(targetUser.getNickname())
+                .email(targetUser.getEmail())
                 .fileUrl(images == null ? null : images.getFileUrl())
+                .isFollowing(isFollowing)
                 .build();
     }
 
@@ -67,7 +85,7 @@ public class UserProfileService {
 
         String newUrl = userRequest.getUrl();
 
-        // 프로필 이미지 삭제 요청 (url 이 비어 있음)
+        // 프로필 이미지 삭제 요청
         if (newUrl == null || newUrl.isEmpty()) {
             if (images != null && isValidUrl(images.getFileUrl())) {
                 s3Service.deleteImageByUrl(images.getFileUrl());
@@ -89,9 +107,8 @@ public class UserProfileService {
             return;
         }
 
-        // 기존 이미지와 동일한 경우 닉네임만 수정.
+        // 기존 이미지와 동일한 경우
         if (images.getFileUrl().equals(newUrl)) {
-            log.info("닉네임만 수정됨.");
             return;
         }
 
@@ -99,6 +116,7 @@ public class UserProfileService {
         if (isValidUrl(images.getFileUrl())) {
             s3Service.deleteImageByUrl(images.getFileUrl());
         }
+
         images.update(newUrl);
         imageRepository.update(images);
     }
@@ -111,9 +129,7 @@ public class UserProfileService {
             URI uri = new URI(url);
             return uri.isAbsolute();
         } catch (Exception e) {
-            log.warn("잘못된 URL 형식: {}", url);
             return false;
         }
     }
 }
-

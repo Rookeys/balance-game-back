@@ -3,21 +3,29 @@ package com.games.balancegameback.service.user.impl;
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.NotFoundException;
+import com.games.balancegameback.domain.media.Images;
 import com.games.balancegameback.domain.user.Follow;
 import com.games.balancegameback.domain.user.Users;
+import com.games.balancegameback.dto.user.FollowCountResponse;
+import com.games.balancegameback.dto.user.FollowUserResponse;
+import com.games.balancegameback.service.media.repository.ImageRepository;
 import com.games.balancegameback.service.user.repository.FollowRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FollowService {
 
     private final FollowRepository followRepository;
+    private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
     private final UserUtils userUtils;
     private final FollowUtils followUtils;
 
@@ -51,18 +59,114 @@ public class FollowService {
      * 팔로워 목록 조회
      */
     @Transactional(readOnly = true)
-    public List<Follow> getFollowers(String email) {
+    public List<FollowUserResponse> getFollowers(String email, HttpServletRequest request) {
         String uid = followUtils.getUserUidByEmail(email);
-        return followRepository.findByFollowingUid(uid);
+        List<Follow> follows = followRepository.findByFollowingUid(uid);
+        
+        // 현재 로그인한 사용자 확인
+        Users currentUser = null;
+        try {
+            currentUser = userUtils.findUserByToken(request);
+        } catch (Exception e) {
+            // 로그인하지 않은 경우
+        }
+        
+        // 팔로워들의 UID 목록
+        List<String> followerUids = follows.stream()
+                .map(Follow::getFollower)
+                .collect(Collectors.toList());
+        
+        if (followerUids.isEmpty()) {
+            return List.of();
+        }
+        
+        // 팔로워들의 사용자 정보 조회
+        List<Users> followers = userRepository.findByUids(followerUids);
+        
+        Users finalCurrentUser = currentUser;
+        return followers.stream()
+                .map(follower -> {
+                    Images images = imageRepository.findByUsers(follower);
+                    
+                    // 팔로우 버튼 표시 여부
+                    boolean showFollowButton = finalCurrentUser != null && 
+                            !finalCurrentUser.getUid().equals(follower.getUid());
+                    
+                    // 팔로우 여부 확인
+                    boolean isFollowing = false;
+                    if (showFollowButton) {
+                        isFollowing = followRepository.existsByFollowerUidAndFollowingUid(
+                                finalCurrentUser.getUid(), 
+                                follower.getUid()
+                        );
+                    }
+                    
+                    return FollowUserResponse.builder()
+                            .nickname(follower.getNickname())
+                            .email(follower.getEmail())
+                            .fileUrl(images == null ? null : images.getFileUrl())
+                            .isFollowing(isFollowing)
+                            .showFollowButton(showFollowButton)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     /**
      * 팔로잉 목록 조회
      */
     @Transactional(readOnly = true)
-    public List<Follow> getFollowings(String email) {
+    public List<FollowUserResponse> getFollowings(String email, HttpServletRequest request) {
         String uid = followUtils.getUserUidByEmail(email);
-        return followRepository.findByFollowerUid(uid);
+        List<Follow> follows = followRepository.findByFollowerUid(uid);
+        
+        // 현재 로그인한 사용자 확인
+        Users currentUser = null;
+        try {
+            currentUser = userUtils.findUserByToken(request);
+        } catch (Exception e) {
+            // 로그인하지 않은 경우
+        }
+        
+        // 팔로잉들의 UID 목록
+        List<String> followingUids = follows.stream()
+                .map(Follow::getFollowing)
+                .collect(Collectors.toList());
+        
+        if (followingUids.isEmpty()) {
+            return List.of();
+        }
+        
+        // 팔로잉들의 사용자 정보 조회
+        List<Users> followings = userRepository.findByUids(followingUids);
+        
+        Users finalCurrentUser = currentUser;
+        return followings.stream()
+                .map(following -> {
+                    Images images = imageRepository.findByUsers(following);
+                    
+                    // 팔로우 버튼 표시 여부
+                    boolean showFollowButton = finalCurrentUser != null && 
+                            !finalCurrentUser.getUid().equals(following.getUid());
+                    
+                    // 팔로우 여부 확인
+                    boolean isFollowing = false;
+                    if (showFollowButton) {
+                        isFollowing = followRepository.existsByFollowerUidAndFollowingUid(
+                                finalCurrentUser.getUid(), 
+                                following.getUid()
+                        );
+                    }
+                    
+                    return FollowUserResponse.builder()
+                            .nickname(following.getNickname())
+                            .email(following.getEmail())
+                            .fileUrl(images == null ? null : images.getFileUrl())
+                            .isFollowing(isFollowing)
+                            .showFollowButton(showFollowButton)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -111,20 +215,18 @@ public class FollowService {
     }
 
     /**
-     * 팔로워 수 조회
+     * 팔로워 / 팔로잉 수 조회
      */
     @Transactional(readOnly = true)
-    public long getFollowerCount(String email) {
+    public FollowCountResponse getFollowCounts(String email) {
         String uid = followUtils.getUserUidByEmail(email);
-        return followRepository.countByFollowingUid(uid);
-    }
-
-    /**
-     * 팔로잉 수 조회
-     */
-    @Transactional(readOnly = true)
-    public long getFollowingCount(String email) {
-        String uid = followUtils.getUserUidByEmail(email);
-        return followRepository.countByFollowerUid(uid);
+        
+        long followerCount = followRepository.countByFollowingUid(uid);
+        long followingCount = followRepository.countByFollowerUid(uid);
+        
+        return FollowCountResponse.builder()
+                .followerCount(followerCount)
+                .followingCount(followingCount)
+                .build();
     }
 }

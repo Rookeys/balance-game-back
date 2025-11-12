@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UserResponse {
+public class FollowUserResponse {
 
     @Schema(description = "닉네임")
     private String nickname;
@@ -19,4 +19,7 @@ public class UserResponse {
 
     @Schema(description = "팔로우 여부")
     private Boolean isFollowing;
+
+    @Schema(description = "팔로우 버튼 표시 여부")
+    private Boolean showFollowButton;
 }

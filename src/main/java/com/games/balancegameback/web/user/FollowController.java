@@ -1,7 +1,8 @@
 package com.games.balancegameback.web.user;
 
-import com.games.balancegameback.domain.user.Follow;
+import com.games.balancegameback.dto.user.FollowCountResponse;
 import com.games.balancegameback.dto.user.FollowRequest;
+import com.games.balancegameback.dto.user.FollowUserResponse;
 import com.games.balancegameback.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,10 +55,11 @@ public class FollowController {
             @ApiResponse(responseCode = "404", description = "해당 사용자는 존재하지 않습니다.")
     })
     @GetMapping(value = "/followers")
-    public ResponseEntity<List<Follow>> getFollowers(
+    public ResponseEntity<List<FollowUserResponse>> getFollowers(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
-            @RequestParam String email) {
-        List<Follow> followers = userService.getFollowers(email);
+            @RequestParam String email,
+            HttpServletRequest request) {
+        List<FollowUserResponse> followers = userService.getFollowers(email, request);
         return ResponseEntity.ok(followers);
     }
 
@@ -70,10 +72,11 @@ public class FollowController {
             @ApiResponse(responseCode = "404", description = "해당 사용자는 존재하지 않습니다.")
     })
     @GetMapping(value = "/followings")
-    public ResponseEntity<List<Follow>> getFollowings(
+    public ResponseEntity<List<FollowUserResponse>> getFollowings(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
-            @RequestParam String email) {
-        List<Follow> followings = userService.getFollowings(email);
+            @RequestParam String email,
+            HttpServletRequest request) {
+        List<FollowUserResponse> followings = userService.getFollowings(email, request);
         return ResponseEntity.ok(followings);
     }
 
@@ -135,34 +138,18 @@ public class FollowController {
     }
 
     /**
-     * 팔로워 수 조회
+     * 팔로워/팔로잉 수 조회
      */
-    @Operation(summary = "팔로워 수 조회 API", description = "특정 사용자의 팔로워 수를 조회합니다.")
+    @Operation(summary = "팔로워/팔로잉 수 조회 API", description = "특정 사용자의 팔로워 수와 팔로잉 수를 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "팔로워 수 조회 성공"),
+            @ApiResponse(responseCode = "200", description = "팔로워/팔로잉 수 조회 성공"),
             @ApiResponse(responseCode = "404", description = "해당 사용자는 존재하지 않습니다.")
     })
-    @GetMapping(value = "/followers/count")
-    public ResponseEntity<Long> getFollowerCount(
+    @GetMapping(value = "/counts")
+    public ResponseEntity<FollowCountResponse> getFollowCounts(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
             @RequestParam String email) {
-        long count = userService.getFollowerCount(email);
-        return ResponseEntity.ok(count);
-    }
-
-    /**
-     * 팔로잉 수 조회
-     */
-    @Operation(summary = "팔로잉 수 조회 API", description = "특정 사용자의 팔로잉 수를 조회합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "팔로잉 수 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "해당 사용자는 존재하지 않습니다.")
-    })
-    @GetMapping(value = "/followings/count")
-    public ResponseEntity<Long> getFollowingCount(
-            @Parameter(name = "email", description = "사용자 이메일", required = true)
-            @RequestParam String email) {
-        long count = userService.getFollowingCount(email);
-        return ResponseEntity.ok(count);
+        FollowCountResponse response = userService.getFollowCounts(email);
+        return ResponseEntity.ok(response);
     }
 }

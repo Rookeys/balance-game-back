@@ -55,8 +55,9 @@ public class UserProfileController {
     @GetMapping(value = "/profile/user")
     public UserResponse getProfileByEmail(
             @Parameter(name = "email", description = "조회할 사용자 이메일", required = true)
-            @RequestParam(name = "email") String email) {
-        return userService.getProfileByEmail(email);
+            @RequestParam(name = "email") String email,
+            HttpServletRequest request) {
+        return userService.getProfileByEmail(email, request);
     }
 
     @Operation(summary = "프로필 정보 수정 API", description = "프로필 정보를 수정합니다.")

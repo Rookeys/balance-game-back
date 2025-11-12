@@ -10,7 +10,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -31,6 +33,14 @@ public class UserRepositoryImpl implements UserRepository {
         UsersEntity users = userRepository.findByNickname(nickname).orElseThrow(()
                 -> new NotFoundException("해당 닉네임을 가진 유저를 찾을 수 없습니다.", ErrorCode.NOT_FOUND_EXCEPTION));
         return users.toModel();
+    }
+
+    @Override
+    public List<Users> findByUids(List<String> uids) {
+        List<UsersEntity> usersEntities = userRepository.findByUidIn(uids);
+        return usersEntities.stream()
+                .map(UsersEntity::toModel)
+                .collect(Collectors.toList());
     }
 
     @Override
