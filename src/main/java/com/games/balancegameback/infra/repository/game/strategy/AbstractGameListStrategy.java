@@ -14,18 +14,23 @@ public abstract class AbstractGameListStrategy implements GameListStrategy {
     
     /**
      * 팔로잉 필터 조건 생성
+     * user가 팔로우한 사람들의 게임만 조회
+     * 팔로우 관계가 없으면 결과가 없어야 함
      */
     protected BooleanExpression buildFollowingCondition(Users user) {
         if (user == null) {
             return null;
         }
         
-        return GameQClasses.games.users.uid.in(
-            JPAExpressions
-                .select(GameQClasses.follow.followingUid)
+        // EXISTS를 사용하여 팔로우 관계가 있는 게임만 조회
+        return JPAExpressions
+                .selectOne()
                 .from(GameQClasses.follow)
-                .where(GameQClasses.follow.followerUid.eq(user.getUid()))
-        );
+                .where(
+                    GameQClasses.follow.followerUid.eq(user.getUid())
+                        .and(GameQClasses.follow.followingUid.eq(GameQClasses.games.users.uid))
+                )
+                .exists();
     }
     
     /**

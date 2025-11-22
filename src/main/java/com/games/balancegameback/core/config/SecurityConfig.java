@@ -55,6 +55,12 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/categories").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/v1/games/{gameId}/resources/count").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/follows/followers").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/follows/followings").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/follows/counts").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/follows/recommended").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/games/user").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/profile/user").permitAll()
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .anyRequest().authenticated(); // 그 외 모든 요청은 검증 필요
                 })

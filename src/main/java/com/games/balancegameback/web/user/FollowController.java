@@ -57,7 +57,7 @@ public class FollowController {
     @GetMapping(value = "/followers")
     public ResponseEntity<List<FollowUserResponse>> getFollowers(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
-            @RequestParam String email,
+            @RequestParam(name = "email") String email,
             HttpServletRequest request) {
         List<FollowUserResponse> followers = userService.getFollowers(email, request);
         return ResponseEntity.ok(followers);
@@ -74,7 +74,7 @@ public class FollowController {
     @GetMapping(value = "/followings")
     public ResponseEntity<List<FollowUserResponse>> getFollowings(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
-            @RequestParam String email,
+            @RequestParam(name = "email") String email,
             HttpServletRequest request) {
         List<FollowUserResponse> followings = userService.getFollowings(email, request);
         return ResponseEntity.ok(followings);
@@ -93,7 +93,7 @@ public class FollowController {
     @DeleteMapping(value = "/followers/{followerEmail}")
     public ResponseEntity<Boolean> removeFollower(
             @Parameter(name = "followerEmail", description = "제거할 팔로워의 이메일", required = true)
-            @PathVariable String followerEmail,
+            @PathVariable(name = "followerEmail") String followerEmail,
             HttpServletRequest request) {
         userService.removeFollower(followerEmail, request);
         return ResponseEntity.ok(true);
@@ -112,7 +112,7 @@ public class FollowController {
     @DeleteMapping(value = "/followings/{followingEmail}")
     public ResponseEntity<Boolean> removeFollowing(
             @Parameter(name = "followingEmail", description = "언팔로우할 사용자의 이메일", required = true)
-            @PathVariable String followingEmail,
+            @PathVariable(name = "followingEmail") String followingEmail,
             HttpServletRequest request) {
         userService.removeFollowing(followingEmail, request);
         return ResponseEntity.ok(true);
@@ -131,7 +131,7 @@ public class FollowController {
     @GetMapping(value = "/check")
     public ResponseEntity<Boolean> isFollowing(
             @Parameter(name = "followingEmail", description = "확인할 사용자의 이메일", required = true)
-            @RequestParam String followingEmail,
+            @RequestParam(name = "followingEmail") String followingEmail,
             HttpServletRequest request) {
         boolean isFollowing = userService.isFollowing(followingEmail, request);
         return ResponseEntity.ok(isFollowing);
@@ -148,7 +148,7 @@ public class FollowController {
     @GetMapping(value = "/counts")
     public ResponseEntity<FollowCountResponse> getFollowCounts(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
-            @RequestParam String email) {
+            @RequestParam(name = "email") String email) {
         FollowCountResponse response = userService.getFollowCounts(email);
         return ResponseEntity.ok(response);
     }
