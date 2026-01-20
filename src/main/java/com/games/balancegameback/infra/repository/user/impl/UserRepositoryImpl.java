@@ -78,7 +78,7 @@ public class UserRepositoryImpl implements UserRepository {
         List<String> allExcludeUids = new ArrayList<>();
         
         // 자신의 UID 제외
-        if (userUid != null) {
+        if (userUid != null && !userUid.isEmpty()) {
             allExcludeUids.add(userUid);
         }
         
@@ -89,7 +89,9 @@ public class UserRepositoryImpl implements UserRepository {
         
         // 모든 사용자 조회
         List<UsersEntity> allUsers = userRepository.findAll().stream()
+                .filter(user -> user != null)
                 .filter(user -> !user.getIsDeleted())
+                .filter(user -> user.getUid() != null)
                 .filter(user -> !allExcludeUids.contains(user.getUid()))
                 .collect(Collectors.toList());
         

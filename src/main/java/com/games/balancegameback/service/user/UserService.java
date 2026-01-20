@@ -1,5 +1,6 @@
 package com.games.balancegameback.service.user;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.dto.user.*;
 import com.games.balancegameback.infra.repository.user.SchedulerRepository;
 import com.games.balancegameback.service.user.impl.AuthService;
@@ -8,6 +9,7 @@ import com.games.balancegameback.service.user.impl.UserProfileService;
 import com.games.balancegameback.service.user.impl.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -101,13 +103,13 @@ public class UserService {
     }
 
     // 팔로워 목록 조회
-    public List<FollowUserResponse> getFollowers(String email, HttpServletRequest request) {
-        return followService.getFollowers(email, request);
+    public CustomPageImpl<FollowUserResponse> getFollowers(String email, Long cursorId, Pageable pageable, HttpServletRequest request) {
+        return followService.getFollowers(email, cursorId, pageable, request);
     }
 
     // 팔로잉 목록 조회
-    public List<FollowUserResponse> getFollowings(String email, HttpServletRequest request) {
-        return followService.getFollowings(email, request);
+    public CustomPageImpl<FollowUserResponse> getFollowings(String email, Long cursorId, Pageable pageable, HttpServletRequest request) {
+        return followService.getFollowings(email, cursorId, pageable, request);
     }
 
     // 팔로워 취소

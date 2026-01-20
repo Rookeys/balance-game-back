@@ -1,5 +1,6 @@
 package com.games.balancegameback.web.user;
 
+import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.dto.user.FollowCountResponse;
 import com.games.balancegameback.dto.user.FollowRequest;
 import com.games.balancegameback.dto.user.FollowUserResponse;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,34 +52,50 @@ public class FollowController {
     /**
      * 팔로워 목록 조회
      */
-    @Operation(summary = "팔로워 목록 조회 API", description = "특정 사용자의 팔로워 목록을 조회합니다.")
+    @Operation(summary = "팔로워 목록 조회 API", description = "특정 사용자의 팔로워 목록을 조회합니다. (무한스크롤 지원)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로워 목록 조회 성공"),
             @ApiResponse(responseCode = "404", description = "해당 사용자는 존재하지 않습니다.")
     })
     @GetMapping(value = "/followers")
-    public ResponseEntity<List<FollowUserResponse>> getFollowers(
+    public ResponseEntity<CustomPageImpl<FollowUserResponse>> getFollowers(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
             @RequestParam(name = "email") String email,
+            
+            @Parameter(name = "cursorId", description = "커서 ID (페이징 처리용)")
+            @RequestParam(name = "cursorId", required = false) Long cursorId,
+            
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
+            @RequestParam(name = "size", required = false, defaultValue = "20") int size,
+            
             HttpServletRequest request) {
-        List<FollowUserResponse> followers = userService.getFollowers(email, request);
+        Pageable pageable = PageRequest.of(0, size);
+        CustomPageImpl<FollowUserResponse> followers = userService.getFollowers(email, cursorId, pageable, request);
         return ResponseEntity.ok(followers);
     }
 
     /**
      * 팔로잉 목록 조회
      */
-    @Operation(summary = "팔로잉 목록 조회 API", description = "특정 사용자의 팔로잉 목록을 조회합니다.")
+    @Operation(summary = "팔로잉 목록 조회 API", description = "특정 사용자의 팔로잉 목록을 조회합니다. (무한스크롤 지원)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로잉 목록 조회 성공"),
             @ApiResponse(responseCode = "404", description = "해당 사용자는 존재하지 않습니다.")
     })
     @GetMapping(value = "/followings")
-    public ResponseEntity<List<FollowUserResponse>> getFollowings(
+    public ResponseEntity<CustomPageImpl<FollowUserResponse>> getFollowings(
             @Parameter(name = "email", description = "사용자 이메일", required = true)
             @RequestParam(name = "email") String email,
+            
+            @Parameter(name = "cursorId", description = "커서 ID")
+            @RequestParam(name = "cursorId", required = false) Long cursorId,
+            
+            @Parameter(name = "size", description = "한 페이지 당 출력 개수")
+            @RequestParam(name = "size", required = false, defaultValue = "20") int size,
+            
             HttpServletRequest request) {
-        List<FollowUserResponse> followings = userService.getFollowings(email, request);
+        Pageable pageable = PageRequest.of(0, size);
+        CustomPageImpl<FollowUserResponse> followings = userService.getFollowings(email, cursorId, pageable, request);
         return ResponseEntity.ok(followings);
     }
 

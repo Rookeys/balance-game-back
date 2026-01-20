@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.user.repository;
 
 import com.games.balancegameback.domain.user.Follow;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -11,6 +12,16 @@ public interface FollowRepository {
     List<Follow> findByFollowerUid(String followerUid);
 
     List<Follow> findByFollowingUid(String followingUid);
+
+    /**
+     * 팔로워 목록 조회 (페이징)
+     */
+    List<Follow> findByFollowingUidWithPaging(String followingUid, Long cursorId, Pageable pageable);
+
+    /**
+     * 팔로잉 목록 조회 (페이징)
+     */
+    List<Follow> findByFollowerUidWithPaging(String followerUid, Long cursorId, Pageable pageable);
 
     void deleteByFollowerUidAndFollowingUid(String followerUid, String followingUid);
 

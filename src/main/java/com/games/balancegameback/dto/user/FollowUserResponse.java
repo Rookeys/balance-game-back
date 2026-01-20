@@ -8,6 +8,9 @@ import lombok.Getter;
 @Builder
 public class FollowUserResponse {
 
+    @Schema(description = "팔로우 관계 ID (커서 페이징용)")
+    private Long followId;
+
     @Schema(description = "닉네임")
     private String nickname;
 

@@ -152,7 +152,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             List<Category> categories = batchData.getCategoriesMap().getOrDefault(gameId, Collections.emptyList());
             List<GameListSelectionResponse> selections = batchData.getSelectionsMap().getOrDefault(gameId, Collections.emptyList());
 
-            return gameQueryService.buildGameDetailResponse(gameData, categories, selections, user);
+            return gameQueryService.buildGameDetailResponse(gameData, categories, selections);
         } catch (Exception e) {
             log.error("Error fetching game detail for gameId: {}", gameId, e);
             throw new RuntimeException("Game detail fetch failed", e);

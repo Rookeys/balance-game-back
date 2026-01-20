@@ -99,7 +99,8 @@ public class GameQueryService {
                     GameQClasses.results.count().coalesce(GameConstants.DEFAULT_COUNT).as("totalPlays"), // 10
                     GameQClasses.resources.count().coalesce(GameConstants.DEFAULT_COUNT).as("totalResources"), // 11
                     GameQClasses.games.users.uid,                                                       // 12 - 제작자 UID
-                    isFollowingExpr                                                                     // 13 - 팔로우 여부
+                    isFollowingExpr,                                                                    // 13 - 팔로우 여부
+                    GameQClasses.games.users.email                                                      // 14 - 제작자 이메일
                 )
                 .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
@@ -150,9 +151,10 @@ public class GameQueryService {
      * @return GameDetailResponse
      */
     public GameDetailResponse buildGameDetailResponse(Tuple gameData, List<Category> categories,
-                                                       List<GameListSelectionResponse> selections, Users user) {
+                                                       List<GameListSelectionResponse> selections) {
         String nickname = gameData.get(GameQClasses.games.users.nickname);
         String profileImageUrl = gameData.get(8, String.class);
+        String email = gameData.get(14, String.class);
         boolean isPrivate = Boolean.TRUE.equals(gameData.get(GameQClasses.games.isNamePrivate));
         Boolean isFollowing = gameData.get(13, Boolean.class);
         
@@ -160,6 +162,7 @@ public class GameQueryService {
         if (isPrivate) {
             nickname = GameConstants.ANONYMOUS_NICKNAME;
             profileImageUrl = null;
+            email = null; // 익명 사용자는 이메일 숨김
             isFollowing = null; // 익명 사용자는 팔로우 불가
         }
         
@@ -175,6 +178,7 @@ public class GameQueryService {
                 .updatedAt(gameData.get(GameQClasses.games.updatedDate))
                 .userResponse(UserMainResponse.builder()
                         .nickname(nickname)
+                        .email(email)
                         .profileImageUrl(profileImageUrl)
                         .isFollowing(isFollowing)
                         .build())
