@@ -234,21 +234,17 @@ public class GameResourceService {
     }
 
     /**
-     * 리소스 수 변화를 확인하고 2개 기준으로 상태가 변했을 때 revalidate를 호출하는 메서드
+     * 리소스 수 변화를 확인하고 수가 바뀌었을 때 revalidate를 호출하는 메서드
      *
      * @param gameId 게임 ID
      * @param beforeCount 변경 전 리소스 수
      * @param afterCount 변경 후 리소스 수
      */
     private void checkResourceCountChangeAndRevalidate(Long gameId, Integer beforeCount, Integer afterCount) {
-        boolean wasPlayable = beforeCount >= 2;
-        boolean isPlayable = afterCount >= 2;
-
-        // 상태가 변했을 때만 revalidate 호출
-        if (wasPlayable != isPlayable) {
+        if (!beforeCount.equals(afterCount)) {
             gameRoomService.revalidate("/game/" + gameId);
-            log.info("Game {} resource count changed from {} to {}. Playable status changed from {} to {}. Revalidate called.",
-                    gameId, beforeCount, afterCount, wasPlayable, isPlayable);
+            log.info("Game {} resource count changed from {} to {}. Revalidate called.",
+                    gameId, beforeCount, afterCount);
         }
     }
 }

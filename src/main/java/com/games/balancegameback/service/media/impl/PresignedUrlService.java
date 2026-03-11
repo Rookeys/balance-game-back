@@ -2,10 +2,10 @@ package com.games.balancegameback.service.media.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
+import com.games.balancegameback.dto.media.PresignedUrlResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -27,31 +27,32 @@ public class PresignedUrlService {
     /**
      * Presigned URL 발급
      * @param prefix 버킷 디렉토리 이름
-     * @return Presigned URL
+     * @return uploadUrl(업로드용 presigned URL, 10분 유효) + fileUrl(저장용 클린 S3 URL)
      */
-    public String getPreSignedUrl(String prefix) {
+    public PresignedUrlResponse getPreSignedUrl(String prefix) {
         if (prefix == null || prefix.isEmpty()) {
             throw new BadRequestException("prefix 값이 잘못되었습니다.", ErrorCode.RUNTIME_EXCEPTION);
         }
 
         String fileName = createPath(prefix);
 
-        // Presigned URL 생성
         PresignedPutObjectRequest presignedRequest = generatePreSignedUrlRequest(bucket, fileName);
         URL url = presignedRequest.url();
 
-        // 최종 S3 URL 생성
-        return String.format("%s", url);
+        String uploadUrl = url.toString();
+        String fileUrl = url.getProtocol() + "://" + url.getHost() + url.getPath();
+
+        return new PresignedUrlResponse(uploadUrl, fileUrl);
     }
 
     /**
-     * 여러 장의 Presigned URL 발급 및 S3 URL 반환
+     * 여러 장의 Presigned URL 발급
      * @param prefix 버킷 디렉토리 이름
      * @param length 클라이언트가 전달한 파일 갯수
-     * @return List<String> (presignedUrl, finalUrl)
+     * @return List<PresignedUrlResponse>
      */
-    public List<String> getPreSignedUrls(String prefix, int length) {
-        List<String> urls = new ArrayList<>();
+    public List<PresignedUrlResponse> getPreSignedUrls(String prefix, int length) {
+        List<PresignedUrlResponse> urls = new ArrayList<>();
 
         for (int i = 0; i < length; i++) {
             urls.add(getPreSignedUrl(prefix));
@@ -76,7 +77,7 @@ public class PresignedUrlService {
         // Presign 요청 설정
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
                 .putObjectRequest(putObjectRequest)
-                .signatureDuration(Duration.ofMinutes(5)) // 유효 시간 5분
+                .signatureDuration(Duration.ofMinutes(10)) // 유효 시간 10분
                 .build();
 
         // Presigned URL 생성

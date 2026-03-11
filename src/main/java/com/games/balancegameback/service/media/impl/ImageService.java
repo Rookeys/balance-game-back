@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ImageService {
@@ -19,6 +22,11 @@ public class ImageService {
 
     @Transactional
     public void saveImage(Long gameId, ImageRequest imageRequest) {
+        List<String> cleanUrls = imageRequest.getUrls().stream()
+                .map(url -> url.contains("?") ? url.substring(0, url.indexOf("?")) : url)
+                .collect(Collectors.toList());
+        imageRequest.setUrls(cleanUrls);
+
         Games games = gameRepository.findByRoomId(gameId);
         gameService.saveImageResource(games, imageRequest);
     }
