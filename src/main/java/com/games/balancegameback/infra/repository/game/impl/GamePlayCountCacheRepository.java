@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Repository
 @RequiredArgsConstructor
@@ -45,7 +46,7 @@ public class GamePlayCountCacheRepository {
 
     @Cacheable(value = "game-week-plays", key = "#gameId")
     public int getGameWeekPlayCount(Long gameId) {
-        OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
+        OffsetDateTime oneWeekAgo = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(1);
         Long count = jpaQueryFactory
                 .select(GameQClasses.results.count())
                 .from(GameQClasses.games)
@@ -62,7 +63,7 @@ public class GamePlayCountCacheRepository {
 
     @Cacheable(value = "game-month-plays", key = "#gameId")
     public int getGameMonthPlayCount(Long gameId) {
-        OffsetDateTime oneMonthAgo = OffsetDateTime.now().minusMonths(1);
+        OffsetDateTime oneMonthAgo = OffsetDateTime.now(ZoneOffset.UTC).minusMonths(1);
         Long count = jpaQueryFactory
                 .select(GameQClasses.results.count())
                 .from(GameQClasses.games)
