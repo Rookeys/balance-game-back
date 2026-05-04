@@ -1,14 +1,33 @@
+/*
+ * File Name   : RedisConfig.java
+ * Description : Redis 설정 (RefreshToken 저장용 + CacheManager)
+ *
+ * Created By  : cheomuk
+ * Created At  : 2026-05-04
+ * Updated At  : 2026-05-04
+ *
+ * Change Log
+ * -------------------------------------------------
+ * 2026-05-04  RedisCacheManager 빈 추가
+ */
 package com.games.balancegameback.infra.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+import java.util.Map;
 
 @Configuration
 public class RedisConfig {
@@ -37,5 +56,25 @@ public class RedisConfig {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
+    }
+
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .disableCachingNullValues();
+
+        Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
+                "game-category-counts", defaultConfig.entryTtl(Duration.ofMinutes(5)),
+                "game-total-plays",     defaultConfig.entryTtl(Duration.ofMinutes(10)),
+                "game-week-plays",      defaultConfig.entryTtl(Duration.ofMinutes(5)),
+                "game-month-plays",     defaultConfig.entryTtl(Duration.ofMinutes(5))
+        );
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(defaultConfig.entryTtl(Duration.ofMinutes(10)))
+                .withInitialCacheConfigurations(cacheConfigs)
+                .build();
     }
 }
