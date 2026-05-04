@@ -49,6 +49,9 @@ public class GameListController {
                     schema = @Schema(implementation = GameSortType.class, name = "GameSortType"))
             @RequestParam(name = "sortType", required = false, defaultValue = "RECENT") GameSortType sortType,
 
+            @Parameter(name = "followingOnly", description = "팔로잉한 유저의 게임만 조회 (true: 팔로잉 게임만, false/null: 전체)")
+            @RequestParam(name = "followingOnly", required = false) Boolean followingOnly,
+
             HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(0, size);
@@ -56,6 +59,7 @@ public class GameListController {
                 .title(title)
                 .sortType(sortType)
                 .category(category)
+                .followingOnly(followingOnly)
                 .build();
 
         return gameService.getMainGameList(cursorId, pageable, searchRequest, request);

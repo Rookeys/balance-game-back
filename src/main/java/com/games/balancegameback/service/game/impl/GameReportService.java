@@ -10,7 +10,7 @@ import com.games.balancegameback.dto.game.report.GameCommentReportRequest;
 import com.games.balancegameback.dto.game.report.GameReportRequest;
 import com.games.balancegameback.dto.user.UserReportRequest;
 import com.games.balancegameback.service.game.repository.GameReportRepository;
-import com.games.balancegameback.service.user.UserRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import com.games.balancegameback.service.user.impl.UserUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

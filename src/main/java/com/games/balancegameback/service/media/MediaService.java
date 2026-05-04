@@ -4,6 +4,7 @@ import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.media.*;
+import com.games.balancegameback.dto.media.PresignedUrlResponse;
 import com.games.balancegameback.service.game.repository.GameRepository;
 import com.games.balancegameback.service.media.impl.ImageService;
 import com.games.balancegameback.service.media.impl.LinkService;
@@ -26,12 +27,12 @@ public class MediaService {
     private final UserUtils userUtils;
 
     // Presigned URL 발급 (단일, 유저)
-    public String getPreSignedUrl(PresignedUrlRequest request) {
+    public PresignedUrlResponse getPreSignedUrl(PresignedUrlRequest request) {
         return presignedUrlService.getPreSignedUrl(request.getPrefix());
     }
 
     // Presigned URL 발급 (다중)
-    public List<String> getPreSignedUrls(PresignedUrlsRequest urlRequest) {
+    public List<PresignedUrlResponse> getPreSignedUrls(PresignedUrlsRequest urlRequest) {
         return presignedUrlService.getPreSignedUrls(urlRequest.getPrefix(), urlRequest.getLength());
     }
 

@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -38,7 +39,9 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     "/api/v1/games/{gameId}/resources/{resourceId}/comments/{parentId}",
                     "/api/v1/games/{gameId}/results/comments", "/api/v1/games/{gameId}/resources/{resourceId}",
                     "/api/v1/games/{gameId}/resources/count", "/api/v1/games/list",
-                    "/api/v1/games/categories"
+                    "/api/v1/games/categories", "/api/v1/follows/followers", "/api/v1/follows/followings",
+                    "/api/v1/follows/counts", "/api/v1/follows/recommended", "/api/v1/users/games/user",
+                    "/api/v1/users/profile/user"
             ),
             "POST", Set.of(
                     "/api/v1/users/login/kakao", "/api/v1/users/test/login", "/api/v1/users/login",
@@ -62,8 +65,8 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     @SneakyThrows
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) {
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) {
         String path = request.getRequestURI();
         String method = request.getMethod();
 

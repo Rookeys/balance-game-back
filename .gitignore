@@ -61,5 +61,8 @@ out/
 ### VS Code ###
 .vscode/
 
+.claude/
+docs/
+
 application.yml
 application-local.yml

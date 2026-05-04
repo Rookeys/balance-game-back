@@ -11,7 +11,7 @@ import com.games.balancegameback.dto.user.UserReportRequest;
 import com.games.balancegameback.infra.entity.*;
 import com.games.balancegameback.infra.repository.game.GameReportJpaRepository;
 import com.games.balancegameback.service.game.repository.GameReportRepository;
-import com.games.balancegameback.service.user.UserRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

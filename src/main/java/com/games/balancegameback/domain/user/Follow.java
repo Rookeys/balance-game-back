@@ -1,4 +1,4 @@
-package com.games.balancegameback.domain.game;
+package com.games.balancegameback.domain.user;
 
 import lombok.Builder;
 import lombok.Data;

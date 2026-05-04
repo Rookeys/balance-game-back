@@ -16,6 +16,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -91,6 +92,7 @@ public class GameResultRepositoryImpl implements GameResultRepository {
     }
 
     @Override
+    @CacheEvict(value = "game-total-plays", key = "#gameResults.gameResources().games.id")
     public void save(GameResults gameResults) {
         gameResultJpaRepository.save(GameResultsEntity.from(gameResults));
     }

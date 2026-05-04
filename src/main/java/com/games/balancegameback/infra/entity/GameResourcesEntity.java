@@ -9,7 +9,9 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "game_resources")
+@Table(name = "game_resources", indexes = {
+    @Index(name = "idx_game_resources_games_id", columnList = "games_id")
+})
 public class GameResourcesEntity extends BaseTimeEntity {
 
     @Id

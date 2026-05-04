@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class CommonGameRepositoryImpl implements CommonGameRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
+    private final GamePlayCountCacheRepository gamePlayCountCacheRepository;
 
     // =========================== 배치 조회 메서드들 ===========================
 
@@ -96,35 +97,27 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
         }
 
         Map<Long, GamePlayCounts> playCountsMap = new HashMap<>();
-
-        // 총 플레이 횟수
-        Map<Long, Integer> totalCountMap = getTotalPlayCounts(gameIds);
-
-        // 주간 플레이 횟수 : WEEK, MONTH 일 때만 조회
-        Map<Long, Integer> weekCountMap = new HashMap<>();
-        if (sortType == GameSortType.WEEK || sortType == GameSortType.MONTH) {
-            weekCountMap = getWeekPlayCounts(gameIds);
-        }
-
-        // 월간 플레이 횟수 : MONTH 일 때만 조회
-        Map<Long, Integer> monthCountMap = new HashMap<>();
-        if (sortType == GameSortType.MONTH) {
-            monthCountMap = getMonthPlayCounts(gameIds);
-        }
-
         for (Long gameId : gameIds) {
-            int totalCount = totalCountMap.getOrDefault(gameId, 0);
-            int weekCount = weekCountMap.getOrDefault(gameId, 0);
-            int monthCount = monthCountMap.getOrDefault(gameId, 0);
+            int totalCount = gamePlayCountCacheRepository.getGameTotalPlayCount(gameId);
+            int weekCount = (sortType == GameSortType.WEEK || sortType == GameSortType.MONTH)
+                    ? gamePlayCountCacheRepository.getGameWeekPlayCount(gameId) : 0;
+            int monthCount = (sortType == GameSortType.MONTH)
+                    ? gamePlayCountCacheRepository.getGameMonthPlayCount(gameId) : 0;
             playCountsMap.put(gameId, new GamePlayCounts(totalCount, weekCount, monthCount));
         }
-
         return playCountsMap;
     }
 
     @Override
     public Map<Long, Integer> getTotalPlayCountsBatch(List<Long> gameIds) {
-        return getTotalPlayCounts(gameIds);
+        if (gameIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, Integer> result = new HashMap<>();
+        for (Long gameId : gameIds) {
+            result.put(gameId, gamePlayCountCacheRepository.getGameTotalPlayCount(gameId));
+        }
+        return result;
     }
 
     @Override
@@ -273,72 +266,6 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
     }
 
     // =========================== 헬퍼 메서드들 ===========================
-
-    private Map<Long, Integer> getTotalPlayCounts(List<Long> gameIds) {
-        List<Tuple> totalResults = jpaQueryFactory
-                .select(GameQClasses.games.id, GameQClasses.results.count())
-                .from(GameQClasses.games)
-                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
-                .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.eq(GameQClasses.resources))
-                .where(GameQClasses.games.id.in(gameIds)
-                        .and(GameQClasses.games.accessType.eq(AccessType.PUBLIC)))
-                .groupBy(GameQClasses.games.id)
-                .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
-                .fetch();
-
-        return totalResults.stream()
-                .filter(tuple -> tuple.get(GameQClasses.games.id) != null)
-                .collect(Collectors.toMap(
-                        tuple -> tuple.get(GameQClasses.games.id),
-                        tuple -> safeIntValue(tuple.get(1, Long.class))
-                ));
-    }
-
-    private Map<Long, Integer> getWeekPlayCounts(List<Long> gameIds) {
-        OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
-
-        List<Tuple> weekResults = jpaQueryFactory
-                .select(GameQClasses.games.id, GameQClasses.results.count())
-                .from(GameQClasses.games)
-                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
-                .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.eq(GameQClasses.resources)
-                        .and(GameQClasses.results.createdDate.after(oneWeekAgo)))
-                .where(GameQClasses.games.id.in(gameIds)
-                        .and(GameQClasses.games.accessType.eq(AccessType.PUBLIC)))
-                .groupBy(GameQClasses.games.id)
-                .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
-                .fetch();
-
-        return weekResults.stream()
-                .filter(tuple -> tuple.get(GameQClasses.games.id) != null)
-                .collect(Collectors.toMap(
-                        tuple -> tuple.get(GameQClasses.games.id),
-                        tuple -> safeIntValue(tuple.get(1, Long.class))
-                ));
-    }
-
-    private Map<Long, Integer> getMonthPlayCounts(List<Long> gameIds) {
-        OffsetDateTime oneMonthAgo = OffsetDateTime.now().minusMonths(1);
-
-        List<Tuple> monthResults = jpaQueryFactory
-                .select(GameQClasses.games.id, GameQClasses.results.count())
-                .from(GameQClasses.games)
-                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
-                .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.eq(GameQClasses.resources)
-                        .and(GameQClasses.results.createdDate.after(oneMonthAgo)))
-                .where(GameQClasses.games.id.in(gameIds)
-                        .and(GameQClasses.games.accessType.eq(AccessType.PUBLIC)))
-                .groupBy(GameQClasses.games.id)
-                .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
-                .fetch();
-
-        return monthResults.stream()
-                .filter(tuple -> tuple.get(GameQClasses.games.id) != null)
-                .collect(Collectors.toMap(
-                        tuple -> tuple.get(GameQClasses.games.id),
-                        tuple -> safeIntValue(tuple.get(1, Long.class))
-                ));
-    }
 
     private <T> int findCursorIndex(List<T> items, Long cursorId, Function<T, Long> cursorExtractor) {
         for (int i = 0; i < items.size(); i++) {

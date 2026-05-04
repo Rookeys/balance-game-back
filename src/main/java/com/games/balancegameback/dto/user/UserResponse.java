@@ -16,4 +16,7 @@ public class UserResponse {
 
     @Schema(description = "프로필 사진 URL")
     private String fileUrl;
+
+    @Schema(description = "팔로우 여부")
+    private Boolean isFollowing;
 }

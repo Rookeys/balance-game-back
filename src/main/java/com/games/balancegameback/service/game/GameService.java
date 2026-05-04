@@ -87,6 +87,12 @@ public class GameService {
         return gameRoomService.getMyGameList(pageable, cursorId, searchRequest, request);
     }
 
+    // 특정 사용자가 만든 게임들 리스트 반환
+    public CustomPageImpl<GameListResponse> getUserGameListByEmail(String email, Pageable pageable, Long cursorId,
+                                                                   GameSearchRequest searchRequest) {
+        return gameRoomService.getUserGameListByEmail(email, pageable, cursorId, searchRequest);
+    }
+
     // 게임방 설정 업데이트
     public void updateGameStatus(Long gameId, GameRequest gameRequest, HttpServletRequest request) {
         gameRoomService.updateGameStatus(gameId, gameRequest, request);

@@ -1,6 +1,7 @@
 package com.games.balancegameback.web.media;
 
 import com.games.balancegameback.dto.media.PresignedUrlRequest;
+import com.games.balancegameback.dto.media.PresignedUrlResponse;
 import com.games.balancegameback.dto.media.PresignedUrlsRequest;
 import com.games.balancegameback.service.media.MediaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ public class PresignedUrlController {
             @ApiResponse(responseCode = "400", description = "prefix 값이 확인되지 않음.")
     })
     @PostMapping(value = "/single")
-    public String getPreSignedUrlForUser(@RequestBody PresignedUrlRequest request) {
+    public PresignedUrlResponse getPreSignedUrlForUser(@RequestBody PresignedUrlRequest request) {
         return mediaService.getPreSignedUrl(request);
     }
 
@@ -40,7 +41,7 @@ public class PresignedUrlController {
             @ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @PostMapping(value = "/multiple")
-    public List<String> getPreSignedUrl(@RequestBody PresignedUrlsRequest urlRequest) {
+    public List<PresignedUrlResponse> getPreSignedUrl(@RequestBody PresignedUrlsRequest urlRequest) {
         return mediaService.getPreSignedUrls(urlRequest);
     }
 }

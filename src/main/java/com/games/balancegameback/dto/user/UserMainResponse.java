@@ -15,6 +15,12 @@ public class UserMainResponse {
     @Schema(description = "제작자 닉네임")
     private String nickname;
 
+    @Schema(description = "제작자 이메일")
+    private String email;
+
     @Schema(description = "프로필 사진 URL")
     private String profileImageUrl;
+
+    @Schema(description = "팔로우 여부")
+    private Boolean isFollowing;
 }

@@ -5,7 +5,7 @@ import com.games.balancegameback.core.exception.impl.CustomJwtException;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.domain.user.enums.UserRole;
 import com.games.balancegameback.infra.repository.redis.RedisRepository;
-import com.games.balancegameback.service.user.UserRepository;
+import com.games.balancegameback.service.user.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
 

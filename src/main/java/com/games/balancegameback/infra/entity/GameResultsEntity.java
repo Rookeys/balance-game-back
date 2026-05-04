@@ -6,7 +6,9 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "game_results")
+@Table(name = "game_results", indexes = {
+    @Index(name = "idx_game_results_resource_date", columnList = "game_resources_id, created_date")
+})
 public class GameResultsEntity extends BaseTimeEntity {
 
     @Id

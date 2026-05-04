@@ -97,6 +97,15 @@ public class GameRoomService {
         return gameRepository.findGamesWithResources(cursorId, users, pageable, searchRequest);
     }
 
+    /**
+     * 이메일로 특정 사용자가 만든 게임 목록 조회
+     */
+    public CustomPageImpl<GameListResponse> getUserGameListByEmail(String email, Pageable pageable, Long cursorId,
+                                                                   GameSearchRequest searchRequest) {
+        Users users = userUtils.findUserByEmail(email);
+        return gameRepository.findGamesWithResources(cursorId, users, pageable, searchRequest);
+    }
+
     @Transactional
     public void updateGameStatus(Long gameId, GameRequest gameRequest, HttpServletRequest request) {
         Users users = userUtils.findUserByToken(request);
