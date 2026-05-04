@@ -8,7 +8,7 @@ import lombok.Getter;
 @Entity
 @Getter
 @Table(name = "game_categories", indexes = {
-    @Index(name = "idx_game_categories_games_id", columnList = "games_id")
+    @Index(name = "idx_game_categories_games_category", columnList = "games_id, category")
 })
 public class GameCategoryEntity {
 
