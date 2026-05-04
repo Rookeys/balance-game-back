@@ -18,6 +18,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -101,6 +102,7 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
     
     @Override
+    @Cacheable(value = "game-category-counts", key = "#title != null && !#title.isEmpty() ? #title : 'all'")
     public GameCategoryNumsResponse getCategoryCounts(String title) {
         try {
             log.info("Getting category counts - title: {}", title);
