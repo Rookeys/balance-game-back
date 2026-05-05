@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "games", indexes = {
-    @Index(name = "idx_games_access_type", columnList = "access_type")
+    @Index(name = "idx_games_access_type_id", columnList = "access_type, id")
 })
 public class GamesEntity extends BaseTimeEntity {
 
