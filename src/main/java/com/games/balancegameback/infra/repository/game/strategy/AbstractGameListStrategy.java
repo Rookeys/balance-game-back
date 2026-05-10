@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.repository.game.strategy;
 
+import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.infra.repository.game.common.GameQClasses;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -34,27 +35,30 @@ public abstract class AbstractGameListStrategy implements GameListStrategy {
     }
     
     /**
-     * 카테고리 필터 조건 생성
+     * 카테고리 필터 조건 생성 — JOIN 없이 IN 서브쿼리로 처리
      */
-    protected BooleanExpression buildCategoryCondition(com.games.balancegameback.domain.game.enums.Category category) {
-        if (category == null) {
-            return null;
-        }
-        return GameQClasses.category.category.eq(category);
+    protected BooleanExpression buildCategoryCondition(Category category) {
+        if (category == null) return null;
+        return GameQClasses.games.id.in(
+                JPAExpressions.select(GameQClasses.category.games.id)
+                        .from(GameQClasses.category)
+                        .where(GameQClasses.category.category.eq(category))
+        );
     }
-    
+
     /**
-     * 제목 검색 조건 생성
-     * 게임 제목, 리소스 제목, 작성자 닉네임에서 검색
+     * 제목 검색 조건 생성 — resources.title 검색도 IN 서브쿼리로 처리해 JOIN 불필요
      */
     protected BooleanExpression buildTitleSearchCondition(String title) {
-        if (!StringUtils.hasText(title)) {
-            return null;
-        }
-        
+        if (!StringUtils.hasText(title)) return null;
+
         String searchTitle = title.trim();
         return GameQClasses.games.title.containsIgnoreCase(searchTitle)
-                .or(GameQClasses.resources.title.containsIgnoreCase(searchTitle))
+                .or(GameQClasses.games.id.in(
+                        JPAExpressions.select(GameQClasses.resources.games.id)
+                                .from(GameQClasses.resources)
+                                .where(GameQClasses.resources.title.containsIgnoreCase(searchTitle))
+                ))
                 .or(GameQClasses.users.nickname.containsIgnoreCase(searchTitle)
                         .and(GameQClasses.games.isNamePrivate.eq(false)));
     }

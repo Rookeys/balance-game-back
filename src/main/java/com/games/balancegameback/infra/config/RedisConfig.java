@@ -1,14 +1,15 @@
 /*
  * File Name   : RedisConfig.java
- * Description : Redis 설정 (RefreshToken 저장용 + CacheManager)
+ * Description : Redis 설정 (RefreshToken 저장용 + CacheManager + Hash 전용 RedisTemplate)
  *
  * Created By  : cheomuk
  * Created At  : 2026-05-04
- * Updated At  : 2026-05-04
+ * Updated At  : 2026-05-10
  *
  * Change Log
  * -------------------------------------------------
  * 2026-05-04  RedisCacheManager 빈 추가
+ * 2026-05-10  Hash 전용 RedisTemplate 빈 추가, 게임 플레이 카운트 캐시 설정 제거
  */
 package com.games.balancegameback.infra.config;
 
@@ -58,6 +59,16 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    @Bean("hashRedisTemplate")
+    public RedisTemplate<String, Object> hashRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return template;
+    }
+
     @Bean
     @Primary
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -67,10 +78,7 @@ public class RedisConfig {
                 .disableCachingNullValues();
 
         Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
-                "game-category-counts", defaultConfig.entryTtl(Duration.ofMinutes(5)),
-                "game-total-plays",     defaultConfig.entryTtl(Duration.ofMinutes(10)),
-                "game-week-plays",      defaultConfig.entryTtl(Duration.ofMinutes(5)),
-                "game-month-plays",     defaultConfig.entryTtl(Duration.ofMinutes(5))
+                "game-category-counts", defaultConfig.entryTtl(Duration.ofMinutes(5))
         );
 
         return RedisCacheManager.builder(connectionFactory)

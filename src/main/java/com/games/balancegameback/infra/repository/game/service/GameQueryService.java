@@ -12,6 +12,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,55 @@ public class GameQueryService {
      * @param validateResourceCount 리소스 개수 검증 여부
      * @return 게임 기본 정보 Tuple 리스트
      */
+    /**
+     * totalElements 계산도 이 결과를 재사용하므로 별도 COUNT 쿼리 불필요
+     */
+    public List<Long> fetchAllGameIds(BooleanBuilder conditions, boolean validateResourceCount) {
+        JPAQuery<Long> query = jpaQueryFactory
+                .select(GameQClasses.games.id)
+                .from(GameQClasses.games)
+                .leftJoin(GameQClasses.games.users, GameQClasses.users)  // 닉네임 검색 조건 대응
+                .where(conditions);
+
+        if (validateResourceCount) {
+            query.where(GameQClasses.games.id.in(
+                    JPAExpressions.select(GameQClasses.resources.games.id)
+                            .from(GameQClasses.resources)
+                            .groupBy(GameQClasses.resources.games.id)
+                            .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
+            ));
+        }
+        return query.fetch();
+    }
+
+    /**
+     * 페이징된 소수 ID에 대해서만 실행
+     */
+    public List<Tuple> fetchGameBasicDataByIds(List<Long> gameIds, Users user) {
+        if (gameIds.isEmpty()) return Collections.emptyList();
+        Expression<Boolean> existsMineExpr = buildExistsMineExpression(user);
+
+        return jpaQueryFactory
+                .select(
+                    GameQClasses.games.id,
+                    GameQClasses.games.title,
+                    GameQClasses.games.description,
+                    GameQClasses.games.users.nickname,
+                    GameQClasses.images.fileUrl.max(),
+                    GameQClasses.games.isNamePrivate,
+                    GameQClasses.games.createdDate,
+                    GameQClasses.games.isBlind,
+                    existsMineExpr
+                )
+                .from(GameQClasses.games)
+                .leftJoin(GameQClasses.games.users, GameQClasses.users)
+                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid)
+                        .and(GameQClasses.images.games.isNull()))
+                .where(GameQClasses.games.id.in(gameIds))
+                .groupBy(GameQClasses.games.id)
+                .fetch();
+    }
+
     public List<Tuple> fetchGameBasicData(BooleanBuilder conditions, Users user, boolean validateResourceCount) {
         Expression<Boolean> existsMineExpr = buildExistsMineExpression(user);
         
@@ -57,15 +107,19 @@ public class GameQueryService {
                 )
                 .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
-                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid))
-                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
-                .leftJoin(GameQClasses.games.categories, GameQClasses.category)
+                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid)
+                        .and(GameQClasses.images.games.isNull()))
                 .where(conditions)
                 .groupBy(GameQClasses.games.id);
-        
-        // 전략에 따라 리소스 개수 검증 추가
+
+        // 리소스 수 검증: JOIN+HAVING 대신 IN 서브쿼리로 처리
         if (validateResourceCount) {
-            query.having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT));
+            query.where(GameQClasses.games.id.in(
+                    JPAExpressions.select(GameQClasses.resources.games.id)
+                            .from(GameQClasses.resources)
+                            .groupBy(GameQClasses.resources.games.id)
+                            .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
+            ));
         }
         
         List<Tuple> result = query.fetch();
@@ -104,7 +158,8 @@ public class GameQueryService {
                 )
                 .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
-                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid))
+                .leftJoin(GameQClasses.images).on(GameQClasses.images.users.uid.eq(GameQClasses.users.uid)
+                        .and(GameQClasses.images.games.isNull()))
                 .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
                 .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.eq(GameQClasses.resources))
                 .where(GameQClasses.games.id.eq(gameId))
@@ -128,16 +183,31 @@ public class GameQueryService {
         if (tuples.isEmpty()) {
             return Collections.emptyList();
         }
-        
+
         List<Long> gameIds = commonGameRepository.extractGameIds(tuples);
-        GameBatchData batchData = commonGameRepository.getAllBatchData(gameIds, sortType);
-        
+
+        long afterExtractMs = System.currentTimeMillis();
+        var categoriesMap = commonGameRepository.getCategoriesBatch(gameIds);
+        long afterCategoriesMs = System.currentTimeMillis();
+        log.info("[PERF]   getCategoriesBatch: {}ms, ids={}", afterCategoriesMs - afterExtractMs, gameIds.size());
+
+        var selectionsMap = commonGameRepository.getTopResourcesBatch(gameIds);
+        long afterSelectionsMs = System.currentTimeMillis();
+        log.info("[PERF]   getTopResourcesBatch: {}ms", afterSelectionsMs - afterCategoriesMs);
+
+        var playCountsMap = commonGameRepository.getPlayCountsBatch(gameIds, sortType);
+        long afterPlayCountsMs = System.currentTimeMillis();
+        log.info("[PERF]   getPlayCountsBatch: {}ms", afterPlayCountsMs - afterSelectionsMs);
+
+        GameBatchData batchData = GameBatchData.of(categoriesMap, selectionsMap, playCountsMap);
+
         List<GameListResponse> responses = tuples.stream()
                 .map(tuple -> commonGameRepository.buildGameListResponse(tuple, user, batchData))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        
-        log.debug("Built {} GameListResponses from {} tuples", responses.size(), tuples.size());
+        long afterBuildMs = System.currentTimeMillis();
+        log.info("[PERF]   buildResponses (map+filter): {}ms", afterBuildMs - afterPlayCountsMs);
+
         return responses;
     }
     
@@ -147,7 +217,6 @@ public class GameQueryService {
      * @param gameData 게임 기본 데이터
      * @param categories 카테고리 목록
      * @param selections 상위 선택지
-     * @param user 현재 사용자
      * @return GameDetailResponse
      */
     public GameDetailResponse buildGameDetailResponse(Tuple gameData, List<Category> categories,
@@ -229,22 +298,34 @@ public class GameQueryService {
      * @return 총 개수
      */
     public Long calculateTotalElements(BooleanBuilder conditions, boolean validateResourceCount) {
-        JPAQuery<?> query = jpaQueryFactory
-                .selectFrom(GameQClasses.games)
-                .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.games.eq(GameQClasses.games))
-                .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
-                .leftJoin(GameQClasses.games.categories, GameQClasses.category)
+        if (!validateResourceCount) {
+            Long total = jpaQueryFactory
+                    .select(GameQClasses.games.id.countDistinct())
+                    .from(GameQClasses.games)
+                    .leftJoin(GameQClasses.games.users, GameQClasses.users)
+                    .where(conditions)
+                    .fetchOne();
+            long result = Optional.ofNullable(total).orElse(0L);
+            log.debug("Calculated total elements: {} (validateResourceCount: false)", result);
+            return result;
+        }
+
+        // IN 서브쿼리로 리소스 수 검증 — resources JOIN + HAVING 크로스 프로덕트 제거
+        Long total = jpaQueryFactory
+                .select(GameQClasses.games.id.countDistinct())
+                .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
                 .where(conditions)
-                .groupBy(GameQClasses.games.id);
-        
-        if (validateResourceCount) {
-            query.having(GameQClasses.games.gameResources.size().goe(GameConstants.MIN_RESOURCE_COUNT));
-        }
-        
-        long total = query.fetch().size();
-        log.debug("Calculated total elements: {} (validateResourceCount: {})", total, validateResourceCount);
-        return total;
+                .where(GameQClasses.games.id.in(
+                        JPAExpressions.select(GameQClasses.resources.games.id)
+                                .from(GameQClasses.resources)
+                                .groupBy(GameQClasses.resources.games.id)
+                                .having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT))
+                ))
+                .fetchOne();
+        long result = Optional.ofNullable(total).orElse(0L);
+        log.debug("Calculated total elements: {} (validateResourceCount: true)", result);
+        return result;
     }
     
     /**

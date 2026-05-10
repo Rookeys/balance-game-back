@@ -60,18 +60,26 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
     public Map<Long, List<GameListSelectionResponse>> getTopResourcesBatch(List<Long> gameIds) {
         if (gameIds.isEmpty()) return Collections.emptyMap();
 
+        // winningLists.size() 상관 서브쿼리 대신 LEFT JOIN + COUNT로 교체
         List<Tuple> topResources = jpaQueryFactory
                 .select(GameQClasses.resources.games.id, GameQClasses.resources.id, GameQClasses.resources.title,
                         GameQClasses.images.fileUrl.coalesce(GameQClasses.links.urls),
                         GameQClasses.images.mediaType.coalesce(GameQClasses.links.mediaType),
                         GameQClasses.links.startSec.coalesce(GameConstants.DEFAULT_SEC),
-                        GameQClasses.links.endSec.coalesce(GameConstants.DEFAULT_SEC))
+                        GameQClasses.links.endSec.coalesce(GameConstants.DEFAULT_SEC),
+                        GameQClasses.results.count())
                 .from(GameQClasses.resources)
                 .leftJoin(GameQClasses.resources.images, GameQClasses.images)
                 .leftJoin(GameQClasses.resources.links, GameQClasses.links)
+                .leftJoin(GameQClasses.resources.winningLists, GameQClasses.results)
                 .where(GameQClasses.resources.games.id.in(gameIds))
+                .groupBy(GameQClasses.resources.games.id, GameQClasses.resources.id,
+                        GameQClasses.resources.title,
+                        GameQClasses.images.fileUrl, GameQClasses.links.urls,
+                        GameQClasses.images.mediaType, GameQClasses.links.mediaType,
+                        GameQClasses.links.startSec, GameQClasses.links.endSec)
                 .orderBy(GameQClasses.resources.games.id.asc(),
-                        GameQClasses.resources.winningLists.size().desc(),
+                        GameQClasses.results.count().desc(),
                         GameQClasses.resources.id.desc())
                 .fetch();
 
@@ -95,17 +103,7 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
         if (gameIds.isEmpty()) {
             return Collections.emptyMap();
         }
-
-        Map<Long, GamePlayCounts> playCountsMap = new HashMap<>();
-        for (Long gameId : gameIds) {
-            int totalCount = gamePlayCountCacheRepository.getGameTotalPlayCount(gameId);
-            int weekCount = (sortType == GameSortType.WEEK || sortType == GameSortType.MONTH)
-                    ? gamePlayCountCacheRepository.getGameWeekPlayCount(gameId) : 0;
-            int monthCount = (sortType == GameSortType.MONTH)
-                    ? gamePlayCountCacheRepository.getGameMonthPlayCount(gameId) : 0;
-            playCountsMap.put(gameId, new GamePlayCounts(totalCount, weekCount, monthCount));
-        }
-        return playCountsMap;
+        return gamePlayCountCacheRepository.getBulkPlayCounts(gameIds, sortType);
     }
 
     @Override
@@ -113,11 +111,9 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
         if (gameIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<Long, Integer> result = new HashMap<>();
-        for (Long gameId : gameIds) {
-            result.put(gameId, gamePlayCountCacheRepository.getGameTotalPlayCount(gameId));
-        }
-        return result;
+        return gamePlayCountCacheRepository.getBulkPlayCounts(gameIds, GameSortType.RECENT)
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().totalPlays()));
     }
 
     @Override

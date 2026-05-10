@@ -3,11 +3,14 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameListType;
+import com.games.balancegameback.domain.game.enums.GameSortType;
+import org.springframework.transaction.annotation.Transactional;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.repository.game.common.CommonGameRepository;
 import com.games.balancegameback.infra.repository.game.common.GameBatchData;
 import com.games.balancegameback.infra.repository.game.common.GameConstants;
+import com.games.balancegameback.infra.repository.game.common.GamePlayCounts;
 import com.games.balancegameback.infra.repository.game.common.GameQClasses;
 import com.games.balancegameback.infra.repository.game.service.GameQueryService;
 import com.games.balancegameback.infra.repository.game.strategy.GameListStrategy;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 게임 리스트 Repository 구현체
@@ -39,66 +43,106 @@ public class GameListRepositoryImpl implements GameListRepository {
     private final JPAQueryFactory jpaQueryFactory;
     
     @Override
+    @Transactional(readOnly = true)
     public CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable,
                                                         GameSearchRequest searchRequest, Users users) {
         try {
-            log.info("Getting game list - cursorId: {}, pageSize: {}, request: {}", 
-                     cursorId, pageable.getPageSize(), searchRequest);
-            
-            // 전략 선택
-            GameListStrategy strategy = strategyFactory.getStrategy(GameListType.PUBLIC);
-            
-            // 필터 조건 생성
-            BooleanBuilder conditions = strategy.buildFilterConditions(searchRequest, users);
+            long t0 = System.currentTimeMillis();
+            log.info("[PERF] getGameList start - cursorId: {}, pageSize: {}", cursorId, pageable.getPageSize());
 
-            List<Tuple> baseTuples = gameQueryService.fetchGameBasicData(
-                conditions,
-                users,
-                strategy.requiresResourceCountValidation()
-            );
-            
-            if (baseTuples.isEmpty()) {
-                log.info("No games found for the given criteria");
+            GameListStrategy strategy = strategyFactory.getStrategy(GameListType.PUBLIC);
+            BooleanBuilder conditions = strategy.buildFilterConditions(searchRequest, users);
+            GameSortType sortType = searchRequest.getSortType();
+
+            // 전체 게임 ID 경량 조회
+            List<Long> allGameIds = gameQueryService.fetchAllGameIds(conditions, strategy.requiresResourceCountValidation());
+            long t1 = System.currentTimeMillis();
+            log.info("[PERF] fetchAllGameIds: {}ms, count={}", t1 - t0, allGameIds.size());
+
+            if (allGameIds.isEmpty()) {
                 return new CustomPageImpl<>(Collections.emptyList(), pageable, 0L, cursorId, false);
             }
-            
-            // 응답 생성
-            List<GameListResponse> responses = gameQueryService.buildGameListResponses(
-                baseTuples,
-                users,
-                searchRequest.getSortType()
-            );
-            
-            // 정렬
-            List<GameListResponse> sortedResponses = gameQueryService.applySorting(
-                responses,
-                searchRequest.getSortType()
-            );
-            
-            // 페이징
-            List<GameListResponse> pagedResponses = commonGameRepository.applyCursorPagingWithCustomCursor(
-                sortedResponses,
-                cursorId,
-                GameListResponse::getRoomId,
-                pageable
-            );
-            
-            boolean hasNext = pagedResponses.size() > pageable.getPageSize();
-            if (hasNext) {
-                pagedResponses.removeLast();
-            }
-            
-            // 총 개수 계산
-            Long totalElements = gameQueryService.calculateTotalElements(
-                conditions,
-                strategy.requiresResourceCountValidation()
-            );
-            
-            return new CustomPageImpl<>(pagedResponses, pageable, totalElements, cursorId, hasNext);
+
+            // 전체 플레이 카운트 조회
+            Map<Long, GamePlayCounts> allPlayCounts = commonGameRepository.getPlayCountsBatch(allGameIds, sortType);
+            long t2 = System.currentTimeMillis();
+            log.info("[PERF] getPlayCountsBatch (all, sort): {}ms", t2 - t1);
+
+            // Phase 2: 메모리 정렬 후 커서 페이징 → 화면에 보일 ID만 추출
+            List<Long> sortedIds = sortIds(allGameIds, sortType, allPlayCounts);
+            List<Long> pagedIds = applyIdCursorPaging(sortedIds, cursorId, pageable);
+            boolean hasNext = pagedIds.size() > pageable.getPageSize();
+            if (hasNext) pagedIds = new ArrayList<>(pagedIds.subList(0, pageable.getPageSize()));
+
+            // 페이징된 ID에 대해서만 상세 데이터 조회
+            List<Tuple> tuples = gameQueryService.fetchGameBasicDataByIds(pagedIds, users);
+            long t3 = System.currentTimeMillis();
+            log.info("[PERF] fetchGameBasicDataByIds: {}ms, count={}", t3 - t2, tuples.size());
+
+            var categoriesMap = commonGameRepository.getCategoriesBatch(pagedIds);
+            long t4 = System.currentTimeMillis();
+            log.info("[PERF] getCategoriesBatch: {}ms", t4 - t3);
+
+            var selectionsMap = commonGameRepository.getTopResourcesBatch(pagedIds);
+            long t5 = System.currentTimeMillis();
+            log.info("[PERF] getTopResourcesBatch: {}ms", t5 - t4);
+
+            // 정렬용으로 이미 가져온 플레이 카운트 재사용
+            Map<Long, GamePlayCounts> pagedPlayCounts = pagedIds.stream()
+                    .collect(Collectors.toMap(id -> id,
+                            id -> allPlayCounts.getOrDefault(id, new GamePlayCounts(0, 0, 0))));
+            GameBatchData batchData = GameBatchData.of(categoriesMap, selectionsMap, pagedPlayCounts);
+
+            // 응답 생성 후 pagedIds 순서 유지
+            Map<Long, GameListResponse> responseMap = tuples.stream()
+                    .map(t -> commonGameRepository.buildGameListResponse(t, users, batchData))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(GameListResponse::getRoomId, r -> r));
+
+            List<GameListResponse> orderedResponses = pagedIds.stream()
+                    .map(responseMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            long t6 = System.currentTimeMillis();
+            log.info("[PERF] build responses: {}ms", t6 - t5);
+            log.info("[PERF] getGameList TOTAL: {}ms", t6 - t0);
+
+            // totalElements = allGameIds.size() — 별도 COUNT 쿼리 불필요
+            return new CustomPageImpl<>(orderedResponses, pageable, (long) allGameIds.size(), cursorId, hasNext);
         } catch (Exception e) {
             log.error("Error in getGameList", e);
             return new CustomPageImpl<>(Collections.emptyList(), pageable, 0L, cursorId, false);
         }
+    }
+
+    private static final GamePlayCounts EMPTY_COUNTS = new GamePlayCounts(0, 0, 0);
+
+    private List<Long> sortIds(List<Long> ids, GameSortType sortType, Map<Long, GamePlayCounts> counts) {
+        Comparator<Long> comparator = switch (sortType) {
+            case RECENT    -> Comparator.reverseOrder();
+            case OLD       -> Comparator.naturalOrder();
+            case WEEK      -> Comparator.comparingInt((Long id) -> counts.getOrDefault(id, EMPTY_COUNTS).weekPlays())
+                                        .reversed().thenComparing(Comparator.reverseOrder());
+            case MONTH     -> Comparator.comparingInt((Long id) -> counts.getOrDefault(id, EMPTY_COUNTS).monthPlays())
+                                        .reversed().thenComparing(Comparator.reverseOrder());
+            case PLAY_DESC -> Comparator.comparingInt((Long id) -> counts.getOrDefault(id, EMPTY_COUNTS).totalPlays())
+                                        .reversed().thenComparing(Comparator.reverseOrder());
+        };
+        return ids.stream().sorted(comparator).collect(Collectors.toList());
+    }
+
+    private List<Long> applyIdCursorPaging(List<Long> sortedIds, Long cursorId, Pageable pageable) {
+        int start = 0;
+        if (cursorId != null) {
+            int idx = sortedIds.indexOf(cursorId);
+            if (idx == -1) return Collections.emptyList();
+            start = idx + 1;
+        }
+        return sortedIds.stream()
+                .skip(start)
+                .limit(pageable.getPageSize() + 1L)
+                .collect(Collectors.toList());
     }
     
     @Override

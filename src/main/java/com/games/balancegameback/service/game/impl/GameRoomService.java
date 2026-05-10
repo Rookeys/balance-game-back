@@ -1,8 +1,21 @@
+/*
+ * File Name   : GameRoomService.java
+ * Description : 게임방 생성/수정/삭제 서비스
+ *
+ * Created By  : cheomuk
+ * Created At  : 2026-05-04
+ * Updated At  : 2026-05-10
+ *
+ * Change Log
+ * -------------------------------------------------
+ * 2026-05-10  게임 삭제 시 Redis Hash 키 정리 추가
+ */
 package com.games.balancegameback.service.game.impl;
 
 import com.games.balancegameback.core.exception.ErrorCode;
 import com.games.balancegameback.core.exception.impl.BadRequestException;
 import com.games.balancegameback.core.exception.impl.UnAuthorizedException;
+import com.games.balancegameback.infra.repository.game.scheduler.GamePlayCountScheduler;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.GameInviteCode;
 import com.games.balancegameback.domain.game.Games;
@@ -18,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +57,7 @@ public class GameRoomService {
     private final UserMediaCleanupService mediaCleanupService;
     private final UserUtils userUtils;
     private final RestTemplate restTemplate;
+    private final RedisTemplate<String, Object> hashRedisTemplate;
 
     @Value("${front.secret}")
     private String secret;
@@ -168,6 +183,7 @@ public class GameRoomService {
         gameResourcesRepository.deleteByGamesId(gameId);
         gameResultCommentsRepository.deleteByGamesId(gameId);
 
+        hashRedisTemplate.delete(GamePlayCountScheduler.KEY_PREFIX + gameId);
         gameJpaRepository.deleteById(gameId);
     }
 }
