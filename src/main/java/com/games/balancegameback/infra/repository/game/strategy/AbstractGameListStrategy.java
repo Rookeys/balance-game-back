@@ -43,18 +43,13 @@ public abstract class AbstractGameListStrategy implements GameListStrategy {
         return GameQClasses.category.category.eq(category);
     }
     
-    /**
-     * 제목 검색 조건 생성
-     * 게임 제목, 리소스 제목, 작성자 닉네임에서 검색
-     */
     protected BooleanExpression buildTitleSearchCondition(String title) {
         if (!StringUtils.hasText(title)) {
             return null;
         }
-        
+
         String searchTitle = title.trim();
         return GameQClasses.games.title.containsIgnoreCase(searchTitle)
-                .or(GameQClasses.resources.title.containsIgnoreCase(searchTitle))
                 .or(GameQClasses.users.nickname.containsIgnoreCase(searchTitle)
                         .and(GameQClasses.games.isNamePrivate.eq(false)));
     }
