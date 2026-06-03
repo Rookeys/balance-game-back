@@ -16,6 +16,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -34,26 +35,31 @@ public class GameQueryService {
     
     /**
      * 게임 기본 데이터 조회
-     * 
-     * @param conditions 필터 조건
-     * @param user 현재 사용자 (existsMine 판단용)
+     *
+     * @param conditions            필터 조건
+     * @param user                  현재 사용자 (existsMine 판단용)
      * @param validateResourceCount 리소스 개수 검증 여부
+     * @param sortType              정렬 타입 (RECENT/OLD 는 SQL LIMIT 적용)
+     * @param cursorId              커서 ID (null 이면 첫 페이지)
+     * @param pageable              페이지 정보 (pageSize 추출용)
      * @return 게임 기본 정보 Tuple 리스트
      */
-    public List<Tuple> fetchGameBasicData(BooleanBuilder conditions, Users user, boolean validateResourceCount) {
+    public List<Tuple> fetchGameBasicData(BooleanBuilder conditions, Users user,
+                                          boolean validateResourceCount,
+                                          GameSortType sortType, Long cursorId, Pageable pageable) {
         Expression<Boolean> existsMineExpr = buildExistsMineExpression(user);
-        
+
         JPAQuery<Tuple> query = jpaQueryFactory
                 .select(
-                    GameQClasses.games.id,                      // 0
-                    GameQClasses.games.title,                   // 1
-                    GameQClasses.games.description,             // 2
-                    GameQClasses.games.users.nickname,          // 3
-                    GameQClasses.images.fileUrl.max(),          // 4
-                    GameQClasses.games.isNamePrivate,           // 5
-                    GameQClasses.games.createdDate,             // 6
-                    GameQClasses.games.isBlind,                 // 7
-                    existsMineExpr                              // 8
+                    GameQClasses.games.id,             // 0
+                    GameQClasses.games.title,          // 1
+                    GameQClasses.games.description,    // 2
+                    GameQClasses.games.users.nickname, // 3
+                    GameQClasses.images.fileUrl.max(), // 4
+                    GameQClasses.games.isNamePrivate,  // 5
+                    GameQClasses.games.createdDate,    // 6
+                    GameQClasses.games.isBlind,        // 7
+                    existsMineExpr                     // 8
                 )
                 .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
@@ -62,14 +68,29 @@ public class GameQueryService {
                 .leftJoin(GameQClasses.games.categories, GameQClasses.category)
                 .where(conditions)
                 .groupBy(GameQClasses.games.id);
-        
-        // 전략에 따라 리소스 개수 검증 추가
+
         if (validateResourceCount) {
             query.having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT));
         }
-        
+
+        if (sortType == GameSortType.RECENT) {
+            if (cursorId != null) {
+                query.where(GameQClasses.games.id.lt(cursorId));
+            }
+            query.orderBy(GameQClasses.games.id.desc())
+                 .limit(pageable.getPageSize() + 1L);
+        } else if (sortType == GameSortType.OLD) {
+            if (cursorId != null) {
+                query.where(GameQClasses.games.id.gt(cursorId));
+            }
+            query.orderBy(GameQClasses.games.id.asc())
+                 .limit(pageable.getPageSize() + 1L);
+        }
+        // WEEK / MONTH / PLAY_DESC: LIMIT 없이 전체 조회 유지
+
         List<Tuple> result = query.fetch();
-        log.debug("Fetched {} game basic data (validateResourceCount: {})", result.size(), validateResourceCount);
+        log.debug("Fetched {} game basic data (sortType: {}, cursorId: {}, validateResourceCount: {})",
+                  result.size(), sortType, cursorId, validateResourceCount);
         return result;
     }
     
@@ -147,7 +168,6 @@ public class GameQueryService {
      * @param gameData 게임 기본 데이터
      * @param categories 카테고리 목록
      * @param selections 상위 선택지
-     * @param user 현재 사용자
      * @return GameDetailResponse
      */
     public GameDetailResponse buildGameDetailResponse(Tuple gameData, List<Category> categories,

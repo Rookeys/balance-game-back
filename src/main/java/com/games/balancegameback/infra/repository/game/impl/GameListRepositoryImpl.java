@@ -3,6 +3,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameListType;
+import com.games.balancegameback.domain.game.enums.GameSortType;
 import com.games.balancegameback.domain.game.enums.SearchType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
@@ -51,42 +52,52 @@ public class GameListRepositoryImpl implements GameListRepository {
             
             // 필터 조건 생성
             BooleanBuilder conditions = strategy.buildFilterConditions(searchRequest, users);
+            GameSortType sortType = searchRequest.getSortType();
 
             List<Tuple> baseTuples = gameQueryService.fetchGameBasicData(
                 conditions,
                 users,
-                strategy.requiresResourceCountValidation()
+                strategy.requiresResourceCountValidation(),
+                sortType,
+                cursorId,
+                pageable
             );
-            
+
             if (baseTuples.isEmpty()) {
                 log.info("No games found for the given criteria");
                 return new CustomPageImpl<>(Collections.emptyList(), pageable, 0L, cursorId, false);
             }
-            
+
             // 응답 생성
             List<GameListResponse> responses = gameQueryService.buildGameListResponses(
                 baseTuples,
                 users,
-                searchRequest.getSortType()
+                sortType
             );
-            
-            // 정렬
-            List<GameListResponse> sortedResponses = gameQueryService.applySorting(
-                responses,
-                searchRequest.getSortType()
-            );
-            
-            // 페이징
-            List<GameListResponse> pagedResponses = commonGameRepository.applyCursorPagingWithCustomCursor(
-                sortedResponses,
-                cursorId,
-                GameListResponse::getRoomId,
-                pageable
-            );
-            
-            boolean hasNext = pagedResponses.size() > pageable.getPageSize();
-            if (hasNext) {
-                pagedResponses.removeLast();
+
+            boolean hasNext;
+            List<GameListResponse> pagedResponses;
+
+            if (sortType == GameSortType.RECENT || sortType == GameSortType.OLD) {
+                // SQL 에서 이미 pageSize+1 반환 — Java 페이징 불필요
+                hasNext = responses.size() > pageable.getPageSize();
+                pagedResponses = new java.util.ArrayList<>(responses);
+                if (hasNext) {
+                    pagedResponses.removeLast();
+                }
+            } else {
+                // WEEK / MONTH / PLAY_DESC: Java 정렬 후 커서 페이징
+                List<GameListResponse> sortedResponses = gameQueryService.applySorting(responses, sortType);
+                pagedResponses = commonGameRepository.applyCursorPagingWithCustomCursor(
+                    sortedResponses,
+                    cursorId,
+                    GameListResponse::getRoomId,
+                    pageable
+                );
+                hasNext = pagedResponses.size() > pageable.getPageSize();
+                if (hasNext) {
+                    pagedResponses.removeLast();
+                }
             }
             
             // 총 개수 계산

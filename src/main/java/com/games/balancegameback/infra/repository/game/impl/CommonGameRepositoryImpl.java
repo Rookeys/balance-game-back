@@ -61,18 +61,32 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
         if (gameIds.isEmpty()) return Collections.emptyMap();
 
         List<Tuple> topResources = jpaQueryFactory
-                .select(GameQClasses.resources.games.id, GameQClasses.resources.id, GameQClasses.resources.title,
+                .select(GameQClasses.resources.games.id,
+                        GameQClasses.resources.id,
+                        GameQClasses.resources.title,
                         GameQClasses.images.fileUrl.coalesce(GameQClasses.links.urls),
                         GameQClasses.images.mediaType.coalesce(GameQClasses.links.mediaType),
                         GameQClasses.links.startSec.coalesce(GameConstants.DEFAULT_SEC),
-                        GameQClasses.links.endSec.coalesce(GameConstants.DEFAULT_SEC))
+                        GameQClasses.links.endSec.coalesce(GameConstants.DEFAULT_SEC),
+                        GameQClasses.results.count())
                 .from(GameQClasses.resources)
                 .leftJoin(GameQClasses.resources.images, GameQClasses.images)
                 .leftJoin(GameQClasses.resources.links, GameQClasses.links)
+                .leftJoin(GameQClasses.results)
+                    .on(GameQClasses.results.gameResources.eq(GameQClasses.resources))
                 .where(GameQClasses.resources.games.id.in(gameIds))
+                .groupBy(GameQClasses.resources.games.id,
+                         GameQClasses.resources.id,
+                         GameQClasses.resources.title,
+                         GameQClasses.images.fileUrl,
+                         GameQClasses.links.urls,
+                         GameQClasses.images.mediaType,
+                         GameQClasses.links.mediaType,
+                         GameQClasses.links.startSec,
+                         GameQClasses.links.endSec)
                 .orderBy(GameQClasses.resources.games.id.asc(),
-                        GameQClasses.resources.winningLists.size().desc(),
-                        GameQClasses.resources.id.desc())
+                         GameQClasses.results.count().desc(),
+                         GameQClasses.resources.id.desc())
                 .fetch();
 
         return topResources.stream()
@@ -84,7 +98,9 @@ public class CommonGameRepositoryImpl implements CommonGameRepository {
                                 this::buildSelectionResponse,
                                 Collectors.collectingAndThen(
                                         Collectors.toList(),
-                                        list -> list.stream().limit(GameConstants.TOP_RESOURCE_LIMIT).collect(Collectors.toList())
+                                        list -> list.stream()
+                                                    .limit(GameConstants.TOP_RESOURCE_LIMIT)
+                                                    .collect(Collectors.toList())
                                 )
                         )
                 ));

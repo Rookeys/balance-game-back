@@ -8,11 +8,14 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "recent_plays",
-        indexes = {
-                @Index(name = "idx_recent_plays_user_time", columnList = "user_uid, created_date DESC"),
-                @Index(name = "idx_recent_plays_user_game", columnList = "user_uid, game_id, game_resources_id", unique = true)
-        })
+@Table(
+    name = "recent_plays",
+    indexes = {
+        @Index(name = "idx_recent_plays_user_time",   columnList = "user_uid, created_date DESC"),
+        @Index(name = "idx_recent_plays_user_game",   columnList = "user_uid, game_id, game_resources_id", unique = true),
+        @Index(name = "idx_recent_plays_user_cursor", columnList = "user_uid, id DESC")
+    }
+)
 public class RecentPlayEntity extends BaseTimeEntity {
 
     @Id

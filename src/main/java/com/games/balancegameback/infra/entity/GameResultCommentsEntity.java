@@ -9,7 +9,12 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "game_result_comments")
+@Table(
+    name = "game_result_comments",
+    indexes = {
+        @Index(name = "idx_result_comments_games_cursor", columnList = "games_id, id DESC")
+    }
+)
 public class GameResultCommentsEntity extends BaseTimeEntity {
 
     @Id

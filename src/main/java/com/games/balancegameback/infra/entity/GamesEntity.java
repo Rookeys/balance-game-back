@@ -11,9 +11,14 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "games", indexes = {
-    @Index(name = "idx_games_access_type_id", columnList = "access_type, id")
-})
+@Table(
+    name = "games",
+    indexes = {
+        @Index(name = "idx_games_access_type",    columnList = "access_type"),
+        @Index(name = "idx_games_access_type_id", columnList = "access_type, id"),
+        @Index(name = "idx_games_users_cursor",   columnList = "users_uid, id DESC")
+    }
+)
 public class GamesEntity extends BaseTimeEntity {
 
     @Id
