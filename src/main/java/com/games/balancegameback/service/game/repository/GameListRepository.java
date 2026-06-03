@@ -1,6 +1,7 @@
 package com.games.balancegameback.service.game.repository;
 
 import com.games.balancegameback.core.utils.CustomPageImpl;
+import com.games.balancegameback.domain.game.enums.SearchType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.GameCategoryNumsResponse;
 import com.games.balancegameback.dto.game.GameDetailResponse;
@@ -12,7 +13,7 @@ public interface GameListRepository {
 
     CustomPageImpl<GameListResponse> getGameList(Long cursorId, Pageable pageable, GameSearchRequest searchRequest, Users users);
 
-    GameCategoryNumsResponse getCategoryCounts(String title);
+    GameCategoryNumsResponse getCategoryCounts(String search, SearchType searchType);
 
     GameDetailResponse getGameStatus(Long gameId, Users users);
 }

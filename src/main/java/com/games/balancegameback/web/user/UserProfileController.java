@@ -3,6 +3,7 @@ package com.games.balancegameback.web.user;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameSortType;
+import com.games.balancegameback.domain.game.enums.SearchType;
 import com.games.balancegameback.dto.game.GameListResponse;
 import com.games.balancegameback.dto.game.GameResponse;
 import com.games.balancegameback.dto.game.GameSearchRequest;
@@ -87,8 +88,12 @@ public class UserProfileController {
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
-            @Parameter(name = "title", description = "검색할 내용")
-            @RequestParam(name = "title", required = false) String title,
+            @Parameter(name = "search", description = "검색어")
+            @RequestParam(name = "search", required = false) String search,
+
+            @Parameter(name = "searchType", description = "검색 타입 (TITLE: 제목, NICKNAME: 닉네임)",
+                    schema = @Schema(implementation = SearchType.class))
+            @RequestParam(name = "searchType", required = false, defaultValue = "TITLE") SearchType searchType,
 
             @Parameter(name = "category", description = "카테고리",
                     schema = @Schema(implementation = Category.class))
@@ -102,7 +107,8 @@ public class UserProfileController {
 
         Pageable pageable = PageRequest.of(0, size);
         GameSearchRequest searchRequest = GameSearchRequest.builder()
-                .title(title)
+                .search(search)
+                .searchType(searchType)
                 .sortType(sortType)
                 .category(category)
                 .build();
@@ -126,8 +132,12 @@ public class UserProfileController {
             @Parameter(name = "size", description = "한 페이지 당 출력 개수")
             @RequestParam(name = "size", required = false, defaultValue = "10") int size,
 
-            @Parameter(name = "title", description = "검색할 내용")
-            @RequestParam(name = "title", required = false) String title,
+            @Parameter(name = "search", description = "검색어")
+            @RequestParam(name = "search", required = false) String search,
+
+            @Parameter(name = "searchType", description = "검색 타입 (TITLE: 제목, NICKNAME: 닉네임)",
+                    schema = @Schema(implementation = SearchType.class))
+            @RequestParam(name = "searchType", required = false, defaultValue = "TITLE") SearchType searchType,
 
             @Parameter(name = "category", description = "카테고리",
                     schema = @Schema(implementation = Category.class))
@@ -139,7 +149,8 @@ public class UserProfileController {
 
         Pageable pageable = PageRequest.of(0, size);
         GameSearchRequest searchRequest = GameSearchRequest.builder()
-                .title(title)
+                .search(search)
+                .searchType(searchType)
                 .sortType(sortType)
                 .category(category)
                 .build();

@@ -6,6 +6,7 @@ import com.games.balancegameback.core.utils.CustomBasedPageImpl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.Games;
 import com.games.balancegameback.domain.game.enums.CommentType;
+import com.games.balancegameback.domain.game.enums.SearchType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.dto.game.comment.*;
@@ -56,8 +57,8 @@ public class GameService {
     }
 
     // 각 카테고리 별 게임 수 출력
-    public GameCategoryNumsResponse getCategoryNums(String title) {
-        return gameListService.getCategoryNums(title);
+    public GameCategoryNumsResponse getCategoryNums(String search, SearchType searchType) {
+        return gameListService.getCategoryNums(search, searchType);
     }
 
     // 게임 설정값 반환

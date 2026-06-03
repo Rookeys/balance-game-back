@@ -49,10 +49,10 @@ public class AllGamesStrategy extends AbstractGameListStrategy {
             log.debug("Category filter applied: {}", request.getCategory());
         }
 
-        BooleanExpression titleCondition = buildTitleSearchCondition(request.getTitle());
-        if (titleCondition != null) {
-            builder.and(titleCondition);
-            log.debug("Title search applied: {}", request.getTitle());
+        BooleanExpression searchCondition = buildSearchCondition(request.getSearch(), request.getSearchType());
+        if (searchCondition != null) {
+            builder.and(searchCondition);
+            log.debug("Search applied: {} (type: {})", request.getSearch(), request.getSearchType());
         }
         
         return builder;

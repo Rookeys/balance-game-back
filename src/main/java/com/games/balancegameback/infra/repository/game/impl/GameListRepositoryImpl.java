@@ -3,6 +3,7 @@ package com.games.balancegameback.infra.repository.game.impl;
 import com.games.balancegameback.core.utils.CustomPageImpl;
 import com.games.balancegameback.domain.game.enums.Category;
 import com.games.balancegameback.domain.game.enums.GameListType;
+import com.games.balancegameback.domain.game.enums.SearchType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.dto.game.*;
 import com.games.balancegameback.infra.repository.game.common.CommonGameRepository;
@@ -102,16 +103,18 @@ public class GameListRepositoryImpl implements GameListRepository {
     }
     
     @Override
-    @Cacheable(value = "game-category-counts", key = "#title != null && !#title.isEmpty() ? #title : 'all'")
-    public GameCategoryNumsResponse getCategoryCounts(String title) {
+    @Cacheable(value = "game-category-counts",
+            key = "(#search != null && !#search.isEmpty() ? #search : 'all') + '_' + #searchType.name()")
+    public GameCategoryNumsResponse getCategoryCounts(String search, SearchType searchType) {
         try {
-            log.info("Getting category counts - title: {}", title);
-            
+            log.info("Getting category counts - search: {}, searchType: {}", search, searchType);
+
             // PUBLIC 전략 사용
             GameListStrategy strategy = strategyFactory.getStrategy(GameListType.PUBLIC);
-            
+
             GameSearchRequest request = GameSearchRequest.builder()
-                    .title(title)
+                    .search(search)
+                    .searchType(searchType)
                     .build();
             
             BooleanBuilder conditions = strategy.buildFilterConditions(request, null);

@@ -42,11 +42,11 @@ public class PublicGamesStrategy extends AbstractGameListStrategy {
             log.debug("Category filter applied: {}", request.getCategory());
         }
         
-        // 4. 제목 검색 (선택적)
-        BooleanExpression titleCondition = buildTitleSearchCondition(request.getTitle());
-        if (titleCondition != null) {
-            builder.and(titleCondition);
-            log.debug("Title search applied: {}", request.getTitle());
+        // 4. 검색어 필터 (선택적)
+        BooleanExpression searchCondition = buildSearchCondition(request.getSearch(), request.getSearchType());
+        if (searchCondition != null) {
+            builder.and(searchCondition);
+            log.debug("Search applied: {} (type: {})", request.getSearch(), request.getSearchType());
         }
         
         return builder;

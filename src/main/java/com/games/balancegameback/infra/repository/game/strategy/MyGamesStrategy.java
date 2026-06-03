@@ -38,11 +38,11 @@ public class MyGamesStrategy extends AbstractGameListStrategy {
             log.debug("Category filter applied: {}", request.getCategory());
         }
 
-        // 내 게임에서는 게임 제목만 검색
-        if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
-            String searchTitle = request.getTitle().trim();
-            builder.and(GameQClasses.games.title.containsIgnoreCase(searchTitle));
-            log.debug("Title search applied: {}", searchTitle);
+        // 내 게임에서는 게임 제목만 검색 (searchType 무관)
+        if (request.getSearch() != null && !request.getSearch().trim().isEmpty()) {
+            String keyword = request.getSearch().trim();
+            builder.and(GameQClasses.games.title.containsIgnoreCase(keyword));
+            log.debug("Search applied: {}", keyword);
         }
         
         return builder;

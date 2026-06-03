@@ -1,5 +1,6 @@
 package com.games.balancegameback.infra.repository.game.strategy;
 
+import com.games.balancegameback.domain.game.enums.SearchType;
 import com.games.balancegameback.domain.user.Users;
 import com.games.balancegameback.infra.repository.game.common.GameQClasses;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -43,14 +44,16 @@ public abstract class AbstractGameListStrategy implements GameListStrategy {
         return GameQClasses.category.category.eq(category);
     }
     
-    protected BooleanExpression buildTitleSearchCondition(String title) {
-        if (!StringUtils.hasText(title)) {
+    protected BooleanExpression buildSearchCondition(String search, SearchType searchType) {
+        if (!StringUtils.hasText(search)) {
             return null;
         }
 
-        String searchTitle = title.trim();
-        return GameQClasses.games.title.containsIgnoreCase(searchTitle)
-                .or(GameQClasses.users.nickname.containsIgnoreCase(searchTitle)
-                        .and(GameQClasses.games.isNamePrivate.eq(false)));
+        String keyword = search.trim();
+        return switch (searchType) {
+            case TITLE -> GameQClasses.games.title.containsIgnoreCase(keyword);
+            case NICKNAME -> GameQClasses.users.nickname.containsIgnoreCase(keyword)
+                    .and(GameQClasses.games.isNamePrivate.eq(false));
+        };
     }
 }
