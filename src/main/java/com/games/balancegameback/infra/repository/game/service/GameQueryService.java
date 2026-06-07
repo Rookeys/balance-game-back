@@ -249,19 +249,19 @@ public class GameQueryService {
      * @return 총 개수
      */
     public Long calculateTotalElements(BooleanBuilder conditions, boolean validateResourceCount) {
-        JPAQuery<?> query = jpaQueryFactory
-                .selectFrom(GameQClasses.games)
-                .leftJoin(GameQClasses.results).on(GameQClasses.results.gameResources.games.eq(GameQClasses.games))
+        JPAQuery<Long> query = jpaQueryFactory
+                .select(GameQClasses.games.id)
+                .from(GameQClasses.games)
                 .leftJoin(GameQClasses.games.gameResources, GameQClasses.resources)
                 .leftJoin(GameQClasses.games.categories, GameQClasses.category)
                 .leftJoin(GameQClasses.games.users, GameQClasses.users)
                 .where(conditions)
                 .groupBy(GameQClasses.games.id);
-        
+
         if (validateResourceCount) {
-            query.having(GameQClasses.games.gameResources.size().goe(GameConstants.MIN_RESOURCE_COUNT));
+            query.having(GameQClasses.resources.count().goe(GameConstants.MIN_RESOURCE_COUNT));
         }
-        
+
         long total = query.fetch().size();
         log.debug("Calculated total elements: {} (validateResourceCount: {})", total, validateResourceCount);
         return total;
