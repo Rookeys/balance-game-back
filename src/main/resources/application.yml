@@ -14,9 +14,9 @@ spring:
       max-request-size: 50MB
 
   datasource:
-    url: ENC(+rth/7G47HWbMso53JV5QVdcRIoMQAV4CTCZKTahvuJZqa8uJmbosFsxtxFlW4eYI14WWJBbryt3t08ae09a8Ngbf7QTZkurIdsID3Xp8cZbt0EJ8K2gQnlcQ48BDw/Um9g7GyxC5HrCjqdPczz+3Ka5xsHL3yWVKBkrP0bM/VCOvwLJQukPng==)
-    username: ENC(/CyspIvvF6dNHOEFtUrFTg==)
-    password: ENC(iyfDvnpBLAn2JgPYybtabOmRY72ej6IB)
+    url: ENC(5hq8Tav1vWZ/b4jOmbCnz5rFLLpAuhF0SoJjNvf6UfqJpN9ZC/Cw+HTb8qIQt9HNRYshvzpeoPieH0kiIwVNzMooAcumZo73Rge5YYV2KBxfoPM0zPAMk8rYmCf4zU1Jljd0BVY2on36yrIxIPQPavX98L8a6c8rqsyAhT/lsyGOYktxZ2NLBQ==)
+    username: ENC(f4raJSdGYB/CKJdkBCMdxQ==)
+    password: ENC(dAi7JyY/18c85nFNJuZJN22+XpKSt5gD)
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -46,22 +46,22 @@ spring:
       client:
         registration:
           kakao-domain:
-            client-id: ENC(kuVzqyUThECJ4pLkT0txxFeYA7/puYjQBWa7GBF2nAxeUfzzi/C6cAlwx8URnRi9)
-            redirect-uri: ENC(hsDjHZKyHjEt06GyEJ5m02dqAxlqpmOXSRXiUVvX+8wXXBahn50sNUnt4/NBU76l)
+            client-id: ENC(q4dhy6mUli1LbSZCYz6AvGyNuRT8MTzxh85T6sNN3h9UfPwyNVfwV+vxHPwaOVpM)
+            redirect-uri: ENC(9qSmqPTpkdw1e7QgSOEgYyAr1tSLxXQpRoDg8nju6trwEx3siBK8nPIuc6q8fd4n)
             authorization-grant-type: authorization_code
             client-authentication-method: POST
             client-name: Kakao
-            client-secret: ENC(eYsVkQLScHFFP64VjXOgBABRIVx6VX31ZoqwyZai4dS2OkOPft7iZzW4Mjr1pcV4)
+            client-secret: ENC(s5PqPkQeP/SO2r/zS+i3H712UjEWs5esFHk70q5PmFjZZ0UkDVKL0NTBT3M1x5Yl)
             scope:
               - account_email
               - profile_image
           kakao-local:
-            client-id: ENC(kuVzqyUThECJ4pLkT0txxFeYA7/puYjQBWa7GBF2nAxeUfzzi/C6cAlwx8URnRi9)
-            redirect-uri: ENC(hsDjHZKyHjEt06GyEJ5m02dqAxlqpmOXSRXiUVvX+8wXXBahn50sNUnt4/NBU76l)
+            client-id: ENC(q4dhy6mUli1LbSZCYz6AvGyNuRT8MTzxh85T6sNN3h9UfPwyNVfwV+vxHPwaOVpM)
+            redirect-uri: ENC(9qSmqPTpkdw1e7QgSOEgYyAr1tSLxXQpRoDg8nju6trwEx3siBK8nPIuc6q8fd4n)
             authorization-grant-type: authorization_code
             client-authentication-method: POST
             client-name: Kakao
-            client-secret: ENC(eYsVkQLScHFFP64VjXOgBABRIVx6VX31ZoqwyZai4dS2OkOPft7iZzW4Mjr1pcV4)
+            client-secret: ENC(s5PqPkQeP/SO2r/zS+i3H712UjEWs5esFHk70q5PmFjZZ0UkDVKL0NTBT3M1x5Yl)
             scope:
               - account_email
               - profile_image
@@ -77,13 +77,13 @@ cloud:
     s3:
       bucket: balance-game
     credentials:
-      accessKey: ENC(cmMaXTdPrdrP1nmg38xCxlXrrL+parj7xDzoi4+MHzc=)
-      secretKey: ENC(s2lBQF5LlVub1rwF997ULV4EgKplIYN9+2lx/91x8qKbefrNOQnqKzn0MrcsezAXky1tYSJmDTg=)
+      accessKey: ENC(3xHybPn4bkZK8hW2ovfpGGonAIVKLILYgHRZuR8l77c=)
+      secretKey: ENC(nEDjNaSguUVrycO3aiHpUsY/aUums+7X+Bkk3PT7VygunL4Jo4xQeRM50OKTXvcLwQtwvFUa8fk=)
     stack:
       auto: false
 
 jwt:
-  secret: ENC(RnxzhwA89XJzO4TUyxgV/PnW76a1js2bl3fUmHhFqlZjo0EpTx9EQeKyoNZ0LyirrFWRz2jXx/886s2MOnvDx4TFsQs5pYHTfPYJYV3wLjE34NwIzrE6DWnRnQ26b0ueI3jw6tYO8vW1al9KcyhavMkjAQ1PhcTH0gNQD0imFXruxxT2qYxtbR/CT7ErOZ+2lrevEDutMZG/2zez66W9mDrUNYdQ6Zwdij8J4CvrcgtVhteUZFIz6eVJb72SnPap1/yxD6rmEzMB/pjNqNN/m14xODPTbrHnqOFAS+c/TZ0=)
+  secret: ENC(B/+pAP5iZFaUb2kuO+3eubPdjFgXwRAdIMSLoiSXH+jsZJeS31Yo12yjTkWd+8xgsZr9eUwWdwsj+XGU+qlAieG9kvx0hJBVwQZeCIVP8z8ishj1AANJZrdm6p+JBQyF+f+VCJArIlT1AkA5yoSxN2i/sdzl2lKm4QesEQbYJqDrYD4KoBjdmTfxa4UYqINezZ8Pdq7tb1oHj/Q0lWsbxhbQ4HIZRHwNrGWb0Lw68dGASBZzdOUwFkXEgef1zC1Skj2KHrVZKIoBpGqsjZh9kyUJm5n6VhAYsSC3KLtwrkQ=)
   accessTokenExpiration: 86400000
   refreshTokenExpiration: 604800000
 
