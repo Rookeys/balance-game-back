@@ -98,5 +98,5 @@ jasypt:
     bean: jasyptStringEncryptor
 
 front:
-  secret: ENC(Q6CWMk4jLFIcQEi9GTuWcUeL2o4jJms27Yl4lbC+CZZnReCgo2P3WWInRwhF8O+u)
+  secret: ENC(enlQq/5e5sZsVqHRsQQkui+jCnaokdv0CcgVWbR42XbRqH3i/kWEhE1Fip7Jt6Bp)
 
