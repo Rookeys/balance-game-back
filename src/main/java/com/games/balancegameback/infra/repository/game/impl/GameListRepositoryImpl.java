@@ -89,10 +89,7 @@ public class GameListRepositoryImpl implements GameListRepository {
             }
             
             // 총 개수 계산
-            Long totalElements = gameQueryService.calculateTotalElements(
-                conditions,
-                strategy.requiresResourceCountValidation()
-            );
+            Long totalElements = (long) baseTuples.size();
             
             return new CustomPageImpl<>(pagedResponses, pageable, totalElements, cursorId, hasNext);
         } catch (Exception e) {
